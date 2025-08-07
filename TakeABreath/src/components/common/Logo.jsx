@@ -1,21 +1,20 @@
 import styled from "styled-components";
-import { rem } from "../../utils/styledHelpers";
 
 const LogoContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: ${rem(18)};
+  gap: 1.125rem;
 `;
 
 const LogoIcon = styled.svg`
-  width: ${rem(60)};
-  height: ${rem(48)};
+  width: 1.8rem;
+  height: 1.35981rem;
 `;
 
 const LogoText = styled.span`
   color: #abdd95;
   font-family: Pretendard;
-  font-size: 3rem;
+  font-size: 1.5rem;
   font-style: normal;
   font-weight: 700;
   line-height: normal;
