@@ -12,7 +12,7 @@ const LogoIcon = styled.svg`
 `;
 
 const LogoText = styled.span`
-  color: #abdd95;
+  color: #68b8ea;
   font-family: Pretendard;
   font-size: 1.5rem;
   font-style: normal;
@@ -45,9 +45,9 @@ export default function Logo() {
             width="30.4808"
             height="23.4368"
             filterUnits="userSpaceOnUse"
-            color-interpolation-filters="sRGB"
+            colorInterpolationFilters="sRGB"
           >
-            <feFlood flood-opacity="0" result="BackgroundImageFix" />
+            <feFlood floodOpacity="0" result="BackgroundImageFix" />
             <feBlend
               mode="normal"
               in="SourceGraphic"
@@ -99,8 +99,8 @@ export default function Logo() {
             y2="14.0574"
             gradientUnits="userSpaceOnUse"
           >
-            <stop offset="0.287236" stop-color="#ABDD95" />
-            <stop offset="1" stop-color="#FEFEFF" />
+            <stop offset="0.287236" stopColor="#68B8EA" />
+            <stop offset="1" stopColor="#FEFEFF" />
           </linearGradient>
         </defs>
       </LogoIcon>

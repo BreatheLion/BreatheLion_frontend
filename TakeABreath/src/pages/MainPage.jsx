@@ -1,15 +1,16 @@
 import styled from "styled-components";
 import { useState } from "react";
+import axios from "axios";
 import Header from "../components/layout/Header";
 import Logo from "../components/common/Logo";
 
 const MainContainer = styled.div`
   background: radial-gradient(
-    128.88% 112.29% at 52.3% 53.31%,
-    #fffaf8 0%,
-    #fffbf9 15.23%,
-    #ecffe4 45.24%,
-    #abdd95 100%
+    55% 80% at 50% 49.93%,
+    #c3e3f7 0%,
+    #e8f4fc 26.28%,
+    #f1f8fd 39.34%,
+    #fff 55.94%
   );
   width: 100vw;
   height: 100vh;
@@ -33,12 +34,13 @@ const ContentWrapper = styled.div`
 `;
 
 const MainTitle = styled.h1`
-  font-size: 2.25rem;
-  font-family: "Pretendard";
+  color: var(--70, #4a4a4a);
+  text-align: center;
+  font-family: Pretendard;
+  font-size: 1.75rem;
+  font-style: normal;
   font-weight: 700;
-  color: #000;
-  margin: 2.5rem 0 1rem 0;
-  line-height: 2.3125rem;
+  line-height: 2.25rem;
   text-align: center;
 `;
 
@@ -60,7 +62,7 @@ const InputContainer = styled.div`
 const TextInput = styled.input`
   width: 100%;
   height: 3.125rem;
-  background: #abdd95;
+  background: #68b8ea;
   border: none;
   border-radius: 2rem;
   padding: 0 4rem 0 1.5rem;
@@ -76,7 +78,7 @@ const TextInput = styled.input`
   }
 
   &:focus {
-    box-shadow: 0 0 0 2px rgba(171, 221, 149, 0.3);
+    box-shadow: 0 0 0 2px rgba(104, 184, 234, 0.3);
   }
 `;
 
@@ -111,25 +113,92 @@ const ArrowButton = styled.button`
   &:active {
     transform: translateY(-50%) scale(0.95);
   }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 `;
 
 const ArrowIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 24" fill="none">
     <path
       d="M5.00059 19.425C4.66725 19.5583 4.35059 19.529 4.05059 19.337C3.75059 19.145 3.60059 18.866 3.60059 18.5V14L11.6006 12L3.60059 10V5.50001C3.60059 5.13335 3.75059 4.85435 4.05059 4.66301C4.35059 4.47168 4.66725 4.44235 5.00059 4.57501L20.4006 11.075C20.8173 11.2583 21.0256 11.5667 21.0256 12C21.0256 12.4333 20.8173 12.7417 20.4006 12.925L5.00059 19.425Z"
-      fill="#93CF79"
+      fill="#68B8EA"
     />
   </svg>
 );
 
-export default function MainPage() {
-  const [inputValue, setInputValue] = useState("");
+const LoadingText = styled.span`
+  color: #68b8ea;
+  font-size: 0.75rem;
+  font-weight: 500;
+`;
 
-  const handleSubmit = () => {
-    if (inputValue.trim()) {
-      // 다음 페이지로 이동하는 로직 (나중에 구현)
-      console.log("입력된 내용:", inputValue);
-      alert(`입력된 내용: ${inputValue}`);
+export default function MainPage({ onNavigateToChat }) {
+  const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    const trimmed = inputValue.trim();
+    if (!trimmed) return;
+
+    setIsLoading(true);
+
+    // 로딩 중일 때 임시 응답으로 ChatPage로 이동
+    const tempResponse = {
+      chat_session_id: 1,
+      answer: "응답 중입니다",
+      time: new Date().toLocaleTimeString("ko-KR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }),
+      date: new Date().toISOString().split("T")[0],
+    };
+
+    setInputValue("");
+    onNavigateToChat({
+      userMessage: trimmed,
+      serverResponse: tempResponse,
+      isLoading: true,
+    });
+
+    try {
+      const response = await axios.post("/api/records/start/", {
+        message: trimmed,
+        role: "user",
+      });
+
+      const serverResponse = response.data;
+      // 실제 응답으로 업데이트 (ChatPage에서 처리)
+      onNavigateToChat({
+        userMessage: trimmed,
+        serverResponse: serverResponse,
+        isLoading: false,
+      });
+    } catch (error) {
+      console.error(error);
+      // 서버 오프라인 시 기본 응답으로 처리
+      const fallbackResponse = {
+        chat_session_id: 1,
+        answer: "해당 메세지가 전송되지 않았습니다",
+        time: new Date().toLocaleTimeString("ko-KR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }),
+        date: new Date().toISOString().split("T")[0],
+      };
+
+      // fallback 응답으로 업데이트
+      onNavigateToChat({
+        userMessage: trimmed,
+        serverResponse: fallbackResponse,
+        isLoading: false,
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -143,18 +212,26 @@ export default function MainPage() {
     <MainContainer>
       <Header />
       <ContentWrapper>
-        <Logo style={{ marginTop: "4.5rem" }} />
-        <MainTitle>기억을 넘어서, 대화로.</MainTitle>
-        <SubTitle>AI에게 털어놓은 말이, 나를 지키는 증거가 됩니다.</SubTitle>
+        {/* 로고 유무 테스트 부분입니다! 
+        <Logo style={{ marginTop: "4.5rem" }} /> */}
+        <MainTitle>
+          말하지 못한 상처를, 이제는 말해도 괜찮아요.
+          <br />
+          당신의 감정과 이야기를, 증거로 지켜드릴게요.
+        </MainTitle>
+        <SubTitle>
+          아픔은 여기에만 남기고, 당신은 한 걸음 나아가도 좋아요.
+        </SubTitle>
         <InputContainer>
           <TextInput
             type="text"
-            placeholder="내용을 입력하세요"
+            placeholder="천천히 기억나는 것부터 말해주세요"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
+            disabled={isLoading}
           />
-          <ArrowButton onClick={handleSubmit}>
+          <ArrowButton onClick={handleSubmit} disabled={isLoading}>
             <ArrowIcon />
           </ArrowButton>
         </InputContainer>
