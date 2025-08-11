@@ -38,6 +38,7 @@ const ChatArea = styled.div`
   flex: 1;
   padding: 0 12.5rem;
   overflow-y: auto;
+  margin-bottom: 7rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -79,7 +80,7 @@ const MessageBubble = styled.div`
   font-family: "Pretendard", sans-serif;
   font-size: 0.75rem;
   font-weight: 500;
-  line-height: 1.5rem;
+  line-height: 1.125rem;
   white-space: pre-line;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -197,41 +198,62 @@ const TimeStamp = styled.div`
 const InputArea = styled.div`
   padding: 0 12.5rem 2rem 12.5rem;
   display: flex;
-  align-items: center;
+  align-items: flex-end; /* 하단 정렬로 라인 일치 */
   gap: 1rem;
 `;
 
 const InputContainer = styled.div`
   position: relative;
-  flex: 1;
-  height: 2.75rem;
-  background: #68b8ea;
-  border-radius: 3.125rem;
   display: flex;
-  align-items: center;
+  width: 45.9375rem;
+  padding: 0.9375rem 1.25rem 0 1.25rem; /* 하단 패딩 제거 */
+  flex-direction: column;
+  align-items: stretch;
+  border-radius: 1.25rem;
+  border: 3px solid var(--Color, #68b8ea);
+  background: #fff;
+  box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.15);
 `;
 
-const ChatInput = styled.input`
-  flex: 1;
+const ChatInput = styled.textarea`
+  width: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
   background: transparent;
   border: none;
-  padding: 0 3.5rem 0 3.25rem;
-  color: white;
+  padding: 0; /* 한 줄 기준 컴팩트 */
+  margin: 0;
+  color: #313131;
   font-family: "Pretendard", sans-serif;
   font-size: 1rem;
+  line-height: 1.25rem;
+  height: 1.25rem; /* 기본 1줄 높이 */
+  min-height: 1.25rem; /* 최소 1줄 */
   outline: none;
+  resize: none; /* 수동 리사이즈 금지 */
+  max-height: calc(1.25rem * 4); /* 최대 4줄 */
+  overflow-y: auto;
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.8);
+    color: #acacac;
   }
 `;
 
+const InputActions = styled.div`
+  display: flex;
+  margin-top: 0.625rem;
+  margin-bottom: 0.625rem;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+  width: 100%;
+`;
+
 const SendButton = styled.button`
-  position: absolute;
-  right: 0.5rem;
   width: 2rem;
   height: 2rem;
-  background: white;
+  background: #68b8ea; /* 배경 파랑 */
+  color: #fff; /* 아이콘 흰색 (currentColor) */
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -244,35 +266,18 @@ const SendButton = styled.button`
   }
 `;
 
-const FinishButton = styled.button`
-  height: 2.75rem;
-  width: 7rem;
-  background: transparent;
-  border: none;
-  border-radius: 0.625rem;
-  font-family: "Pretendard", sans-serif;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: #313131;
-  cursor: pointer;
-  line-height: 1.125rem;
-
-  &:hover {
-    background: rgba(49, 49, 49, 0.1);
-  }
-`;
-
 const PlusIcon = styled.div`
-  position: absolute;
-  left: 0.5rem;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 0.875rem;
+  height: 0.875rem;
   background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: #68b8ea; /* icon color */
   font-size: 2rem;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
   cursor: pointer;
 
   &:hover {
@@ -280,8 +285,144 @@ const PlusIcon = styled.div`
   }
 `;
 
+const FinishButton = styled.button`
+  height: 2.75rem;
+  width: 7rem;
+  background: #fff;
+  border: 1px solid var(--10, #ddd);
+  margin-bottom: 0.5rem;
+  border-radius: 0.5rem;
+  font-family: "Pretendard", sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #313131;
+  cursor: pointer;
+  line-height: 1.125rem;
+`;
+
 const FileInput = styled.input`
   display: none;
+`;
+
+const AttachmentsBar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0 12.5rem 0.5rem 12.5rem;
+`;
+
+const AttachmentChip = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: 1rem;
+  background: #f2f2f2;
+  color: #313131;
+  font-size: 0.75rem;
+`;
+
+const ChipRemove = styled.button`
+  border: none;
+  background: #4a4a4a;
+  color: #fff;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.625rem;
+`;
+
+const PreviewThumb = styled.div`
+  width: 10rem; /* 고정 크기 */
+  height: 6rem; /* 고정 크기 */
+  border-radius: 0.25rem;
+  overflow: hidden;
+  background: #e9e9e9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  img,
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+const ProgressWrap = styled.div`
+  width: 100%;
+  padding: 0 12.5rem 0.5rem 12.5rem;
+`;
+
+const ProgressBar = styled.div`
+  height: 0.375rem;
+  width: 100%;
+  background: #e9e9e9;
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+`;
+
+const ProgressFill = styled.div`
+  height: 100%;
+  width: ${(props) => props.$percent || 0}%;
+  background: #68b8ea;
+  transition: width 0.15s ease;
+`;
+
+const CancelUpload = styled.button`
+  border: none;
+  background: transparent;
+  color: #4a4a4a;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  cursor: pointer;
+`;
+
+const VideoPreview = styled.video`
+  width: 10rem; /* 이미지 썸네일과 동일 */
+  height: 6rem; /* 이미지 썸네일과 동일 */
+  border-radius: 0.25rem;
+  background: #000;
+  object-fit: cover;
+`;
+
+const AudioPreview = styled.audio`
+  width: 12rem;
+  height: 2rem;
+`;
+
+const MessageAttachments = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+`;
+
+const MessageImage = styled.img`
+  width: 20rem; /* 고정 크기 */
+  height: 12rem; /* 고정 크기 */
+  border-radius: 0.5rem;
+  object-fit: cover;
+  background: #e9e9e9;
+  display: block;
+`;
+
+const MessageVideo = styled.video`
+  width: 20rem; /* 메시지 이미지와 동일 */
+  height: 12rem; /* 메시지 이미지와 동일 */
+  border-radius: 0.5rem;
+  background: #000;
+  object-fit: cover;
+`;
+
+const MessageAudio = styled.audio`
+  width: 20rem;
+  height: 2rem;
 `;
 
 export default function ChatPage({ onNavigateToMain, initialChatData }) {
@@ -322,8 +463,12 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
   const [isFinishing, setIsFinishing] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [finishResponse, setFinishResponse] = useState(null);
+  const [attachments, setAttachments] = useState([]); // {id, file, previewUrl}
+  const [overallProgress, setOverallProgress] = useState(0);
+  const uploadAbortRef = useRef(null);
   const fileInputRef = useRef(null);
   const chatAreaRef = useRef(null);
+  const inputRef = useRef(null);
 
   // chat_session_id 추출
   const chatSessionId = initialChatData?.serverResponse?.chat_session_id || 1;
@@ -358,9 +503,58 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
     }
   }, [messages]);
 
+  useEffect(() => {
+    // 입력 변경 시 높이 자동 조절 (1~4줄 범위)
+    if (!inputRef.current) return;
+    const el = inputRef.current;
+    el.style.height = "auto";
+    const styles = window.getComputedStyle(el);
+    const lh = parseFloat(styles.lineHeight) || 20;
+    const pt = parseFloat(styles.paddingTop) || 0;
+    const pb = parseFloat(styles.paddingBottom) || 0;
+    const minH = lh + pt + pb; // 1줄 높이
+    const maxH = lh * 4 + pt + pb; // 4줄 높이
+    const next = Math.max(minH, Math.min(el.scrollHeight, maxH));
+    el.style.height = `${next}px`;
+  }, [inputValue]);
+
   const handleFileSelect = () => {
-    // 파일 선택 기능 (현재는 비활성화)
-    // fileInputRef.current?.click();
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+
+  const handleFilesChosen = (e) => {
+    const chosen = Array.from(e.target.files || []);
+    if (chosen.length === 0) return;
+    // 제한: 최대 3개, 영상/이미지/오디오 허용
+    const allowTypes = /^(image|audio|video)\//;
+    const current = attachments.length;
+    const room = Math.max(0, 3 - current);
+    const accepted = chosen
+      .filter((f) => allowTypes.test(f.type))
+      .slice(0, room);
+    const next = accepted.map((file) => ({
+      id: `${Date.now()}_${file.name}`,
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }));
+    setAttachments((prev) => [...prev, ...next]);
+    // reset input to allow re-choose same file names
+    e.target.value = "";
+  };
+
+  const removeAttachment = (id) => {
+    setAttachments((prev) => {
+      const target = prev.find((p) => p.id === id);
+      if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((p) => p.id !== id);
+    });
+  };
+
+  const clearAllAttachments = () => {
+    setAttachments((prev) => {
+      prev.forEach((p) => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
+      return [];
+    });
   };
 
   const handleFinish = async () => {
@@ -439,7 +633,7 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
 
     setIsLoading(true);
 
-    // 사용자 메시지 추가
+    // 사용자 메시지 + 로딩 메시지 UI
     const userMessage = {
       id: messages.length + 1,
       type: "user",
@@ -449,81 +643,104 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
         minute: "2-digit",
         hour12: true,
       }),
+      attachments: attachments.map((att) => ({
+        id: att.id,
+        name: att.file.name,
+        type: att.file.type,
+        previewUrl: att.previewUrl,
+      })),
     };
-
-    // "응답 중입니다" 메시지 추가
     const loadingMessage = {
       id: messages.length + 2,
       type: "ai",
       content: "응답 중입니다",
-      time: new Date().toLocaleTimeString("ko-KR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
+      time: "",
     };
-
     setMessages([...messages, userMessage, loadingMessage]);
-    setInputValue("");
 
     try {
-      const response = await axios.post("/api/chats/attach/", {
-        chat_session_id: chatSessionId,
-        evidence: null, // 파일 없이 텍스트만 전송
-        text: trimmed,
+      // multipart 전송
+      const form = new FormData();
+      form.append("chat_session_id", String(chatSessionId));
+      form.append("text", trimmed);
+      attachments.forEach((att) =>
+        form.append("evidences[]", att.file, att.file.name)
+      );
+
+      const controller = new AbortController();
+      uploadAbortRef.current = controller;
+
+      const response = await axios.post("/api/chats/attach/", form, {
+        signal: controller.signal,
+        onUploadProgress: ({ loaded, total }) => {
+          if (!total) return;
+          const pct = Math.round((loaded / total) * 100);
+          setOverallProgress(pct);
+        },
       });
 
       const serverResponse = response.data;
 
-      // "응답 중입니다" 메시지를 실제 응답으로 교체
-      setMessages((prevMessages) => {
-        const updatedMessages = [...prevMessages];
-        const loadingMessageIndex = updatedMessages.findIndex(
-          (msg) => msg.content === "응답 중입니다"
+      // 로딩 메시지를 서버 응답으로 교체
+      setMessages((prev) => {
+        const updated = [...prev];
+        const idx = updated.findIndex(
+          (m) => m.type === "ai" && m.content === "응답 중입니다"
         );
-
-        if (loadingMessageIndex !== -1) {
-          updatedMessages[loadingMessageIndex] = {
-            ...updatedMessages[loadingMessageIndex],
+        if (idx !== -1) {
+          updated[idx] = {
+            ...updated[idx],
             content: serverResponse.answer,
-            time: serverResponse.time,
+            time: serverResponse.time || "",
           };
         }
-
-        return updatedMessages;
+        return updated;
       });
+
+      // 성공 후 입력/첨부 초기화
+      setInputValue("");
+      setOverallProgress(0);
+      clearAllAttachments();
     } catch (error) {
       console.error(error);
-
-      // "응답 중입니다" 메시지를 에러 메시지로 교체
-      setMessages((prevMessages) => {
-        const updatedMessages = [...prevMessages];
-        const loadingMessageIndex = updatedMessages.findIndex(
-          (msg) => msg.content === "응답 중입니다"
+      // 실패 메시지로 교체 + 입력/첨부 초기화
+      setMessages((prev) => {
+        const updated = [...prev];
+        const idx = updated.findIndex(
+          (m) => m.type === "ai" && m.content === "응답 중입니다"
         );
-
-        if (loadingMessageIndex !== -1) {
-          updatedMessages[loadingMessageIndex] = {
-            ...updatedMessages[loadingMessageIndex],
-            content: "해당 메세지가 전송되지 않았습니다 해당 메세지가 전송되지 않았습니다해당 메세지가 전송되지 않았습니다해당 메세지가 전송되지 않았습니다",
+        if (idx !== -1) {
+          updated[idx] = {
+            ...updated[idx],
+            content: "해당 메세지가 전송되지 않았습니다",
             time: new Date().toLocaleTimeString("ko-KR", {
               hour: "2-digit",
               minute: "2-digit",
               hour12: false,
-            })
+            }),
           };
         }
-
-        return updatedMessages;
+        return updated;
       });
+      setInputValue("");
+      setOverallProgress(0);
+      clearAllAttachments();
     } finally {
       setIsLoading(false);
+      uploadAbortRef.current = null;
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       handleSend();
+    }
+  };
+
+  const cancelUpload = () => {
+    if (uploadAbortRef.current) {
+      uploadAbortRef.current.abort();
     }
   };
 
@@ -550,40 +767,124 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
                 )}
                 <MessageBubble className={message.type}>
                   {message.content}
+                  {message.type === "user" &&
+                    message.attachments &&
+                    message.attachments.length > 0 && (
+                      <MessageAttachments>
+                        {message.attachments.map((att) => (
+                          <div key={att.id}>
+                            {att.type.startsWith("image/") && (
+                              <MessageImage
+                                src={att.previewUrl}
+                                alt={att.name}
+                              />
+                            )}
+                            {att.type.startsWith("video/") && (
+                              <MessageVideo src={att.previewUrl} controls />
+                            )}
+                            {att.type.startsWith("audio/") && (
+                              <MessageAudio src={att.previewUrl} controls />
+                            )}
+                          </div>
+                        ))}
+                      </MessageAttachments>
+                    )}
                 </MessageBubble>
               </MessageWrapper>
             </MessageContainer>
           ))}
         </ChatArea>
 
+        {attachments.length > 0 && (
+          <AttachmentsBar>
+            {attachments.map((att) => (
+              <AttachmentChip key={att.id}>
+                {att.file.type.startsWith("image/") && (
+                  <PreviewThumb>
+                    <img src={att.previewUrl} alt={att.file.name} />
+                  </PreviewThumb>
+                )}
+                {att.file.type.startsWith("video/") && (
+                  <VideoPreview src={att.previewUrl} controls />
+                )}
+                {att.file.type.startsWith("audio/") && (
+                  <AudioPreview src={att.previewUrl} controls />
+                )}
+                <span>{att.file.name}</span>
+                <ChipRemove onClick={() => removeAttachment(att.id)}>
+                  ×
+                </ChipRemove>
+              </AttachmentChip>
+            ))}
+          </AttachmentsBar>
+        )}
+
+        {isLoading && (
+          <ProgressWrap>
+            <ProgressBar>
+              <ProgressFill $percent={overallProgress} />
+            </ProgressBar>
+            <CancelUpload onClick={cancelUpload}>업로드 취소</CancelUpload>
+          </ProgressWrap>
+        )}
+
         <InputArea>
           <InputContainer>
-            <PlusIcon onClick={handleFileSelect}>+</PlusIcon>
-            <FileInput
-              ref={fileInputRef}
-              type="file"
-              multiple
-              onChange={(e) => {
-                // 파일 선택 처리 (현재는 비활성화)
-                console.log("파일 선택됨:", e.target.files);
-              }}
-            />
             <ChatInput
-              type="text"
+              ref={inputRef}
               placeholder=""
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               disabled={isLoading}
+              rows={1}
             />
-            <SendButton onClick={handleSend} disabled={isLoading}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z"
-                  fill="#68b8ea"
-                />
-              </svg>
-            </SendButton>
+            <InputActions>
+              <PlusIcon onClick={handleFileSelect}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="100%"
+                  height="100%"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                >
+                  <g clipPath="url(#clip0_168_2659)">
+                    <path
+                      d="M1 7H13"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M7 1L7 13"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </g>
+                  <defs>
+                    <clipPath id="clip0_168_2659">
+                      <rect width="14" height="14" fill="white" />
+                    </clipPath>
+                  </defs>
+                </svg>
+              </PlusIcon>
+              <SendButton onClick={handleSend} disabled={isLoading}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </SendButton>
+            </InputActions>
+            <FileInput
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,audio/*,video/*"
+              multiple
+              onChange={handleFilesChosen}
+            />
           </InputContainer>
 
           <FinishButton onClick={handleFinish} disabled={isFinishing}>
