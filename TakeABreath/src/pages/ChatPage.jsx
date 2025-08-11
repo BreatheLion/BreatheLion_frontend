@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Header from "../components/layout/Header";
 import DetailModifyPage from "./DetailModifyPage";
+import FinishLoadingPage from "./FinishLoadingPage";
 
 const ChatContainer = styled.div`
   background: #ffffff;
@@ -559,52 +560,12 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
 
   const handleFinish = async () => {
     setIsFinishing(true);
+  };
 
-    try {
-      // 서버 연결 테스트 (실제로는 주석 처리)
-      // const response = await axios.post("/api/chats/end/", {
-      //   chat_session_id: chatSessionId,
-      // });
-      // const finishResponse = response.data;
-
-      // 더미 데이터로 테스트
-      const finishResponse = {
-        record_id: 3,
-        title: "동방에서 일어난 무시무시한 사건",
-        category: ["괴롭힘"],
-        content: "오늘 해승이가 해원이를 괴롭혔다",
-        severity: 1,
-        location: "동방",
-        created_at: "2025-08-05T10:00:00",
-        occurred_at: "2025-08-01T14:30:00",
-        assailant: ["서해승", "이예림"],
-        witness: ["오영록"],
-        drawers: ["00 커피 폭언", "기차역 살인사건"],
-        evidences: [
-          {
-            filename: "해원이 욕설 파일",
-            type: "audio",
-            url: "url~~",
-          },
-          {
-            filename: "폭행 당시 사진",
-            type: "image",
-            url: "url2~~",
-          },
-        ],
-      };
-
-      console.log("기록 완료 응답:", finishResponse);
-
-      // 응답 데이터를 저장하고 모달 표시
-      setFinishResponse(finishResponse);
-      setShowDetailModal(true);
-    } catch (error) {
-      console.error("기록 완료 중 오류:", error);
-      alert("기록 완료 중 오류가 발생했습니다. 다시 시도해주세요.");
-    } finally {
-      setIsFinishing(false);
-    }
+  const handleFinishDone = (data) => {
+    setFinishResponse(data);
+    setShowDetailModal(true);
+    setIsFinishing(false);
   };
 
   const handleDetailClose = () => {
@@ -892,6 +853,13 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
           </FinishButton>
         </InputArea>
       </ChatWrapper>
+
+      {isFinishing && !finishResponse && (
+        <FinishLoadingPage
+          chatSessionId={chatSessionId}
+          onDone={handleFinishDone}
+        />
+      )}
 
       {/* DetailModifyPage 모달 */}
       {showDetailModal && finishResponse && (
