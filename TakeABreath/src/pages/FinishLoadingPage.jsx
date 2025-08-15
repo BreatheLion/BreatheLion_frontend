@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import styled from "styled-components";
+import axios from "axios";
 import smile from "../images/smile.mp4";
 
 const Page = styled.div`
@@ -69,30 +70,63 @@ const MediaImg = styled.img`
 
 export default function FinishLoadingPage({
   mediaSrc,
-  titleText = "기록을 서랍에 저장하고 있어요",
-  subText = "2초 후 메인 화면으로 돌아가요",
+  titleText = "대화 내용을 정리하고 있어요",
+  subText = "잠시 한숨 돌리고 계세요!",
   autoCloseMs = 5000,
   onDone,
+  chatSessionId,
 }) {
   useEffect(() => {
     let mounted = true;
+
+    const fetchRecordData = async () => {
+      try {
+        // 실제 API 호출
+        const response = await axios.post("/api/records/start/", {
+          chat_session_id: chatSessionId,
+        });
+
+        if (mounted) {
+          onDone?.(response.data);
+        }
+      } catch (error) {
+        console.error("기록 데이터 가져오기 실패:", error);
+
+        // API 실패 시 fallback 데이터 사용
+        if (mounted) {
+          const fallback = {
+            record_id: 3,
+            title: "동방에서 일어난 무시무시한 사건",
+            category: ["괴롭힘"],
+            content: "오늘 해승이가 해원이를 괴롭혔다",
+            severity: 1,
+            location: "동방",
+            created_at: "2025-08-05T10:00:00",
+            occurred_at: "2025-08-01T14:30:00",
+            assailant: ["서해승", "이예림"],
+            witness: ["오영록"],
+            drawers: ["00 커피 폭언", "기차역 살인사건"],
+            evidences: [
+              {
+                filename: "해원이 욕설 파일",
+                type: "audio",
+                url: "url~~",
+              },
+              {
+                filename: "폭행 당시 사진",
+                type: "image",
+                url: "url2~~",
+              },
+            ],
+          };
+          onDone?.(fallback);
+        }
+      }
+    };
+
     const timer = setTimeout(() => {
       if (!mounted) return;
-      const fallback = {
-        record_id: 3,
-        title: "동방에서 일어난 무시무시한 사건",
-        category: ["괴롭힘"],
-        content: "오늘 해승이가 해원이를 괴롭혔다",
-        severity: 1,
-        location: "동방",
-        created_at: new Date().toISOString(),
-        occurred_at: new Date().toISOString(),
-        assailant: ["서해승", "이예림"],
-        witness: ["오영록"],
-        drawers: ["00 커피 폭언", "기차역 살인사건"],
-        evidences: [],
-      };
-      onDone?.(fallback);
+      fetchRecordData();
     }, autoCloseMs);
 
     return () => {

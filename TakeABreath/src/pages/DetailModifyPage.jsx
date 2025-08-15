@@ -1,5 +1,9 @@
 import styled from "styled-components";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import TimePicker from "react-time-picker";
+import "react-time-picker/dist/TimePicker.css";
+import "react-clock/dist/Clock.css";
+import AttachmentChip from "../components/ui/AttachmentChip";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -60,15 +64,24 @@ const Title = styled.h1`
 `;
 
 const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 1.5rem;
+  display: flex;
+  width: 11.25rem;
+  height: 2.75rem;
+  padding: 0.625rem 2.6875rem;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0.5rem;
+  border: 1px solid var(--10, #ddd);
+  background: #fff;
+  color: #313131;
+  font-family: "Pretendard", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
-  color: #666;
-  padding: 0.5rem;
+  transition: all 0.2s;
 
   &:hover {
-    color: #333;
+    border-color: #4a4a4a;
   }
 `;
 
@@ -79,7 +92,7 @@ const Subtitle = styled.p`
   font-style: normal;
   font-weight: 500;
   line-height: 1.25rem;
-  margin: 0 0 2rem 0;
+  margin: 0.75rem 0 2rem 0;
 `;
 
 const SubtitleStrong = styled.span`
@@ -143,8 +156,8 @@ const Input = styled.input`
   align-items: center;
   gap: 0.625rem;
   border-radius: 0.625rem;
-  border: 1px solid #ddd;
-  background: #fff;
+  border: 1px solid ${(props) => (props.$highlighted ? "#68b8ea" : "#ddd")};
+  background: ${(props) => (props.$highlighted ? "#e6f6ff" : "#fff")};
   font-family: "Pretendard", sans-serif;
   font-size: 0.875rem;
   outline: none;
@@ -160,6 +173,69 @@ const Input = styled.input`
   }
 `;
 
+const DateTimeGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const HalfInput = styled(Input)`
+  width: 17rem;
+`;
+
+const TimePickerBox = styled.div`
+  .react-time-picker {
+    display: inline-flex;
+    width: 17rem;
+    height: 2.625rem;
+    border-radius: 0.625rem;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-family: "Pretendard", sans-serif;
+    font-size: 0.875rem;
+    outline: none;
+    padding: 0.125rem 0.5rem;
+  }
+
+  .react-time-picker__wrapper {
+    border: none;
+  }
+
+  .react-time-picker:focus-within {
+    border: 1px solid #68b8ea;
+    background: #e6f6ff;
+  }
+`;
+
+const AttachmentsBar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+`;
+
+const FileInput = styled.input`
+  display: none;
+`;
+
+const AttachButton = styled.button`
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 1rem;
+  background: #ffffff;
+  color: #68b8ea;
+  font-family: "Pretendard", sans-serif;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #68b8ea;
+  }
+`;
+
+// (reverted) No fixed grid and wrappers; back to fluid flex layout
+
 const TextArea = styled.textarea`
   display: flex;
   width: 34.6875rem;
@@ -167,8 +243,8 @@ const TextArea = styled.textarea`
   align-items: flex-start;
   gap: 0.625rem;
   border-radius: 0.625rem;
-  border: 1px solid #ddd;
-  background: #fff;
+  border: 1px solid ${(props) => (props.$highlighted ? "#68b8ea" : "#ddd")};
+  background: ${(props) => (props.$highlighted ? "#e6f6ff" : "#fff")};
   font-family: "Pretendard", sans-serif;
   font-size: 0.875rem;
   outline: none;
@@ -195,7 +271,7 @@ const SeverityButton = styled.button`
   padding: 0.5rem 1rem;
   border: 1px solid #e0e0e0;
   border-radius: 1rem;
-  background: ${(props) => (props.selected ? "#68b8ea" : "white")};
+  background: ${(props) => (props.selected ? "#4a4a4a" : "white")};
   color: ${(props) => (props.selected ? "white" : "#666")};
   font-family: "Pretendard", sans-serif;
   font-size: 0.875rem;
@@ -203,7 +279,7 @@ const SeverityButton = styled.button`
   transition: all 0.2s;
 
   &:hover {
-    border-color: #68b8ea;
+    border-color: #4a4a4a;
   }
 `;
 
@@ -288,25 +364,44 @@ const AddInput = styled.input`
   }
 `;
 
+const ButtonContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+`;
+
 const SubmitButton = styled.button`
-  background: #68b8ea;
-  color: white;
-  border: none;
+  display: flex;
+  width: 11.25rem;
+  height: 2.75rem;
+  padding: 0.625rem 2.6875rem;
+  justify-content: center;
+  align-items: center;
   border-radius: 0.5rem;
-  padding: 1rem 2rem;
+  border: 1px solid #4fb2ef;
+  background: var(
+    --BP-Gradation,
+    radial-gradient(
+      480.82% 193.78% at 131.5% -43.24%,
+      #8c68e0 0%,
+      #688ae0 31.38%,
+      var(--Color, #68b8ea) 87.56%
+    )
+  );
+  color: white;
   font-family: "Pretendard", sans-serif;
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  width: 100%;
-  transition: background 0.2s;
+  transition: all 0.2s;
 
   &:hover {
-    background: #4a9bd8;
+    opacity: 0.9;
   }
 
   &:disabled {
-    background: #ccc;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 `;
@@ -317,35 +412,85 @@ const severityMap = {
   3: "낮음",
 };
 
-const formatDate = (dateString) => {
+const CategoryContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+`;
+
+const CategoryButton = styled.button`
+  padding: 0.5rem 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 1rem;
+  background: ${(props) => (props.selected ? "#4a4a4a" : "white")};
+  color: ${(props) => (props.selected ? "white" : "#666")};
+  font-family: "Pretendard", sans-serif;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #4a4a4a;
+  }
+`;
+
+const PREDEFINED_CATEGORIES = [
+  "언어폭력",
+  "신체폭력",
+  "성희롱",
+  "성폭력",
+  "차별행위",
+  "따돌림",
+  "괴롭힘",
+  "스토킹",
+  "기타",
+];
+
+const toDateTimeLocal = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
-  const year = date.getFullYear().toString().slice(-2);
+  if (isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 export default function DetailModifyPage({ data, onClose, onSubmit }) {
+  const initialLocal = toDateTimeLocal(data.occurred_at);
+  const initialDate = initialLocal ? initialLocal.split("T")[0] : "";
+  const initialTime = initialLocal
+    ? (initialLocal.split("T")[1] || "").slice(0, 5)
+    : "";
+
   const [formData, setFormData] = useState({
     title: data.title || "",
     assailant: data.assailant || [],
     severity: data.severity || 1,
-    occurred_at: formatDate(data.occurred_at),
+    occurred_at: initialLocal,
     location: data.location || "",
     content: data.content || "",
     category: data.category || [],
     drawers: data.drawers || [],
-    evidences: data.evidences || [],
+    evidences: data.evidence || data.evidences || [],
     witness: data.witness || [],
   });
+
+  const [occurDate, setOccurDate] = useState(initialDate);
+  const [occurTime, setOccurTime] = useState(initialTime);
+  const [localEvidences, setLocalEvidences] = useState([]);
+  const fileInputRef = useRef(null);
 
   const [addingTag, setAddingTag] = useState({
     field: null,
     value: "",
   });
+
+  const [editingNewFolder, setEditingNewFolder] = useState(false);
+  const [newFolderText, setNewFolderText] = useState("새로운 폴더 입력");
+  const [highlightedFields, setHighlightedFields] = useState(new Set());
 
   const handleSeverityChange = (severity) => {
     setFormData((prev) => ({ ...prev, severity }));
@@ -372,9 +517,159 @@ export default function DetailModifyPage({ data, onClose, onSubmit }) {
     }));
   };
 
-  const handleSubmit = () => {
-    onSubmit(formData);
+  const validateRequiredFields = () => {
+    const requiredFields = new Set();
+
+    if (!formData.title?.trim()) requiredFields.add("title");
+    if (!formData.category?.length) requiredFields.add("category");
+    if (!formData.assailant?.length) requiredFields.add("assailant");
+    if (!formData.severity) requiredFields.add("severity");
+    if (!formData.occurred_at) requiredFields.add("occurred_at");
+    if (!formData.location?.trim()) requiredFields.add("location");
+    if (!formData.content?.trim()) requiredFields.add("content");
+    if (!formData.drawers?.length) requiredFields.add("drawers");
+
+    return requiredFields;
   };
+
+  const clearHighlight = (fieldName) => {
+    setHighlightedFields((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(fieldName);
+      return newSet;
+    });
+  };
+
+  const handleSubmit = () => {
+    const missingFields = validateRequiredFields();
+
+    if (missingFields.size > 0) {
+      setHighlightedFields(missingFields);
+      return;
+    }
+
+    const existingEvidences = (formData.evidences || []).filter(
+      (ev) => !String(ev.url || "").startsWith("blob:")
+    );
+    const newFiles = localEvidences.map((le) => le.file);
+
+    const payload = {
+      ...formData,
+      record_id: data.record_id,
+      occurred_at: formData.occurred_at ? `${formData.occurred_at}:00` : "",
+      drawer: Array.isArray(formData.drawers) ? formData.drawers[0] || "" : "",
+      existing_evidences: existingEvidences,
+      new_files: newFiles,
+    };
+    onSubmit(payload);
+  };
+
+  const handleDateChange = (value) => {
+    setOccurDate(value);
+    setFormData((prev) => ({
+      ...prev,
+      occurred_at:
+        value && occurTime
+          ? `${value}T${occurTime}`
+          : value
+          ? `${value}T00:00`
+          : "",
+    }));
+  };
+
+  const handleTimeChange = (value) => {
+    const time = value || ""; // value can be null
+    setOccurTime(time);
+    setFormData((prev) => ({
+      ...prev,
+      occurred_at:
+        occurDate && time
+          ? `${occurDate}T${time}`
+          : occurDate
+          ? `${occurDate}T00:00`
+          : "",
+    }));
+  };
+
+  const getEvidenceType = (file) => {
+    if (!file?.type) return "other";
+    if (file.type.startsWith("image/")) return "image";
+    if (file.type.startsWith("video/")) return "video";
+    if (file.type.startsWith("audio/")) return "audio";
+    return "other";
+  };
+
+  const handleFileSelect = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+
+  const handleFilesChosen = (e) => {
+    const chosen = Array.from(e.target.files || []);
+    if (chosen.length === 0) return;
+    const allowTypes = /^(image|audio|video)\//;
+    const current = localEvidences.length;
+    const room = Math.max(0, 5 - current);
+    const accepted = chosen
+      .filter((f) => allowTypes.test(f.type))
+      .slice(0, room);
+
+    const next = accepted.map((file) => ({
+      id: `${Date.now()}_${file.name}`,
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }));
+
+    setLocalEvidences((prev) => [...prev, ...next]);
+    setFormData((prev) => ({
+      ...prev,
+      evidences: [
+        ...prev.evidences,
+        ...next.map((n) => ({
+          filename: n.file.name,
+          type: getEvidenceType(n.file),
+          url: n.previewUrl,
+        })),
+      ],
+    }));
+
+    e.target.value = "";
+  };
+
+  const removeLocalEvidence = (id) => {
+    let removedUrl = null;
+    setLocalEvidences((prev) => {
+      const target = prev.find((p) => p.id === id);
+      if (target?.previewUrl) {
+        removedUrl = target.previewUrl;
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      return prev.filter((p) => p.id !== id);
+    });
+    setFormData((prev) => ({
+      ...prev,
+      evidences: prev.evidences.filter((ev) => ev.url !== removedUrl),
+    }));
+  };
+
+  const removeServerEvidenceByUrl = (targetUrl) => {
+    setFormData((prev) => ({
+      ...prev,
+      evidences: (prev.evidences || []).filter((ev) => ev.url !== targetUrl),
+    }));
+  };
+
+  // const clearAllLocalEvidences = () => {
+  //   setLocalEvidences((prev) => {
+  //     prev.forEach((p) => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
+  //     return [];
+  //   });
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     evidences: prev.evidences.filter(
+  //       (ev) => !String(ev.url || "").startsWith("blob:")
+  //     ),
+  //   }));
+  // };
 
   return (
     <ModalOverlay>
@@ -382,7 +677,6 @@ export default function DetailModifyPage({ data, onClose, onSubmit }) {
         <StickyTop>
           <Header>
             <Title>상세 내용</Title>
-            <CloseButton onClick={onClose}>×</CloseButton>
           </Header>
 
           <Subtitle>
@@ -404,9 +698,11 @@ export default function DetailModifyPage({ data, onClose, onSubmit }) {
                 <Label showMark={!formData.title}>제목</Label>
                 <Input
                   value={formData.title}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, title: e.target.value }))
-                  }
+                  $highlighted={highlightedFields.has("title")}
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, title: e.target.value }));
+                    clearHighlight("title");
+                  }}
                 />
               </FormField>
 
@@ -418,43 +714,44 @@ export default function DetailModifyPage({ data, onClose, onSubmit }) {
                 >
                   카테고리
                 </Label>
-                <TagContainer>
-                  {formData.category.length > 0 &&
-                    formData.category.map((item, index) => (
-                      <Tag key={index}>
-                        {item}
-                        <RemoveButton
-                          className="remove-btn"
-                          onClick={() => handleRemoveTag("category", index)}
-                        >
-                          ×
-                        </RemoveButton>
-                      </Tag>
-                    ))}
-                  {addingTag.field === "category" ? (
-                    <AddInput
-                      $widthCh={Math.min(
-                        Math.max((addingTag.value?.length || 0) + 1, 6),
-                        30
-                      )}
-                      value={addingTag.value}
-                      onChange={(e) =>
-                        setAddingTag((prev) => ({
-                          ...prev,
-                          value: e.target.value,
-                        }))
-                      }
-                      onKeyPress={handleTagInputKeyPress}
-                      onBlur={() => setAddingTag({ field: null, value: "" })}
-                      autoFocus
-                      placeholder="카테고리 입력"
-                    />
-                  ) : (
-                    <AddButton onClick={() => handleAddTag("category")}>
-                      +
-                    </AddButton>
-                  )}
-                </TagContainer>
+                <CategoryContainer
+                  style={{
+                    border: highlightedFields.has("category")
+                      ? "1px solid #68b8ea"
+                      : "none",
+                    borderRadius: highlightedFields.has("category")
+                      ? "0.625rem"
+                      : "0",
+                    background: highlightedFields.has("category")
+                      ? "#e6f6ff"
+                      : "transparent",
+                    padding: highlightedFields.has("category") ? "0.5rem" : "0",
+                  }}
+                >
+                  {PREDEFINED_CATEGORIES.map((cat) => {
+                    const selected = (formData.category || []).includes(cat);
+                    return (
+                      <CategoryButton
+                        key={cat}
+                        selected={selected}
+                        onClick={() => {
+                          setFormData((prev) => {
+                            const current = new Set(prev.category || []);
+                            if (current.has(cat)) {
+                              current.delete(cat);
+                            } else {
+                              current.add(cat);
+                            }
+                            return { ...prev, category: Array.from(current) };
+                          });
+                          clearHighlight("category");
+                        }}
+                      >
+                        {cat}
+                      </CategoryButton>
+                    );
+                  })}
+                </CategoryContainer>
               </FormField>
             </FormRow>
 
@@ -468,41 +765,74 @@ export default function DetailModifyPage({ data, onClose, onSubmit }) {
                   가해자
                 </Label>
                 <TagContainer>
-                  {formData.assailant.length > 0 &&
-                    formData.assailant.map((item, index) => (
-                      <Tag key={index}>
-                        {item}
-                        <RemoveButton
-                          className="remove-btn"
-                          onClick={() => handleRemoveTag("assailant", index)}
-                        >
-                          ×
-                        </RemoveButton>
-                      </Tag>
-                    ))}
-                  {addingTag.field === "assailant" ? (
-                    <AddInput
-                      $widthCh={Math.min(
-                        Math.max((addingTag.value?.length || 0) + 1, 6),
-                        30
-                      )}
-                      value={addingTag.value}
-                      onChange={(e) =>
-                        setAddingTag((prev) => ({
-                          ...prev,
-                          value: e.target.value,
-                        }))
-                      }
-                      onKeyPress={handleTagInputKeyPress}
-                      onBlur={() => setAddingTag({ field: null, value: "" })}
-                      autoFocus
-                      placeholder="가해자 입력"
-                    />
-                  ) : (
-                    <AddButton onClick={() => handleAddTag("assailant")}>
-                      +
-                    </AddButton>
-                  )}
+                  <div
+                    style={{
+                      border: highlightedFields.has("assailant")
+                        ? "1px solid #68b8ea"
+                        : "none",
+                      borderRadius: highlightedFields.has("assailant")
+                        ? "0.625rem"
+                        : "0",
+                      background: highlightedFields.has("assailant")
+                        ? "#e6f6ff"
+                        : "transparent",
+                      padding: highlightedFields.has("assailant")
+                        ? "0.5rem"
+                        : "0",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      minWidth: "fit-content",
+                      maxWidth: "20rem",
+                    }}
+                  >
+                    {formData.assailant.length > 0 &&
+                      formData.assailant.map((item, index) => (
+                        <Tag key={index}>
+                          {item}
+                          <RemoveButton
+                            className="remove-btn"
+                            onClick={() => {
+                              handleRemoveTag("assailant", index);
+                              clearHighlight("assailant");
+                            }}
+                          >
+                            ×
+                          </RemoveButton>
+                        </Tag>
+                      ))}
+                    {addingTag.field === "assailant" ? (
+                      <AddInput
+                        $widthCh={Math.min(
+                          Math.max((addingTag.value?.length || 0) + 1, 6),
+                          30
+                        )}
+                        value={addingTag.value}
+                        onChange={(e) =>
+                          setAddingTag((prev) => ({
+                            ...prev,
+                            value: e.target.value,
+                          }))
+                        }
+                        onKeyPress={(e) => {
+                          handleTagInputKeyPress(e);
+                          clearHighlight("assailant");
+                        }}
+                        onBlur={() => setAddingTag({ field: null, value: "" })}
+                        autoFocus
+                        placeholder="가해자 입력"
+                      />
+                    ) : (
+                      <AddButton
+                        onClick={() => {
+                          handleAddTag("assailant");
+                          clearHighlight("assailant");
+                        }}
+                      >
+                        +
+                      </AddButton>
+                    )}
+                  </div>
                 </TagContainer>
               </FormField>
 
@@ -512,55 +842,162 @@ export default function DetailModifyPage({ data, onClose, onSubmit }) {
                 >
                   저장 폴더
                 </Label>
-                <TagContainer>
-                  {formData.drawers.length > 0 &&
-                    formData.drawers.map((item, index) => (
-                      <Tag key={index}>
-                        {item}
-                        <RemoveButton
-                          className="remove-btn"
-                          onClick={() => handleRemoveTag("drawers", index)}
-                        >
-                          ×
-                        </RemoveButton>
-                      </Tag>
-                    ))}
-                  {addingTag.field === "drawers" ? (
+                <SeverityContainer
+                  style={{
+                    border: highlightedFields.has("drawers")
+                      ? "1px solid #68b8ea"
+                      : "none",
+                    borderRadius: highlightedFields.has("drawers")
+                      ? "0.625rem"
+                      : "0",
+                    background: highlightedFields.has("drawers")
+                      ? "#e6f6ff"
+                      : "transparent",
+                    padding: highlightedFields.has("drawers") ? "0.5rem" : "0",
+                  }}
+                >
+                  {(data.drawers || []).map((folder) => {
+                    const selected = (formData.drawers || []).includes(folder);
+                    return (
+                      <SeverityButton
+                        key={folder}
+                        selected={selected}
+                        onClick={() => {
+                          setFormData((prev) => {
+                            const current = new Set(prev.drawers || []);
+                            if (current.has(folder)) {
+                              current.delete(folder);
+                            } else {
+                              current.clear(); // 기존 선택 모두 제거
+                              current.add(folder); // 새로운 폴더만 선택
+                            }
+                            return { ...prev, drawers: Array.from(current) };
+                          });
+                          clearHighlight("drawers");
+                        }}
+                      >
+                        {folder}
+                      </SeverityButton>
+                    );
+                  })}
+                  {/* 새로운 폴더 입력 태그 */}
+                  {editingNewFolder ? (
                     <AddInput
                       $widthCh={Math.min(
-                        Math.max((addingTag.value?.length || 0) + 1, 6),
+                        Math.max((newFolderText?.length || 0) + 1, 8),
                         30
                       )}
-                      value={addingTag.value}
-                      onChange={(e) =>
-                        setAddingTag((prev) => ({
-                          ...prev,
-                          value: e.target.value,
-                        }))
-                      }
-                      onKeyPress={handleTagInputKeyPress}
-                      onBlur={() => setAddingTag({ field: null, value: "" })}
+                      value={newFolderText}
+                      onChange={(e) => setNewFolderText(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter" && newFolderText.trim()) {
+                          setEditingNewFolder(false);
+                          setFormData((prev) => {
+                            const current = new Set(prev.drawers || []);
+                            current.clear();
+                            current.add(newFolderText.trim());
+                            return { ...prev, drawers: Array.from(current) };
+                          });
+                          clearHighlight("drawers");
+                        }
+                      }}
+                      onBlur={() => {
+                        setEditingNewFolder(false);
+                        if (newFolderText.trim()) {
+                          setFormData((prev) => {
+                            const current = new Set(prev.drawers || []);
+                            current.clear();
+                            current.add(newFolderText.trim());
+                            return { ...prev, drawers: Array.from(current) };
+                          });
+                          clearHighlight("drawers");
+                        }
+                      }}
                       autoFocus
-                      placeholder="저장 폴더 입력"
                     />
                   ) : (
-                    <AddButton onClick={() => handleAddTag("drawers")}>
-                      +
-                    </AddButton>
+                    <SeverityButton
+                      selected={(formData.drawers || []).includes(
+                        newFolderText
+                      )}
+                      onClick={() => {
+                        setFormData((prev) => {
+                          const current = new Set(prev.drawers || []);
+                          if (current.has(newFolderText)) {
+                            current.delete(newFolderText);
+                          } else {
+                            current.clear();
+                            current.add(newFolderText);
+                          }
+                          return { ...prev, drawers: Array.from(current) };
+                        });
+                        clearHighlight("drawers");
+                      }}
+                      onDoubleClick={() => setEditingNewFolder(true)}
+                      style={{ position: "relative" }}
+                    >
+                      {newFolderText}
+                      <input
+                        type="text"
+                        value={newFolderText}
+                        onChange={(e) => setNewFolderText(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter" && newFolderText.trim()) {
+                            setEditingNewFolder(false);
+                          }
+                        }}
+                        onBlur={() => setEditingNewFolder(false)}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                          background: "transparent",
+                          border: "none",
+                          outline: "none",
+                          color: "inherit",
+                          fontFamily: "inherit",
+                          fontSize: "inherit",
+                          cursor: "text",
+                          opacity: 0,
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingNewFolder(true);
+                        }}
+                      />
+                    </SeverityButton>
                   )}
-                </TagContainer>
+                </SeverityContainer>
               </FormField>
             </FormRow>
 
             <FormRow>
               <FormField>
                 <Label showMark={!formData.severity}>심각도</Label>
-                <SeverityContainer>
+                <SeverityContainer
+                  style={{
+                    border: highlightedFields.has("severity")
+                      ? "1px solid #68b8ea"
+                      : "none",
+                    borderRadius: highlightedFields.has("severity")
+                      ? "0.625rem"
+                      : "0",
+                    background: highlightedFields.has("severity")
+                      ? "#e6f6ff"
+                      : "transparent",
+                    padding: highlightedFields.has("severity") ? "0.5rem" : "0",
+                  }}
+                >
                   {[1, 2, 3].map((level) => (
                     <SeverityButton
                       key={level}
                       selected={formData.severity === level}
-                      onClick={() => handleSeverityChange(level)}
+                      onClick={() => {
+                        handleSeverityChange(level);
+                        clearHighlight("severity");
+                      }}
                     >
                       {severityMap[level]}
                     </SeverityButton>
@@ -572,23 +1009,47 @@ export default function DetailModifyPage({ data, onClose, onSubmit }) {
             <FormRow>
               <FormField>
                 <Label showMark={!formData.occurred_at}>발생 일시</Label>
-                <Input
-                  value={formData.occurred_at}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      occurred_at: e.target.value,
-                    }))
-                  }
-                />
+                <DateTimeGroup
+                  style={{
+                    border: highlightedFields.has("occurred_at")
+                      ? "1px solid #68b8ea"
+                      : "none",
+                    borderRadius: highlightedFields.has("occurred_at")
+                      ? "0.625rem"
+                      : "0",
+                    background: highlightedFields.has("occurred_at")
+                      ? "#e6f6ff"
+                      : "transparent",
+                    padding: highlightedFields.has("occurred_at")
+                      ? "0.5rem"
+                      : "0",
+                  }}
+                >
+                  <HalfInput
+                    type="date"
+                    value={occurDate}
+                    onChange={(e) => {
+                      handleDateChange(e.target.value);
+                      clearHighlight("occurred_at");
+                    }}
+                  />
+                  <TimePickerBox>
+                    <TimePicker
+                      onChange={(value) => {
+                        handleTimeChange(value);
+                        clearHighlight("occurred_at");
+                      }}
+                      value={occurTime}
+                      format="HH:mm"
+                      disableClock
+                      clearIcon={null}
+                    />
+                  </TimePickerBox>
+                </DateTimeGroup>
               </FormField>
 
               <FormField>
-                <Label
-                  showMark={!formData.witness || formData.witness.length === 0}
-                >
-                  목격자
-                </Label>
+                <Label showMark={false}>목격자</Label>
                 <TagContainer>
                   {formData.witness.length > 0 &&
                     formData.witness.map((item, index) => (
@@ -634,12 +1095,14 @@ export default function DetailModifyPage({ data, onClose, onSubmit }) {
                 <Label showMark={!formData.location}>발생 장소</Label>
                 <Input
                   value={formData.location}
-                  onChange={(e) =>
+                  $highlighted={highlightedFields.has("location")}
+                  onChange={(e) => {
                     setFormData((prev) => ({
                       ...prev,
                       location: e.target.value,
-                    }))
-                  }
+                    }));
+                    clearHighlight("location");
+                  }}
                 />
               </FormField>
             </FormRow>
@@ -649,12 +1112,14 @@ export default function DetailModifyPage({ data, onClose, onSubmit }) {
                 <Label showMark={!formData.content}>발생 정황</Label>
                 <TextArea
                   value={formData.content}
-                  onChange={(e) =>
+                  $highlighted={highlightedFields.has("content")}
+                  onChange={(e) => {
                     setFormData((prev) => ({
                       ...prev,
                       content: e.target.value,
-                    }))
-                  }
+                    }));
+                    clearHighlight("content");
+                  }}
                 />
               </FormField>
             </FormRow>
@@ -662,55 +1127,53 @@ export default function DetailModifyPage({ data, onClose, onSubmit }) {
             {/* 자료: 마지막 행 */}
             <FormRow>
               <FormField>
-                <Label
-                  showMark={
-                    !formData.evidences || formData.evidences.length === 0
-                  }
+                <Label showMark={false}>자료</Label>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.5rem",
+                    flex: 1,
+                  }}
                 >
-                  자료
-                </Label>
-                <TagContainer>
-                  {formData.evidences.length > 0 &&
-                    formData.evidences.map((item, index) => (
-                      <Tag key={index}>
-                        {item.filename}
-                        <RemoveButton
-                          className="remove-btn"
-                          onClick={() => handleRemoveTag("evidences", index)}
-                        >
-                          ×
-                        </RemoveButton>
-                      </Tag>
+                  <AttachmentsBar>
+                    {(formData.evidences || [])
+                      .filter((ev) => !String(ev.url || "").startsWith("blob:"))
+                      .map((item, index) => (
+                        <AttachmentChip
+                          key={`remote_${index}`}
+                          name={item.filename}
+                          kind={item.type}
+                          previewUrl={item.url}
+                          onRemove={() => removeServerEvidenceByUrl(item.url)}
+                        />
+                      ))}
+                    {localEvidences.map((att) => (
+                      <AttachmentChip
+                        key={att.id}
+                        file={att.file}
+                        previewUrl={att.previewUrl}
+                        onRemove={() => removeLocalEvidence(att.id)}
+                      />
                     ))}
-                  {addingTag.field === "evidences" ? (
-                    <AddInput
-                      $widthCh={Math.min(
-                        Math.max((addingTag.value?.length || 0) + 1, 6),
-                        30
-                      )}
-                      value={addingTag.value}
-                      onChange={(e) =>
-                        setAddingTag((prev) => ({
-                          ...prev,
-                          value: e.target.value,
-                        }))
-                      }
-                      onKeyPress={handleTagInputKeyPress}
-                      onBlur={() => setAddingTag({ field: null, value: "" })}
-                      autoFocus
-                      placeholder="자료 입력"
-                    />
-                  ) : (
-                    <AddButton onClick={() => handleAddTag("evidences")}>
-                      +
-                    </AddButton>
-                  )}
-                </TagContainer>
+                    <AddButton onClick={handleFileSelect}>+</AddButton>
+                  </AttachmentsBar>
+                  <FileInput
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,audio/*,video/*"
+                    multiple
+                    onChange={handleFilesChosen}
+                  />
+                </div>
               </FormField>
             </FormRow>
           </FormGrid>
 
-          <SubmitButton onClick={handleSubmit}>이대로 기록할게요</SubmitButton>
+          <ButtonContainer>
+            <CloseButton onClick={onClose}>대화로 돌아가기</CloseButton>
+            <SubmitButton onClick={handleSubmit}>저장하기</SubmitButton>
+          </ButtonContainer>
         </ContentArea>
       </ModalContainer>
     </ModalOverlay>

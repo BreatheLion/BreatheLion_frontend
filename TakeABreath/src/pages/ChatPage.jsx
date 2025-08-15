@@ -4,6 +4,8 @@ import axios from "axios";
 import Header from "../components/layout/Header";
 import DetailModifyPage from "./DetailModifyPage";
 import FinishLoadingPage from "./FinishLoadingPage";
+import AttachmentChip from "../components/ui/AttachmentChip";
+import iconSymbol from "../assets/iconSymbol.svg";
 
 const ChatContainer = styled.div`
   background: #ffffff;
@@ -39,7 +41,7 @@ const ChatArea = styled.div`
   flex: 1;
   padding: 0 12.5rem;
   overflow-y: auto;
-  margin-bottom: 7rem;
+
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -94,11 +96,12 @@ const MessageBubble = styled.div`
   }
 
   &.ai {
-    background: transparent;
+    background: #fbfbfb;
     color: #313131;
     border: none;
-    padding-left: 0;
+    padding: 1.25rem;
     position: relative;
+    border-radius: 1.25rem;
   }
 `;
 
@@ -109,82 +112,8 @@ const AIIcon = styled.div`
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 2.5rem;
   margin-right: 1rem;
 `;
-
-const AIIconSvg = () => (
-  <svg width="29" height="23" viewBox="0 0 29 23" fill="none">
-    <g filter="url(#filter0_ii_4_55)">
-      <path
-        d="M19.7061 0.600098C24.7285 0.600314 28.7998 4.39938 28.7998 9.08545C28.7998 10.1716 28.5783 11.209 28.1797 12.1636C28.579 13.0263 28.8008 13.9698 28.8008 14.9595C28.8008 19.0447 25.0507 22.3567 20.4248 22.3569C17.5879 22.3569 15.0817 21.1101 13.5664 19.2046C12.7527 19.8152 11.7277 20.1811 10.6123 20.1812C7.96896 20.1812 5.82544 18.1359 5.8252 15.6128C5.8252 14.8793 6.00725 14.1861 6.3291 13.5718C3.26465 12.1673 1.51803 10.195 0 8.78564C2.39783 9.73325 4.16686 10.0685 5.60449 9.86084C5.43712 9.3386 5.34572 8.78669 5.3457 8.21533C5.3457 4.97111 8.239 2.34141 11.8076 2.34131C12.5053 2.34131 13.1771 2.44242 13.8066 2.62842C15.3948 1.3642 17.4548 0.600098 19.7061 0.600098Z"
-        fill="url(#paint0_linear_4_55)"
-      />
-    </g>
-    <defs>
-      <filter
-        id="filter0_ii_4_55"
-        x="-0.84"
-        y="-0.239902"
-        width="30.4808"
-        height="23.4368"
-        filterUnits="userSpaceOnUse"
-        colorInterpolationFilters="sRGB"
-      >
-        <feFlood floodOpacity="0" result="BackgroundImageFix" />
-        <feBlend
-          mode="normal"
-          in="SourceGraphic"
-          in2="BackgroundImageFix"
-          result="shape"
-        />
-        <feColorMatrix
-          in="SourceAlpha"
-          type="matrix"
-          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-          result="hardAlpha"
-        />
-        <feOffset dx="0.84" dy="0.84" />
-        <feGaussianBlur stdDeviation="6.6" />
-        <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
-        <feColorMatrix
-          type="matrix"
-          values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.15 0"
-        />
-        <feBlend mode="normal" in2="shape" result="effect1_innerShadow_4_55" />
-        <feColorMatrix
-          in="SourceAlpha"
-          type="matrix"
-          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-          result="hardAlpha"
-        />
-        <feOffset dx="-0.84" dy="-0.84" />
-        <feGaussianBlur stdDeviation="2.4" />
-        <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
-        <feColorMatrix
-          type="matrix"
-          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.01 0"
-        />
-        <feBlend
-          mode="normal"
-          in2="effect1_innerShadow_4_55"
-          result="effect2_innerShadow_4_55"
-        />
-      </filter>
-      <linearGradient
-        id="paint0_linear_4_55"
-        x1="0"
-        y1="11.4785"
-        x2="47.435"
-        y2="14.0574"
-        gradientUnits="userSpaceOnUse"
-      >
-        <stop offset="0.287236" stopColor="#68b8ea" />
-        <stop offset="1" stopColor="#FEFEFF" />
-      </linearGradient>
-    </defs>
-  </svg>
-);
 
 const TimeStamp = styled.div`
   font-family: "Pretendard", sans-serif;
@@ -309,19 +238,25 @@ const AttachmentsBar = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0 12.5rem 0.5rem 12.5rem;
+  padding: 0 12.5rem 0 12.5rem; /* 하단 여백 제거로 겹침 방지 */
 `;
 
-const AttachmentChip = styled.div`
-  display: inline-flex;
-  align-items: center;
+const BottomPanel = styled.div`
+  padding: 0 0 0 0;
+  height: 16rem; /* 최대: InputArea 최대 + AttachmentsBar 1줄 보장 (여유 증가) */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* 내용은 하단 정렬 */
   gap: 0.5rem;
-  padding: 0.375rem 0.5rem;
-  border-radius: 1rem;
-  background: #f2f2f2;
-  color: #313131;
-  font-size: 0.75rem;
+  overflow: hidden; /* 내부 스クロ롤 금지, 초과분은 잘림 */
 `;
+
+const Spacer = styled.div`
+  flex: 1;
+`;
+
+// Removed local AttachmentChip styled component to avoid name collision with imported AttachmentChip
 
 const ChipRemove = styled.button`
   border: none;
@@ -354,35 +289,7 @@ const PreviewThumb = styled.div`
   }
 `;
 
-const ProgressWrap = styled.div`
-  width: 100%;
-  padding: 0 12.5rem 0.5rem 12.5rem;
-`;
-
-const ProgressBar = styled.div`
-  height: 0.375rem;
-  width: 100%;
-  background: #e9e9e9;
-  border-radius: 9999px;
-  overflow: hidden;
-  position: relative;
-`;
-
-const ProgressFill = styled.div`
-  height: 100%;
-  width: ${(props) => props.$percent || 0}%;
-  background: #68b8ea;
-  transition: width 0.15s ease;
-`;
-
-const CancelUpload = styled.button`
-  border: none;
-  background: transparent;
-  color: #4a4a4a;
-  font-size: 0.75rem;
-  margin-top: 0.25rem;
-  cursor: pointer;
-`;
+// 진행률 UI 제거
 
 const VideoPreview = styled.video`
   width: 10rem; /* 이미지 썸네일과 동일 */
@@ -465,11 +372,16 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [finishResponse, setFinishResponse] = useState(null);
   const [attachments, setAttachments] = useState([]); // {id, file, previewUrl}
-  const [overallProgress, setOverallProgress] = useState(0);
   const uploadAbortRef = useRef(null);
   const fileInputRef = useRef(null);
   const chatAreaRef = useRef(null);
   const inputRef = useRef(null);
+  // 진행률 데모/플래그 제거
+  // 임시 테스트: 3초 지연 후 응답으로 치환
+  const USE_FAKE_API = true; // 테스트가 끝나면 false로 변경하세요
+  const SIMULATE_LATENCY_MS = 3000;
+  const fakeTimerRef = useRef(null);
+  const MAX_ATTACHMENTS = 5; // 첨부 최대 개수
 
   // chat_session_id 추출
   const chatSessionId = initialChatData?.serverResponse?.chat_session_id || 1;
@@ -519,6 +431,16 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
     el.style.height = `${next}px`;
   }, [inputValue]);
 
+  // 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (fakeTimerRef.current) {
+        clearTimeout(fakeTimerRef.current);
+        fakeTimerRef.current = null;
+      }
+    };
+  }, []);
+
   const handleFileSelect = () => {
     if (fileInputRef.current) fileInputRef.current.click();
   };
@@ -526,10 +448,10 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
   const handleFilesChosen = (e) => {
     const chosen = Array.from(e.target.files || []);
     if (chosen.length === 0) return;
-    // 제한: 최대 3개, 영상/이미지/오디오 허용
+    // 제한: 최대 5개, 영상/이미지/오디오 허용
     const allowTypes = /^(image|audio|video)\//;
     const current = attachments.length;
-    const room = Math.max(0, 3 - current);
+    const room = Math.max(0, MAX_ATTACHMENTS - current);
     const accepted = chosen
       .filter((f) => allowTypes.test(f.type))
       .slice(0, room);
@@ -573,28 +495,51 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
     setFinishResponse(null);
   };
 
-  const handleDetailSubmit = async (formData) => {
+  const handleDetailSubmit = async (payload) => {
     try {
-      // 수정된 데이터를 서버로 전송하는 API 호출
-      // TODO: 실제 API 엔드포인트로 수정
-      console.log("수정된 데이터:", formData);
+      const form = new FormData();
+      form.append("record_id", String(payload.record_id || ""));
+      form.append("title", payload.title || "");
+      form.append("content", payload.content || "");
+      form.append("severity", String(payload.severity ?? ""));
+      form.append("location", payload.location || "");
+      form.append("occurred_at", payload.occurred_at || "");
+      form.append("drawer", payload.drawer || "");
 
-      // 성공 시 MainPage로 이동
+      (payload.category || []).forEach((v) => form.append("category[]", v));
+      (payload.assailant || []).forEach((v) => form.append("assailant[]", v));
+      (payload.witness || []).forEach((v) => form.append("witness[]", v));
+
+      // 기존 유지할 서버 파일들: 파일명 기준
+      (payload.existing_evidences || []).forEach((ev) => {
+        if (ev?.filename) form.append("evidences_keep[]", ev.filename);
+      });
+
+      // 새로 추가된 파일 업로드
+      (payload.new_files || []).forEach((file) => {
+        if (file) form.append("evidences[]", file, file.name);
+      });
+
+      await axios.post("/api/records/save/", form);
+
       onNavigateToMain();
     } catch (error) {
       console.error("데이터 저장 중 오류:", error);
       alert("데이터 저장 중 오류가 발생했습니다. 다시 시도해주세요.");
-      // 에러 발생 시 모달 유지
     }
   };
 
+  // 진행률 데모 제거
+
   const handleSend = async () => {
+    if (isLoading) return; // 중복 전송 방지
+
     const trimmed = inputValue.trim();
     if (!trimmed) return;
 
     setIsLoading(true);
 
-    // 사용자 메시지 + 로딩 메시지 UI
+    // 사용자/로딩 메시지 추가
     const userMessage = {
       id: messages.length + 1,
       type: "user",
@@ -617,10 +562,48 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
       content: "응답 중입니다",
       time: "",
     };
-    setMessages([...messages, userMessage, loadingMessage]);
+    setMessages((prev) => [...prev, userMessage, loadingMessage]);
+    // 전송 즉시 입력란 비우기
+    setInputValue("");
+
+    // 임시 테스트 모드: 3초 지연 후 응답으로 교체
+    if (USE_FAKE_API) {
+      fakeTimerRef.current = setTimeout(() => {
+        const mockResponse = {
+          answer: "어 고생했어",
+          time: new Date().toLocaleTimeString("ko-KR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          }),
+          date: new Date().toISOString().split("T")[0],
+        };
+
+        setMessages((prev) => {
+          const updated = [...prev];
+          const idx = updated.findIndex(
+            (m) => m.type === "ai" && m.content === "응답 중입니다"
+          );
+          if (idx !== -1) {
+            updated[idx] = {
+              ...updated[idx],
+              content: mockResponse.answer,
+              time: mockResponse.time || "",
+            };
+          }
+          return updated;
+        });
+
+        setInputValue("");
+        clearAllAttachments();
+        setIsLoading(false);
+        fakeTimerRef.current = null;
+      }, SIMULATE_LATENCY_MS);
+      return;
+    }
 
     try {
-      // multipart 전송
+      // 실제 업로드
       const form = new FormData();
       form.append("chat_session_id", String(chatSessionId));
       form.append("text", trimmed);
@@ -633,16 +616,10 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
 
       const response = await axios.post("/api/chats/attach/", form, {
         signal: controller.signal,
-        onUploadProgress: ({ loaded, total }) => {
-          if (!total) return;
-          const pct = Math.round((loaded / total) * 100);
-          setOverallProgress(pct);
-        },
       });
 
       const serverResponse = response.data;
 
-      // 로딩 메시지를 서버 응답으로 교체
       setMessages((prev) => {
         const updated = [...prev];
         const idx = updated.findIndex(
@@ -658,13 +635,10 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
         return updated;
       });
 
-      // 성공 후 입력/첨부 초기화
       setInputValue("");
-      setOverallProgress(0);
       clearAllAttachments();
     } catch (error) {
       console.error(error);
-      // 실패 메시지로 교체 + 입력/첨부 초기화
       setMessages((prev) => {
         const updated = [...prev];
         const idx = updated.findIndex(
@@ -684,9 +658,9 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
         return updated;
       });
       setInputValue("");
-      setOverallProgress(0);
       clearAllAttachments();
     } finally {
+      // 데모 모드에서는 여기 오지 않음
       setIsLoading(false);
       uploadAbortRef.current = null;
     }
@@ -699,11 +673,7 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
     }
   };
 
-  const cancelUpload = () => {
-    if (uploadAbortRef.current) {
-      uploadAbortRef.current.abort();
-    }
-  };
+  // 업로드 취소/진행률 UI 제거
 
   return (
     <ChatContainer>
@@ -720,7 +690,11 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
               <MessageWrapper className={message.type}>
                 {message.type === "ai" && (
                   <AIIcon>
-                    <AIIconSvg />
+                    <img
+                      src={iconSymbol}
+                      alt="AI 아이콘"
+                      style={{ width: "1.8125rem", height: "1.8125rem" }}
+                    />
                   </AIIcon>
                 )}
                 {message.type === "user" && message.time && (
@@ -756,102 +730,87 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
           ))}
         </ChatArea>
 
-        {attachments.length > 0 && (
-          <AttachmentsBar>
-            {attachments.map((att) => (
-              <AttachmentChip key={att.id}>
-                {att.file.type.startsWith("image/") && (
-                  <PreviewThumb>
-                    <img src={att.previewUrl} alt={att.file.name} />
-                  </PreviewThumb>
-                )}
-                {att.file.type.startsWith("video/") && (
-                  <VideoPreview src={att.previewUrl} controls />
-                )}
-                {att.file.type.startsWith("audio/") && (
-                  <AudioPreview src={att.previewUrl} controls />
-                )}
-                <span>{att.file.name}</span>
-                <ChipRemove onClick={() => removeAttachment(att.id)}>
-                  ×
-                </ChipRemove>
-              </AttachmentChip>
-            ))}
-          </AttachmentsBar>
-        )}
+        <BottomPanel>
+          {attachments.length > 0 && (
+            <AttachmentsBar>
+              {attachments.map((att) => (
+                <AttachmentChip
+                  key={att.id}
+                  file={att.file}
+                  previewUrl={att.previewUrl}
+                  onRemove={() => removeAttachment(att.id)}
+                />
+              ))}
+            </AttachmentsBar>
+          )}
 
-        {isLoading && (
-          <ProgressWrap>
-            <ProgressBar>
-              <ProgressFill $percent={overallProgress} />
-            </ProgressBar>
-            <CancelUpload onClick={cancelUpload}>업로드 취소</CancelUpload>
-          </ProgressWrap>
-        )}
+          {/* 진행률 바 제거: 로딩 상태는 메시지 버블의 "응답 중입니다"로만 표시 */}
 
-        <InputArea>
-          <InputContainer>
-            <ChatInput
-              ref={inputRef}
-              placeholder=""
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={isLoading}
-              rows={1}
-            />
-            <InputActions>
-              <PlusIcon onClick={handleFileSelect}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="100%"
-                  height="100%"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                >
-                  <g clipPath="url(#clip0_168_2659)">
+          <InputArea>
+            <Spacer />
+            <InputContainer>
+              <ChatInput
+                ref={inputRef}
+                placeholder=""
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={isLoading}
+                rows={1}
+              />
+              <InputActions>
+                <PlusIcon onClick={handleFileSelect}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="100%"
+                    height="100%"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                  >
+                    <g clipPath="url(#clip0_168_2659)">
+                      <path
+                        d="M1 7H13"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M7 1L7 13"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </g>
+                    <defs>
+                      <clipPath id="clip0_168_2659">
+                        <rect width="14" height="14" fill="white" />
+                      </clipPath>
+                    </defs>
+                  </svg>
+                </PlusIcon>
+                <SendButton onClick={handleSend} disabled={isLoading}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                     <path
-                      d="M1 7H13"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
+                      d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z"
+                      fill="currentColor"
                     />
-                    <path
-                      d="M7 1L7 13"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_168_2659">
-                      <rect width="14" height="14" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
-              </PlusIcon>
-              <SendButton onClick={handleSend} disabled={isLoading}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </SendButton>
-            </InputActions>
-            <FileInput
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,audio/*,video/*"
-              multiple
-              onChange={handleFilesChosen}
-            />
-          </InputContainer>
+                  </svg>
+                </SendButton>
+              </InputActions>
+              <FileInput
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,audio/*,video/*"
+                multiple
+                onChange={handleFilesChosen}
+              />
+            </InputContainer>
 
-          <FinishButton onClick={handleFinish} disabled={isFinishing}>
-            {isFinishing ? "기록 완료 중..." : "기록 마치기"}
-          </FinishButton>
-        </InputArea>
+            <FinishButton onClick={handleFinish} disabled={isFinishing}>
+              {isFinishing ? "기록 완료 중..." : "기록 마치기"}
+            </FinishButton>
+          </InputArea>
+        </BottomPanel>
       </ChatWrapper>
 
       {isFinishing && !finishResponse && (
