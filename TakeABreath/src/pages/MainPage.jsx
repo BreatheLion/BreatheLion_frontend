@@ -5,7 +5,6 @@ import Header from "../components/layout/Header";
 import Logo from "../components/common/Logo";
 
 const MainContainer = styled.div`
-  
   background: radial-gradient(
     70% 90% at 50% 49.93%,
     #c3e3f7 0%,
@@ -13,7 +12,7 @@ const MainContainer = styled.div`
     #f1f8fd 39.34%,
     #fff 55.94%
   );
-  
+
   /*background: radial-gradient(45.56% 69.85% at 50% 49.93%, #FFF 16.15%, #F1F8FD 30.21%, #E8F4FC 55.08%, #C3E3F7 99.43%);*/
   width: 100vw;
   height: 100vh;
@@ -138,7 +137,7 @@ const LoadingText = styled.span`
   font-weight: 500;
 `;
 
-export default function MainPage({ onNavigateToChat }) {
+export default function MainPage({ onNavigateToChat, onNavigateToDrawer }) {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -213,7 +212,11 @@ export default function MainPage({ onNavigateToChat }) {
 
   return (
     <MainContainer>
-      <Header />
+      <Header
+        onRecordClick={() => {}}
+        onDrawerClick={onNavigateToDrawer}
+        currentPage="main"
+      />
       <ContentWrapper>
         {/* 로고 유무 테스트 부분입니다! 
         <Logo style={{ marginTop: "4.5rem" }} /> */}

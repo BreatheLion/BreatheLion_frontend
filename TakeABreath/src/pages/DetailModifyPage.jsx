@@ -4,6 +4,9 @@ import TimePicker from "react-time-picker";
 import "react-time-picker/dist/TimePicker.css";
 import "react-clock/dist/Clock.css";
 import AttachmentChip from "../components/ui/AttachmentChip";
+import { MainButton } from "../components/ui/Button";
+import ConfirmModal from "../components/ui/ConfirmModal";
+import SavingModal from "../components/ui/SavingModal";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -61,28 +64,6 @@ const Title = styled.h1`
   font-weight: 500;
   line-height: 1.25rem;
   margin: 0;
-`;
-
-const CloseButton = styled.button`
-  display: flex;
-  width: 11.25rem;
-  height: 2.75rem;
-  padding: 0.625rem 2.6875rem;
-  justify-content: center;
-  align-items: center;
-  border-radius: 0.5rem;
-  border: 1px solid var(--10, #ddd);
-  background: #fff;
-  color: #313131;
-  font-family: "Pretendard", sans-serif;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    border-color: #4a4a4a;
-  }
 `;
 
 const Subtitle = styled.p`
@@ -371,41 +352,6 @@ const ButtonContainer = styled.div`
   margin-top: 2rem;
 `;
 
-const SubmitButton = styled.button`
-  display: flex;
-  width: 11.25rem;
-  height: 2.75rem;
-  padding: 0.625rem 2.6875rem;
-  justify-content: center;
-  align-items: center;
-  border-radius: 0.5rem;
-  border: 1px solid #4fb2ef;
-  background: var(
-    --BP-Gradation,
-    radial-gradient(
-      480.82% 193.78% at 131.5% -43.24%,
-      #8c68e0 0%,
-      #688ae0 31.38%,
-      var(--Color, #68b8ea) 87.56%
-    )
-  );
-  color: white;
-  font-family: "Pretendard", sans-serif;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    opacity: 0.9;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
 const severityMap = {
   1: "높음",
   2: "보통",
@@ -458,7 +404,12 @@ const toDateTimeLocal = (dateString) => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
-export default function DetailModifyPage({ data, onClose, onSubmit }) {
+export default function DetailModifyPage({
+  data,
+  attachments,
+  onClose,
+  onSubmit,
+}) {
   const initialLocal = toDateTimeLocal(data.occurred_at);
   const initialDate = initialLocal ? initialLocal.split("T")[0] : "";
   const initialTime = initialLocal
@@ -480,7 +431,15 @@ export default function DetailModifyPage({ data, onClose, onSubmit }) {
 
   const [occurDate, setOccurDate] = useState(initialDate);
   const [occurTime, setOccurTime] = useState(initialTime);
-  const [localEvidences, setLocalEvidences] = useState([]);
+  const [localEvidences, setLocalEvidences] = useState(
+    attachments
+      ? attachments.map((att) => ({
+          id: att.id,
+          file: att.file,
+          previewUrl: att.previewUrl,
+        }))
+      : []
+  );
   const fileInputRef = useRef(null);
 
   const [addingTag, setAddingTag] = useState({
@@ -491,6 +450,8 @@ export default function DetailModifyPage({ data, onClose, onSubmit }) {
   const [editingNewFolder, setEditingNewFolder] = useState(false);
   const [newFolderText, setNewFolderText] = useState("새로운 폴더 입력");
   const [highlightedFields, setHighlightedFields] = useState(new Set());
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSavingModal, setShowSavingModal] = useState(false);
 
   const handleSeverityChange = (severity) => {
     setFormData((prev) => ({ ...prev, severity }));
@@ -548,6 +509,15 @@ export default function DetailModifyPage({ data, onClose, onSubmit }) {
       return;
     }
 
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmSubmit = () => {
+    setShowConfirmModal(false);
+    setShowSavingModal(true);
+  };
+
+  const handleSavingComplete = () => {
     const existingEvidences = (formData.evidences || []).filter(
       (ev) => !String(ev.url || "").startsWith("blob:")
     );
@@ -562,6 +532,7 @@ export default function DetailModifyPage({ data, onClose, onSubmit }) {
       new_files: newFiles,
     };
     onSubmit(payload);
+    setShowSavingModal(false);
   };
 
   const handleDateChange = (value) => {
@@ -1171,11 +1142,25 @@ export default function DetailModifyPage({ data, onClose, onSubmit }) {
           </FormGrid>
 
           <ButtonContainer>
-            <CloseButton onClick={onClose}>대화로 돌아가기</CloseButton>
-            <SubmitButton onClick={handleSubmit}>저장하기</SubmitButton>
+            <MainButton variant="secondary" onClick={onClose}>
+              대화로 돌아가기
+            </MainButton>
+            <MainButton variant="primary" onClick={handleSubmit}>
+              저장하기
+            </MainButton>
           </ButtonContainer>
         </ContentArea>
       </ModalContainer>
+
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirmSubmit}
+        title="정말로 저장할까요?"
+        subtitle="서랍에 들어가면 수정이 불가능해요"
+      />
+
+      <SavingModal isOpen={showSavingModal} onDone={handleSavingComplete} />
     </ModalOverlay>
   );
 }

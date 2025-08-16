@@ -45,32 +45,30 @@ const NavButton = styled.button`
   align-items: center;
   justify-content: center;
 
-  &.record {
-    color: #313131;
+  color: ${(props) => (props.$active ? "#313131" : "#acacac")};
 
-    &:hover {
-      background-color: rgba(49, 49, 49, 0.1);
-    }
-  }
-
-  &.drawer {
-    color: #acacac;
-
-    &:hover {
-      background-color: rgba(172, 172, 172, 0.1);
-    }
+  &:hover {
+    background-color: ${(props) =>
+      props.$active ? "rgba(49, 49, 49, 0.1)" : "rgba(172, 172, 172, 0.1)"};
   }
 `;
 
-export default function Header() {
+export default function Header({ onRecordClick, onDrawerClick, currentPage }) {
   return (
     <HeaderContainer>
       <LogoWrapper>
         <Logo />
       </LogoWrapper>
       <NavButtons>
-        <NavButton className="record">기록하기</NavButton>
-        <NavButton className="drawer">서랍</NavButton>
+        <NavButton
+          $active={currentPage === "main" || currentPage === "chat"}
+          onClick={onRecordClick}
+        >
+          기록하기
+        </NavButton>
+        <NavButton $active={currentPage === "drawer"} onClick={onDrawerClick}>
+          서랍장
+        </NavButton>
       </NavButtons>
     </HeaderContainer>
   );

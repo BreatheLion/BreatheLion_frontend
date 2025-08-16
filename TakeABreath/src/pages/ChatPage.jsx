@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Header from "../components/layout/Header";
 import DetailModifyPage from "./DetailModifyPage";
-import FinishLoadingPage from "./FinishLoadingPage";
+import FinishLoadingModal from "../components/ui/FinishLoadingModal";
 import AttachmentChip from "../components/ui/AttachmentChip";
 import iconSymbol from "../assets/iconSymbol.svg";
 
@@ -333,7 +333,11 @@ const MessageAudio = styled.audio`
   height: 2rem;
 `;
 
-export default function ChatPage({ onNavigateToMain, initialChatData }) {
+export default function ChatPage({
+  onNavigateToMain,
+  onNavigateToDrawer,
+  initialChatData,
+}) {
   const [messages, setMessages] = useState(() => {
     if (initialChatData) {
       // 서버 응답으로 초기 채팅 구성
@@ -377,7 +381,8 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
   const chatAreaRef = useRef(null);
   const inputRef = useRef(null);
   // 진행률 데모/플래그 제거
-  // 임시 테스트: 3초 지연 후 응답으로 치환
+  // TODO: 백엔드 연동 후 false로 변경 필요
+  // 임시 테스트: 3초 지연 후 응답으로 치환 (임시 로직)
   const USE_FAKE_API = true; // 테스트가 끝나면 false로 변경하세요
   const SIMULATE_LATENCY_MS = 3000;
   const fakeTimerRef = useRef(null);
@@ -520,12 +525,18 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
         if (file) form.append("evidences[]", file, file.name);
       });
 
-      await axios.post("/api/records/save/", form);
+      // TODO: 백엔드 연동 후 실제 API 호출로 변경
+      // 현재는 즉시 메인 화면으로 이동 (임시 로직)
+      console.log("저장 API 호출 시뮬레이션:", form);
 
       onNavigateToMain();
+      // await axios.post("/api/records/save/", form);
+      // onNavigateToMain();
     } catch (error) {
       console.error("데이터 저장 중 오류:", error);
-      alert("데이터 저장 중 오류가 발생했습니다. 다시 시도해주세요.");
+      // TODO: 백엔드 연동 후 에러 처리 로직 수정
+      // 현재는 에러가 발생해도 즉시 메인 화면으로 이동 (임시 로직)
+      onNavigateToMain();
     }
   };
 
@@ -566,7 +577,8 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
     // 전송 즉시 입력란 비우기
     setInputValue("");
 
-    // 임시 테스트 모드: 3초 지연 후 응답으로 교체
+    // TODO: 백엔드 연동 후 실제 API 호출로 변경 필요
+    // 임시 테스트 모드: 3초 지연 후 응답으로 교체 (임시 로직)
     if (USE_FAKE_API) {
       fakeTimerRef.current = setTimeout(() => {
         const mockResponse = {
@@ -677,7 +689,11 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
 
   return (
     <ChatContainer>
-      <Header />
+      <Header
+        onRecordClick={() => {}}
+        onDrawerClick={onNavigateToDrawer}
+        currentPage="chat"
+      />
       <ChatWrapper>
         <DateDisplay>
           {initialChatData?.serverResponse?.date ||
@@ -814,7 +830,7 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
       </ChatWrapper>
 
       {isFinishing && !finishResponse && (
-        <FinishLoadingPage
+        <FinishLoadingModal
           chatSessionId={chatSessionId}
           onDone={handleFinishDone}
         />
@@ -824,6 +840,7 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
       {showDetailModal && finishResponse && (
         <DetailModifyPage
           data={finishResponse}
+          attachments={attachments} // 미리보기 URL 포함된 첨부파일 데이터 전달
           onClose={handleDetailClose}
           onSubmit={handleDetailSubmit}
         />
