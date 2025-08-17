@@ -6,11 +6,14 @@ const HeaderContainer = styled.div`
   align-items: center;
   background: var(
     --BP-Gradation,
-    radial-gradient(
-      584.29% 214.57% at 131.5% -43.24%,
-      var(--Color, #68b8ea) 12.44%,
-      #688ae0 48.58%,
-      #8c68e0 100%
+    var(
+      --BP-Gradation,
+      radial-gradient(
+        180% 300% at 140% 0%,
+        var(--Color, #68b8ea) 12.44%,
+        #688ae0 48.58%,
+        #8c68e0 100%
+      )
     )
   );
   margin: 0 auto;
