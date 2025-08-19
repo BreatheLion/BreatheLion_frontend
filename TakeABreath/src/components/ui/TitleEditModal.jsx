@@ -105,7 +105,7 @@ export default function TitleEditModal({
   const handleConfirm = () => {
     if (newTitle.trim() && newTitle.trim() !== currentTitle) {
       console.log(`제목 수정: ${currentTitle} → ${newTitle.trim()}`);
-      console.log(`전체 레코드 데이터:`, recordData);
+      //console.log(`전체 레코드 데이터:`, recordData);
       onConfirm(newTitle.trim());
       onClose();
     }

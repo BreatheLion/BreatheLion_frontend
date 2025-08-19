@@ -76,9 +76,15 @@ const LawyerConsultButton = styled.button`
 `;
 
 export default function Header({ currentPage }) {
-  const handleRecordClick = () => {
+  const handleLogoClick = () => {
     if (window.navigation.navigateToMain) {
       window.navigation.navigateToMain();
+    }
+  };
+
+  const handleRecordClick = () => {
+    if (window.navigation.navigateToChat) {
+      window.navigation.navigateToChat();
     }
   };
 
@@ -96,14 +102,11 @@ export default function Header({ currentPage }) {
 
   return (
     <HeaderContainer>
-      <LogoWrapper>
+      <LogoWrapper onClick={handleLogoClick} style={{ cursor: "pointer" }}>
         <Logo />
       </LogoWrapper>
       <NavButtons>
-        <NavButton
-          $active={currentPage === "main" || currentPage === "chat"}
-          onClick={handleRecordClick}
-        >
+        <NavButton $active={currentPage === "chat"} onClick={handleRecordClick}>
           기록하기
         </NavButton>
         <NavButton

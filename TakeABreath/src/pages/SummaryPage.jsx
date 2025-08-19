@@ -1,9 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useLayoutEffect,
+  useCallback,
+} from "react";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
 import ArrowIcon from "../assets/ArrowIcon.svg";
 import DownArrowIcon from "../assets/DownArrowIcon.svg";
 import SearchIcon from "../assets/SearchIcon.svg";
+import { jsonServerHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -351,187 +358,83 @@ export default function SummaryPage({ folderId, folderName }) {
   const containerRef = useRef(null);
   const dotRefs = useRef([]);
   const [axisStyle, setAxisStyle] = useState({ top: 0, height: 0 });
-  const setDotRef = (el) => {
-    if (el) dotRefs.current.push(el);
+  const setDotRef = (index, el) => {
+    if (el) {
+      dotRefs.current[index] = el;
+    }
   };
 
   const getSubtitle = () => {
     return `모아보기   >   ${folderName || "폴더명"}`;
   };
 
-  const fetchSummaryData = async () => {
+  const fetchSummaryData = useCallback(async () => {
     try {
       setIsLoading(true);
 
-      // API 호출: GET /api/drawers/{drawer_id}/helpai/
-      const response = await fetch(`/api/drawers/${folderId}/helpai/`);
+      // JSON Server API 호출
+      const response = await jsonServerHelpers.getHelpaiByDrawerId(folderId);
 
-      if (response.ok) {
-        const data = await response.json();
-        setSummaryData(data);
+      if (response && response.isSuccess && response.data) {
+        // 실제 API 구조에 맞게 데이터 가공
+        const processedData = {
+          drawer_name: response.data.drawer_name,
+          assailant: response.data.assailant,
+          record_count: response.data.record_count,
+          summary: response.data.summary,
+        };
+        setSummaryData(processedData);
       } else {
-        console.log("요약 데이터 API 호출 실패, 더미 데이터 사용");
-        // 더미 데이터 설정
-        setSummaryData({
-          drawer_id: folderId,
-          drawer_name: folderName,
-          categories: ["직장 내 관계", "직장 내 괴롭힘"],
-          assailant: ["김OO 팀장", "영록이형"],
-          record_count: 10,
-          summary:
-            "회의 중 새로운 제안을 발표했는데 무시당하고, 5분 뒤 상사가 같은 내용을 말함. 지난 회의에서도 비슷한 일이 있었음.",
-          actions: [
-            "아이디어를 제출할 때 익명 혹은 사전에 메일로 정리해 공개적으로 문서화하는 방법 사용",
-            "회의 후 1:1 멘토나 동료에게 피드백을 요청하여 존재감을 회복",
-          ],
-          related_laws: [],
-          organizations: [
-            {
-              name: "고용노동부",
-              description: "직장 내 괴롭힘 익명신고센터",
-              url: "https://www.moel.go.kr",
-            },
-            {
-              name: "노무사",
-              description: "노동 관련 법률 상담 가능",
-              url: "https://www.nomos.or.kr",
-            },
-          ],
-        });
+        setSummaryData(null);
       }
     } catch (error) {
-      console.error("요약 데이터 로딩 중 오류:", error);
-      // 에러 시에도 더미 데이터 사용
-      setSummaryData({
-        drawer_id: folderId,
-        drawer_name: folderName,
-        categories: ["직장 내 관계", "직장 내 괴롭힘"],
-        assailant: ["김OO 팀장", "영록이형"],
-        record_count: 3,
-        summary:
-          "회의 중 새로운 제안을 발표했는데 무시당하고, 5분 뒤 상사가 같은 내용을 말함. 지난 회의에서도 비슷한 일이 있었음.",
-        actions: [
-          "아이디어를 제출할 때 익명 혹은 사전에 메일로 정리해 공개적으로 문서화하는 방법 사용",
-          "회의 후 1:1 멘토나 동료에게 피드백을 요청하여 존재감을 회복",
-        ],
-        related_laws: [],
-        organizations: [
-          {
-            name: "고용노동부",
-            description: "직장 내 괴롭힘 익명신고센터",
-            url: "https://www.moel.go.kr",
-          },
-          {
-            name: "노무사",
-            description: "노동 관련 법률 상담 가능",
-            url: "https://www.nomos.or.kr",
-          },
-        ],
-      });
+      window.handleApiError(error, "요약 데이터 로딩에 실패했습니다.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [folderId]);
 
-  const fetchTimelineData = async (keyword = searchKeyword) => {
-    try {
-      // API 호출: GET /api/drawers/{drawer_id}/timeline/
-      const response = await fetch(`/api/drawers/${folderId}/timeline/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ keyword: keyword }),
-      });
+  const fetchTimelineData = useCallback(
+    async (keyword = "") => {
+      try {
+        // JSON Server API 호출 (현재 사용 중)
+        const data = await jsonServerHelpers.getTimelineByDrawerId(folderId);
 
-      if (response.ok) {
-        const data = await response.json();
-        setTimelineData(data);
-      } else {
-        console.log("타임라인 데이터 API 호출 실패, 더미 데이터 사용");
-        // 더미 데이터 설정
-        setTimelineData([
-          {
-            record_id: 1,
-            title: "공부",
-            location: "팀회의실",
-            category: "언어폭력",
-            summary: "내가 낸 아이디어를 무시하고~",
-            occurred_at: "2025-06-13",
-          },
-          {
-            record_id: 3,
-            title: "사내사내",
-            location: "사내 메신저",
-            category: "언어폭력",
-            summary: "메세지에 인사 없이 지시만~",
-            occurred_at: "2025-06-26",
-          },
-          {
-            record_id: 5,
-            title: "회의 중 갈등",
-            location: "회의실",
-            category: "언어폭력",
-            summary:
-              "회의 중 새로운 제안을 발표했는데 무시당하고, 5분 뒤 상사가 같은 내용을 말함.",
-            occurred_at: "2025-07-05",
-          },
-          {
-            record_id: 6,
-            title: "동료 간 갈등",
-            location: "사무실",
-            category: "언어폭력",
-            summary:
-              "동료가 나의 업무 성과를 무시하고 다른 사람에게 공을 돌림.",
-            occurred_at: "2025-07-10",
-          },
-        ]);
+        if (data && data.length > 0) {
+          // 키워드 필터링 (JSON Server에서는 클라이언트 사이드 필터링)
+          if (keyword && keyword.trim()) {
+            const filteredData = data.filter(
+              (item) =>
+                item.title.includes(keyword) ||
+                item.summary.includes(keyword) ||
+                item.category.includes(keyword)
+            );
+            setTimelineData(filteredData);
+          } else {
+            setTimelineData(data);
+          }
+        } else {
+          setTimelineData([]);
+        }
+
+        // TODO: 실제 API로 전환 시 아래 코드로 교체
+        /*
+      // 실제 API 호출 (서버 사이드 검색)
+      const data = await realApiHelpers.getTimelineByDrawerId(folderId, keyword);
+      setTimelineData(data || []);
+      */
+      } catch (error) {
+        window.handleApiError(error, "타임라인 데이터 로딩에 실패했습니다.");
       }
-    } catch (error) {
-      console.error("타임라인 데이터 로딩 중 오류:", error);
-      // 에러 시에도 더미 데이터 사용
-      setTimelineData([
-        {
-          record_id: 1,
-          title: "공부",
-          location: "팀회의실",
-          category: "언어폭력",
-          summary: "내가 낸 아이디어를 무시하고~",
-          occurred_at: "2025-06-13",
-        },
-        {
-          record_id: 3,
-          title: "사내사내",
-          location: "사내 메신저",
-          category: "언어폭력",
-          summary: "메세지에 인사 없이 지시만~",
-          occurred_at: "2025-06-26",
-        },
-        {
-          record_id: 5,
-          title: "회의 중 갈등",
-          location: "회의실",
-          category: "언어폭력",
-          summary:
-            "회의 중 새로운 제안을 발표했는데 무시당하고, 5분 뒤 상사가 같은 내용을 말함.",
-          occurred_at: "2025-07-05",
-        },
-        {
-          record_id: 6,
-          title: "동료 간 갈등",
-          location: "사무실",
-          category: "언어폭력",
-          summary: "동료가 나의 업무 성과를 무시하고 다른 사람에게 공을 돌림.",
-          occurred_at: "2025-07-10",
-        },
-      ]);
-    }
-  };
+    },
+    [folderId]
+  );
 
   // 검색 실행 함수
   const handleSearch = () => {
-    if (searchKeyword.trim()) {
-      fetchTimelineData(searchKeyword);
+    const keyword = searchKeyword.trim();
+    if (keyword) {
+      fetchTimelineData(keyword);
     } else {
       // 검색어가 없으면 초기 데이터로 복원
       fetchTimelineData("");
@@ -545,26 +448,24 @@ export default function SummaryPage({ folderId, folderName }) {
 
   useEffect(() => {
     fetchSummaryData();
-    fetchTimelineData();
-  }, [folderId]);
+    fetchTimelineData("");
+  }, [fetchSummaryData, fetchTimelineData]);
 
-  // 초기 로드 시에만 API 호출
-  useEffect(() => {
-    if (folderId) {
-      fetchTimelineData("");
+  useLayoutEffect(() => {
+    if (!containerRef.current) return;
+    if (dotRefs.current.length >= 2) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const firstRect = dotRefs.current[0].getBoundingClientRect();
+      const lastRect =
+        dotRefs.current[dotRefs.current.length - 1].getBoundingClientRect();
+      const top = firstRect.top - containerRect.top + firstRect.height / 2;
+      const height =
+        lastRect.top - firstRect.top + (lastRect.height - firstRect.height) / 2;
+      setAxisStyle({ top, height });
+    } else {
+      // 0개 또는 1개일 때는 축을 숨김 처리
+      setAxisStyle({ top: 0, height: 0 });
     }
-  }, [folderId]);
-
-  useEffect(() => {
-    if (!containerRef.current || dotRefs.current.length < 2) return;
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const firstRect = dotRefs.current[0].getBoundingClientRect();
-    const lastRect =
-      dotRefs.current[dotRefs.current.length - 1].getBoundingClientRect();
-    const top = firstRect.top - containerRect.top + firstRect.height / 2;
-    const height =
-      lastRect.top - firstRect.top + (lastRect.height - firstRect.height) / 2;
-    setAxisStyle({ top, height });
   }, [timelineData, isLoading]);
 
   if (isLoading) {
@@ -651,47 +552,47 @@ export default function SummaryPage({ folderId, folderName }) {
           </SearchContainer>
         </TimelineSearchContainer>
 
-        <TimelineContainer ref={containerRef}>
-          {sortedTimelineData.length > 0 ? (
-            <>
+        {sortedTimelineData.length > 0 ? (
+          <TimelineContainer ref={containerRef}>
+            {sortedTimelineData.length >= 2 && (
               <TimelineAxis
                 style={{ top: axisStyle.top, height: axisStyle.height }}
               />
-              {sortedTimelineData.map((record, index) => (
-                <TimelineRow key={record.record_id}>
-                  <MarkerCol>
-                    <MarkerDot
-                      ref={setDotRef}
-                      $filled={index === sortedTimelineData.length - 1}
-                    />
-                  </MarkerCol>
-                  <TimelineDate>{formatDate(record.occurred_at)}</TimelineDate>
-                  <TimelineCard
-                    onClick={() => {
-                      if (window.navigation.navigateToRecordDetail) {
-                        window.navigation.navigateToRecordDetail(
-                          "summary",
-                          record.record_id
-                        );
-                      }
-                    }}
-                  >
-                    <CardContent>
-                      <CardHeader>
-                        <CategoryTag>{record.category}</CategoryTag>
-                        <CardTitle>{record.title}</CardTitle>
-                      </CardHeader>
-                      <CardSummary>{record.summary}</CardSummary>
-                    </CardContent>
-                    <CardArrow src={ArrowIcon} alt="더보기" />
-                  </TimelineCard>
-                </TimelineRow>
-              ))}
-            </>
-          ) : (
-            <NoResultsMessage>검색 결과가 없습니다.</NoResultsMessage>
-          )}
-        </TimelineContainer>
+            )}
+            {sortedTimelineData.map((record, index) => (
+              <TimelineRow key={record.record_id}>
+                <MarkerCol>
+                  <MarkerDot
+                    ref={(el) => setDotRef(index, el)}
+                    $filled={index === sortedTimelineData.length - 1}
+                  />
+                </MarkerCol>
+                <TimelineDate>{formatDate(record.occurred_at)}</TimelineDate>
+                <TimelineCard
+                  onClick={() => {
+                    if (window.navigation.navigateToRecordDetail) {
+                      window.navigation.navigateToRecordDetail(
+                        "summary",
+                        record.record_id
+                      );
+                    }
+                  }}
+                >
+                  <CardContent>
+                    <CardHeader>
+                      <CategoryTag>{record.category}</CategoryTag>
+                      <CardTitle>{record.title}</CardTitle>
+                    </CardHeader>
+                    <CardSummary>{record.summary}</CardSummary>
+                  </CardContent>
+                  <CardArrow src={ArrowIcon} alt="더보기" />
+                </TimelineCard>
+              </TimelineRow>
+            ))}
+          </TimelineContainer>
+        ) : (
+          <NoResultsMessage>검색 결과가 없습니다.</NoResultsMessage>
+        )}
       </ContentContainer>
     </PageContainer>
   );

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
+import { jsonServerHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -149,121 +150,21 @@ export default function ChatViewPage({ record_id, pageTitle, created_at }) {
     try {
       setIsLoading(true);
 
-      // API 호출: GET /api/records/{record_id}/chat/
-      const response = await fetch(`/api/records/${record_id}/chat/`);
+      // JSON Server API 호출
+      const chatData = await jsonServerHelpers.getChatByRecordId(record_id);
 
-      if (response.ok) {
-        const data = await response.json();
-        setChatData(data);
-      } else {
-        console.log("채팅 데이터 API 호출 실패, 더미 데이터 사용");
-        // 더미 데이터 설정 (새로운 API 구조에 맞춤)
+      if (chatData) {
         setChatData({
           isSuccess: true,
           code: "200",
           message: "채팅 조회 성공!",
-          data: {
-            session_id: 5,
-            messages: [
-              {
-                content:
-                  "안녕하세요, 오늘 발생한 사건에 대해 기록을 남기고 싶습니다.",
-                role: "user",
-                message_time: "14:30",
-                message_date: "08-01",
-              },
-              {
-                content: "네, 도와드리겠습니다. 어떤 일이 발생했나요?",
-                role: "assistant",
-                message_time: "14:30",
-                message_date: "08-01",
-              },
-              {
-                content:
-                  "학교에서 친구가 저를 괴롭혔어요. 계속 욕을 하고 때리려고 해요.",
-                role: "user",
-                message_time: "14:30",
-                message_date: "08-01",
-              },
-              {
-                content:
-                  "정말 힘드셨겠어요. 언제부터 이런 일이 발생했나요? 그리고 구체적으로 어떤 행동을 했는지 알려주실 수 있나요?",
-                role: "assistant",
-                message_time: "14:30",
-                message_date: "08-01",
-              },
-              {
-                content:
-                  "이번 주 월요일부터 시작됐어요. 점심시간에 계속 따라다니면서 놀려요. 오늘은 제 가방을 뺏어가서 창밖으로 던졌어요.",
-                role: "user",
-                message_time: "14:30",
-                message_date: "08-01",
-              },
-              {
-                content:
-                  "매우 심각한 상황이네요. 이런 일이 발생한 장소와 시간, 그리고 목격자가 있었는지도 기록해보겠습니다. 혹시 증거로 남길 수 있는 사진이나 녹음이 있나요?",
-                role: "assistant",
-                message_time: "14:30",
-                message_date: "08-01",
-              },
-            ],
-          },
+          data: chatData,
         });
+      } else {
+        throw new Error("채팅 데이터를 찾을 수 없습니다.");
       }
     } catch (error) {
-      console.error("채팅 데이터 로딩 중 오류:", error);
-      // 에러 시에도 더미 데이터 사용 (새로운 API 구조에 맞춤)
-      setChatData({
-        isSuccess: true,
-        code: "200",
-        message: "채팅 조회 성공!",
-        data: {
-          session_id: 5,
-          messages: [
-            {
-              content:
-                "안녕하세요, 오늘 발생한 사건에 대해 기록을 남기고 싶습니다.",
-              role: "user",
-              message_time: "14:30",
-              message_date: "08-01",
-            },
-            {
-              content: "네, 도와드리겠습니다. 어떤 일이 발생했나요?",
-              role: "assistant",
-              message_time: "14:30",
-              message_date: "08-01",
-            },
-            {
-              content:
-                "학교에서 친구가 저를 괴롭혔어요. 계속 욕을 하고 때리려고 해요.",
-              role: "user",
-              message_time: "14:30",
-              message_date: "08-01",
-            },
-            {
-              content:
-                "정말 힘드셨겠어요. 언제부터 이런 일이 발생했나요? 그리고 구체적으로 어떤 행동을 했는지 알려주실 수 있나요?",
-              role: "assistant",
-              message_time: "14:30",
-              message_date: "08-01",
-            },
-            {
-              content:
-                "이번 주 월요일부터 시작됐어요. 점심시간에 계속 따라다니면서 놀려요. 오늘은 제 가방을 뺏어가서 창밖으로 던졌어요.",
-              role: "user",
-              message_time: "14:30",
-              message_date: "08-01",
-            },
-            {
-              content:
-                "매우 심각한 상황이네요. 이런 일이 발생한 장소와 시간, 그리고 목격자가 있었는지도 기록해보겠습니다. 혹시 증거로 남길 수 있는 사진이나 녹음이 있나요?",
-              role: "assistant",
-              message_time: "14:30",
-              message_date: "08-01",
-            },
-          ],
-        },
-      });
+      window.handleApiError(error, "채팅 데이터 로딩에 실패했습니다.");
     } finally {
       setIsLoading(false);
     }

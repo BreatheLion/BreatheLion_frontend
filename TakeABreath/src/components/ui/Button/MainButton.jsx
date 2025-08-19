@@ -1,6 +1,8 @@
 import styled from "styled-components";
 
-const StyledMainButton = styled.button`
+const StyledMainButton = styled.button.withConfig({
+  shouldForwardProp: (prop) => prop !== "variant",
+})`
   display: flex;
   width: 11.25rem;
   height: 2.75rem;
@@ -49,7 +51,16 @@ const StyledMainButton = styled.button`
   `}
 
   &:disabled {
-    opacity: 0.5;
+    border-radius: 0.5rem;
+    border: 1px solid var(--10, #ddd);
+    background: var(--5, #e9e9e9);
+    color: var(--30, #acacac);
+    text-align: center;
+    font-family: Pretendard;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.25rem;
     cursor: not-allowed;
   }
 `;

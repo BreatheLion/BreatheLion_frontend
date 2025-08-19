@@ -334,9 +334,30 @@ const MessageAudio = styled.audio`
 `;
 
 export default function ChatPage({ onNavigateToMain, initialChatData }) {
+  // localStorage에서 메시지 복원 또는 초기화
+  const getStoredMessages = () => {
+    try {
+      const stored = localStorage.getItem(
+        `chat_messages_${initialChatData?.serverResponse?.chat_session_id || 1}`
+      );
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      console.error("localStorage에서 메시지 복원 실패:", error);
+      return null;
+    }
+  };
+
   const [messages, setMessages] = useState(() => {
+    // 1. localStorage에서 기존 메시지 확인
+    const storedMessages = getStoredMessages();
+
+    if (storedMessages && storedMessages.length > 0) {
+      // 기존 대화가 있으면 복원
+      return storedMessages;
+    }
+
+    // 2. 새로운 대화 시작
     if (initialChatData) {
-      // 서버 응답으로 초기 채팅 구성
       const { userMessage, serverResponse } = initialChatData;
 
       const initialMessages = [
@@ -364,6 +385,7 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
 
       return initialMessages;
     }
+
     return []; // 초기 데이터가 없으면 빈 배열
   });
   const [inputValue, setInputValue] = useState("");
@@ -394,7 +416,7 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
       setMessages((prevMessages) => {
         const updatedMessages = [...prevMessages];
         const aiMessageIndex = updatedMessages.findIndex(
-          (msg) => msg.type === "ai"
+          (msg) => msg.type === "ai" && msg.content === "응답 중입니다"
         );
 
         if (aiMessageIndex !== -1) {
@@ -410,12 +432,47 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
     }
   }, [initialChatData]);
 
-  // 메시지가 변경될 때마다 하단으로 스크롤
+  // 브라우저 뒤로가기/앞으로가기 시 메시지 복원
   useEffect(() => {
+    const handleBeforeUnload = () => {
+      // 페이지를 떠날 때 현재 메시지를 localStorage에 저장
+      try {
+        const chatSessionId =
+          initialChatData?.serverResponse?.chat_session_id || 1;
+        localStorage.setItem(
+          `chat_messages_${chatSessionId}`,
+          JSON.stringify(messages)
+        );
+      } catch (error) {
+        console.error("페이지 떠날 때 메시지 저장 실패:", error);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [messages, initialChatData?.serverResponse?.chat_session_id]);
+
+  // 메시지가 변경될 때마다 localStorage에 저장하고 하단으로 스크롤
+  useEffect(() => {
+    // localStorage에 메시지 저장
+    try {
+      const chatSessionId =
+        initialChatData?.serverResponse?.chat_session_id || 1;
+      localStorage.setItem(
+        `chat_messages_${chatSessionId}`,
+        JSON.stringify(messages)
+      );
+    } catch (error) {
+      console.error("localStorage에 메시지 저장 실패:", error);
+    }
+
+    // 하단으로 스크롤
     if (chatAreaRef.current) {
       chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, initialChatData?.serverResponse?.chat_session_id]);
 
   useEffect(() => {
     // 입력 변경 시 높이 자동 조절 (1~4줄 범위)
@@ -525,14 +582,20 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
       // 현재는 즉시 메인 화면으로 이동 (임시 로직)
       console.log("저장 API 호출 시뮬레이션:", form);
 
+      // 대화 완료 시 localStorage에서 해당 세션 메시지 삭제
+      try {
+        const chatSessionId =
+          initialChatData?.serverResponse?.chat_session_id || 1;
+        localStorage.removeItem(`chat_messages_${chatSessionId}`);
+      } catch (error) {
+        console.error("localStorage에서 메시지 삭제 실패:", error);
+      }
+
       onNavigateToMain();
       // await axios.post("/api/records/save/", form);
       // onNavigateToMain();
     } catch (error) {
-      console.error("데이터 저장 중 오류:", error);
-      // TODO: 백엔드 연동 후 에러 처리 로직 수정
-      // 현재는 에러가 발생해도 즉시 메인 화면으로 이동 (임시 로직)
-      onNavigateToMain();
+      window.handleApiError(error, "데이터 저장에 실패했습니다.");
     }
   };
 
@@ -646,27 +709,7 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
       setInputValue("");
       clearAllAttachments();
     } catch (error) {
-      console.error(error);
-      setMessages((prev) => {
-        const updated = [...prev];
-        const idx = updated.findIndex(
-          (m) => m.type === "ai" && m.content === "응답 중입니다"
-        );
-        if (idx !== -1) {
-          updated[idx] = {
-            ...updated[idx],
-            content: "해당 메세지가 전송되지 않았습니다",
-            time: new Date().toLocaleTimeString("ko-KR", {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: false,
-            }),
-          };
-        }
-        return updated;
-      });
-      setInputValue("");
-      clearAllAttachments();
+      window.handleApiError(error, "메시지 전송에 실패했습니다.");
     } finally {
       // 데모 모드에서는 여기 오지 않음
       setIsLoading(false);

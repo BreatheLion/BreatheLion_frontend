@@ -6,8 +6,6 @@ import FolderAddModal from "../components/ui/FolderAddModal";
 import FolderDeleteSelectionUI from "../components/ui/FolderDeleteSelectionUI";
 import FolderDeleteConfirmModal from "../components/ui/DeleteConfirmModal";
 import settingButton from "../assets/settingButton.svg";
-import folderAddIcon from "../assets/folderAddIcon.svg";
-import deleteIcon from "../assets/deleteIcon.svg";
 
 const SettingButtonContainer = styled.div`
   position: absolute;
@@ -105,39 +103,21 @@ export default function IncidentRecordsPage({
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const modalRef = useRef(null);
 
-  // 사건별 기록 데이터를 state로 관리
-  const [incidentDataDummy, setIncidentDataDummy] = useState([
-    {
-      drawer_id: 1,
-      name: "상도동 커피 폭언",
-      record_amt: 3,
-      date: "2025.08.16",
-    },
-    {
-      drawer_id: 2,
-      name: "회기동 함박",
-      record_amt: 3,
-      date: "2025.08.16",
-    },
-    {
-      drawer_id: 3,
-      name: "사장님",
-      record_amt: 2,
-      date: "2025.08.15",
-    },
-  ]);
-
-  // API 호출 함수 (추후 실제 엔드포인트로 변경)
+  // JSON Server API 호출 함수
   const fetchIncidentData = async () => {
     setIsLoading(true);
     try {
-      // const response = await axios.get("/api/drawers/");
-      // setIncidentData(response.data.drawers);
+      // JSON Server에서 모든 drawers 조회
+      const response = await fetch("http://localhost:3001/drawers");
+      const data = await response.json();
 
-      // 현재는 더미 데이터 사용
-      setIncidentData(incidentDataDummy);
+      if (data && Array.isArray(data)) {
+        setIncidentData(data);
+      } else {
+        setIncidentData([]);
+      }
     } catch (error) {
-      console.error("사건별 기록 조회 실패:", error);
+      window.handleApiError(error, "사건별 기록 조회에 실패했습니다.");
     } finally {
       setIsLoading(false);
     }
@@ -193,7 +173,7 @@ export default function IncidentRecordsPage({
 
       setIncidentData((prev) => [...prev, newFolder]);
     } catch (error) {
-      console.error("폴더 추가 실패:", error);
+      window.handleApiError(error, "폴더 추가에 실패했습니다.");
     }
   };
 

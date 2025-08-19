@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import { useState, useEffect } from "react";
 import { SmallButton } from "./Button";
-import axios from "axios";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -137,37 +136,15 @@ export default function FolderChangeModal({
   const fetchFolders = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get("/api/drawers/list/");
-      // API 응답이 배열인지 확인하고 설정
-      const folders = Array.isArray(response.data) ? response.data : [];
-      console.log("API 응답 폴더:", folders);
-
-      // TODO: 백엔드 연동 후 실제 API 응답 사용
-      // 현재는 API 응답이 비어있거나 더미 데이터가 필요할 때 더미 데이터 사용 (임시 로직)
-      if (folders.length === 0) {
-        const dummyFolders = [
-          { drawer_id: 1, name: "상도동" },
-          { drawer_id: 2, name: "회기동 함박" },
-          { drawer_id: 3, name: "사장님" },
-          { drawer_id: 4, name: "폴더2" },
-        ];
-        console.log("더미 데이터 설정 (빈 응답):", dummyFolders);
-        setAvailableFolders(dummyFolders);
-      } else {
-        setAvailableFolders(folders);
-      }
+      // JSON Server API 호출
+      const response = await fetch("http://localhost:3001/drawers_list");
+      const data = await response.json();
+      const folders = Array.isArray(data) ? data : [];
+      console.log("JSON Server 응답 폴더:", folders);
+      setAvailableFolders(folders);
     } catch (error) {
       console.error("폴더 목록 가져오기 실패:", error);
-      // TODO: 백엔드 연동 후 실제 API 호출로 변경
-      // 현재는 더미 데이터 사용 (임시 로직)
-      const dummyFolders = [
-        { drawer_id: 1, name: "상도동 커피 폭언" },
-        { drawer_id: 2, name: "회기동 함박" },
-        { drawer_id: 3, name: "사장님" },
-        { drawer_id: 4, name: "폴더2" },
-      ];
-      console.log("더미 데이터 설정 (에러):", dummyFolders);
-      setAvailableFolders(dummyFolders);
+      setAvailableFolders([]);
     } finally {
       setIsLoading(false);
     }

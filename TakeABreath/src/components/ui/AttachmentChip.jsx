@@ -70,8 +70,8 @@ const Name = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: center;
-  font-size: 0.75rem;
-  line-height: 1rem;
+  font-size: 0.5rem;
+  line-height: 0.5rem;
   max-height: 2rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -92,15 +92,6 @@ export default function AttachmentChip({
 
   // 예시 이미지 URL (실제 이미지가 없을 때 사용)
   const fallbackImageUrl = iconSymbol;
-
-  // 디버깅을 위한 로그
-  console.log("AttachmentChip props:", {
-    type,
-    displayName,
-    previewUrl,
-    fallbackImageUrl,
-    finalImageUrl: previewUrl || fallbackImageUrl,
-  });
 
   const isImage =
     type.startsWith("image/") || type === "image" || type === "photo";

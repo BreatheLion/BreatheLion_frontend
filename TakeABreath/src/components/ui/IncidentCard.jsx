@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { MainButton } from "./Button";
 import aiHelperIcon from "../../assets/aiHelperIcon.svg";
+import unableAiHelperIcon from "../../assets/UnableAiHelperIcon.svg";
 import gatheringIcon from "../../assets/gatheringIcon.svg";
 import downloadIcon from "../../assets/downloadIcon.svg";
 
@@ -155,19 +156,30 @@ export default function IncidentCard({
 
       {!isSelectionMode && (
         <ButtonSection>
-          <MainButton>
+          <MainButton disabled={incident.record_amt === 0}>
             <ButtonContent>
-              <img src={aiHelperIcon} alt="AI Helper" />
-              <ButtonText $isPrimary={true}>AI 도우미</ButtonText>
+              <img
+                src={
+                  incident.record_amt === 0 ? unableAiHelperIcon : aiHelperIcon
+                }
+                alt="AI Helper"
+              />
+              <ButtonText $isPrimary={incident.record_amt !== 0}>
+                AI 도우미
+              </ButtonText>
             </ButtonContent>
           </MainButton>
-          <MainButton variant="secondary" onClick={handleGatheringClick}>
+          <MainButton
+            variant="secondary"
+            onClick={handleGatheringClick}
+            disabled={incident.record_amt === 0}
+          >
             <ButtonContent>
               <img src={gatheringIcon} alt="Gathering" />
               <ButtonText $isPrimary={false}>모아보기</ButtonText>
             </ButtonContent>
           </MainButton>
-          <MainButton variant="secondary">
+          <MainButton variant="secondary" disabled={incident.record_amt === 0}>
             <ButtonContent>
               <img src={downloadIcon} alt="Download" />
               <ButtonText $isPrimary={false}>PDF 추출</ButtonText>

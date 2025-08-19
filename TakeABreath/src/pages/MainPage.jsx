@@ -1,6 +1,5 @@
 import styled from "styled-components";
 import { useState } from "react";
-import axios from "axios";
 import Header from "../components/layout/Header";
 import Logo from "../components/common/Logo";
 
@@ -145,6 +144,19 @@ export default function MainPage({ onNavigateToChat }) {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
 
+    // 새로운 채팅 시작 시 기존 채팅 localStorage 정리
+    const clearPreviousChatSessions = () => {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("chat_messages_")) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+    };
+
+    clearPreviousChatSessions();
     setIsLoading(true);
 
     // 로딩 중일 때 임시 응답으로 ChatPage로 이동
@@ -167,38 +179,65 @@ export default function MainPage({ onNavigateToChat }) {
     });
 
     try {
-      const response = await axios.post("/api/records/start/", {
-        message: trimmed,
-        role: "user",
+      // JSON Server API 호출 (POST 요청 시뮬레이션)
+      await fetch("http://localhost:3001/records_start", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: trimmed,
+          role: "user",
+        }),
       });
 
-      const serverResponse = response.data;
-      // 실제 응답으로 업데이트 (ChatPage에서 처리)
-      onNavigateToChat({
-        userMessage: trimmed,
-        serverResponse: serverResponse,
-        isLoading: false,
-      });
-    } catch (error) {
-      console.error(error);
-      // 서버 오프라인 시 기본 응답으로 처리
-      const fallbackResponse = {
-        chat_session_id: 1,
-        answer: "해당 메세지가 전송되지 않았습니다",
-        time: new Date().toLocaleTimeString("ko-KR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        }),
-        date: new Date().toISOString().split("T")[0],
+      // POST 요청은 성공했지만, 응답은 미리 정의된 데이터 사용
+      // 실제 API에서는 서버가 이 응답을 반환할 것
+      const mockServerResponse = {
+        isSuccess: true,
+        code: "200",
+        message: "채팅성공",
+        data: {
+          session_id: 1,
+          answer:
+            "안녕하세요. 오늘 있으셨던 사건에 대해 이야기해 주셔서 감사합니다. 어떤 일이 있었는지 조금 더 자세히 말씀해 주실 수 있을까요? 어떤 감정을 느끼셨는지도 함께 이야기해 주시면 도움이 될 것 같아요.",
+          message_time: new Date().toLocaleTimeString("ko-KR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          }),
+          message_date: new Date()
+            .toISOString()
+            .split("T")[0]
+            .slice(5)
+            .replace("-", "-"),
+        },
       };
 
-      // fallback 응답으로 업데이트
-      onNavigateToChat({
-        userMessage: trimmed,
-        serverResponse: fallbackResponse,
-        isLoading: false,
-      });
+      if (
+        mockServerResponse &&
+        mockServerResponse.isSuccess &&
+        mockServerResponse.data
+      ) {
+        // 실제 API 구조에 맞게 데이터 가공
+        const processedResponse = {
+          chat_session_id: mockServerResponse.data.session_id,
+          answer: mockServerResponse.data.answer,
+          time: mockServerResponse.data.message_time,
+          date: mockServerResponse.data.message_date,
+        };
+
+        // 실제 응답으로 업데이트 (ChatPage에서 처리)
+        onNavigateToChat({
+          userMessage: trimmed,
+          serverResponse: processedResponse,
+          isLoading: false,
+        });
+      } else {
+        throw new Error("서버 응답이 올바르지 않습니다.");
+      }
+    } catch (error) {
+      window.handleApiError(error, "채팅 시작에 실패했습니다.");
     } finally {
       setIsLoading(false);
     }

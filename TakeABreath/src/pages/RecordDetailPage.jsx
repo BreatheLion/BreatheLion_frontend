@@ -8,6 +8,7 @@ import DeleteConfirmModal from "../components/ui/DeleteConfirmModal";
 import FolderChangeModal from "../components/ui/FolderChangeModal";
 import titleEditInRecordIcon from "../assets/titleEditInRecordIcon.svg";
 import iconSymbol from "../assets/iconSymbol.svg";
+import { jsonServerHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -338,6 +339,7 @@ export default function RecordDetailPage({ previousPage, record_id }) {
 
   const handleFolderChangeConfirm = async (newFolderName) => {
     try {
+      console.log(`새로운 이름:`, newFolderName);
       // API 호출: PATCH /api/records/{record_id}/update/
       const response = await fetch(`/api/records/${record_id}/update/`, {
         method: "PATCH",
@@ -361,110 +363,16 @@ export default function RecordDetailPage({ previousPage, record_id }) {
     try {
       setIsLoading(true);
 
-      // API 호출 (현재는 더미 데이터 사용)
-      const response = await fetch(`/api/records/${record_id}/`);
+      // JSON Server API 호출
+      const data = await jsonServerHelpers.getRecordByRecordId(record_id);
 
-      if (response.ok) {
-        const data = await response.json();
+      if (data) {
         setRecordData(data);
       } else {
-        // 에러 처리 (현재는 더미 데이터로 대체)
-        console.log("API 호출 실패, 더미 데이터 사용");
-        setRecordData({
-          record_id: record_id,
-          drawer_id: 5,
-          category: "언어폭력",
-          content: "교내에서 학생 간 심한 욕설이 발생하였습니다.",
-          severity: 2,
-          location: "서울시 A고등학교",
-          occurred_at: "2025-08-01T14:30:00",
-          created_at: "2025-08-02T09:00:00",
-          updated_at: "2025-08-02T09:10:00",
-          assailant: [],
-          witness: ["정다은", "한유진"],
-          evidences: [
-            {
-              id: 101,
-              record_id: 1,
-              type: "audio",
-              filename: "bullying_recosdfsdrding.m4a",
-              S3url:
-                "https://s3.bucket.com/records/1/audio/bullying_recording.m4a",
-              uploaded_at: "2025-08-02T09:05:00",
-            },
-            {
-              id: 102,
-              record_id: 1,
-              type: "photo",
-              filename: "chat_ㄴㅇㄹㄴㄹㄴcreenshot.png",
-              S3url: iconSymbol,
-              uploaded_at: "2025-08-02T09:06:00",
-            },
-            {
-              id: 103,
-              record_id: 1,
-              type: "file",
-              filename: "진술서.pdf",
-              S3url: "https://s3.bucket.com/records/1/file/진술서.pdf",
-              uploaded_at: "2025-08-02T09:07:00",
-            },
-            {
-              id: 104,
-              record_id: 1,
-              type: "file",
-              filename: "진ㄴㅇㄹㄴㅇㄹㄹㅇㄴㄹ술서.pdf",
-              S3url: "https://s3.bucket.com/records/1/file/진술서.pdf",
-              uploaded_at: "2025-08-02T09:07:00",
-            },
-          ],
-          drawer_name: "서랍이름",
-          title: "레코드 제목",
-        });
+        throw new Error("기록 데이터를 찾을 수 없습니다.");
       }
     } catch (error) {
-      console.error("API 호출 중 오류:", error);
-      // 에러 시에도 더미 데이터 사용
-      setRecordData({
-        record_id: record_id,
-        drawer_id: 5,
-        category: "언어폭력",
-        content: "교내에서 학생 간 심한 욕설이 발생하였습니다.",
-        severity: 2,
-        location: "서울시 A고등학교",
-        occurred_at: "2025-08-01T14:30:00",
-        created_at: "2025-08-02T09:00:00",
-        updated_at: "2025-08-02T09:10:00",
-        assailant: [],
-        witness: ["정다은", "한유진"],
-        evidences: [
-          {
-            id: 101,
-            record_id: 1,
-            type: "audio",
-            filename: "bullying_recording.m4a",
-            S3url: "/src/assets/iconSymbol.svg",
-            uploaded_at: "2025-08-02T09:05:00",
-          },
-          {
-            id: 102,
-            record_id: 1,
-            type: "photo",
-            filename: "chat_screenㄴㅇㄹㄴㅇㄹshot.png",
-            S3url: iconSymbol,
-            uploaded_at: "2025-08-02T09:06:00",
-          },
-          {
-            id: 103,
-            record_id: 1,
-            type: "file",
-            filename: "진술ㄹㄹ서.pdf",
-            S3url: "https://s3.bucket.com/records/1/file/진술서.pdf",
-            uploaded_at: "2025-08-02T09:07:00",
-          },
-        ],
-        drawer_name: "서랍이름",
-        title: "레코드 제목",
-      });
+      window.handleApiError(error, "기록 데이터 로딩에 실패했습니다.");
     } finally {
       setIsLoading(false);
     }
@@ -562,8 +470,8 @@ export default function RecordDetailPage({ previousPage, record_id }) {
               <FormField>
                 <Label>카테고리</Label>
                 <CategoryContainer>
-                  {recordData?.category && (
-                    <CategoryButton>{recordData.category}</CategoryButton>
+                  {recordData?.categories && (
+                    <CategoryButton>{recordData.categories}</CategoryButton>
                   )}
                 </CategoryContainer>
               </FormField>
