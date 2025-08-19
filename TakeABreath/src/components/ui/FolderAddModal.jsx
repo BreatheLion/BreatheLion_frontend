@@ -20,7 +20,7 @@ const ModalContainer = styled.div`
   border-radius: 1.25rem;
   padding: 3.125rem;
   width: 90%;
-  max-width: 34.6875rem;
+  max-width: 22rem;
   display: flex;
   flex-direction: column;
   gap: 3.125rem;
@@ -63,8 +63,8 @@ const InputSection = styled.div`
   align-items: center;
 `;
 
-const TitleInput = styled.input`
-  width: 34.6875rem;
+const FolderInput = styled.input`
+  width: 100%;
   padding: 0.625rem 0.625rem;
   border-radius: 0.625rem;
   border: 1px solid #ddd;
@@ -89,24 +89,19 @@ const ButtonSection = styled.div`
   justify-content: center;
 `;
 
-export default function TitleEditModal({
-  isOpen,
-  onClose,
-  onConfirm,
-  currentTitle,
-  recordData,
-}) {
-  const [newTitle, setNewTitle] = useState(currentTitle || "");
+export default function FolderAddModal({ isOpen, onClose, onConfirm }) {
+  const [newFolderName, setNewFolderName] = useState("");
 
   useEffect(() => {
-    setNewTitle(currentTitle || "");
-  }, [currentTitle, isOpen]);
+    if (isOpen) {
+      setNewFolderName("");
+    }
+  }, [isOpen]);
 
   const handleConfirm = () => {
-    if (newTitle.trim() && newTitle.trim() !== currentTitle) {
-      console.log(`제목 수정: ${currentTitle} → ${newTitle.trim()}`);
-      console.log(`전체 레코드 데이터:`, recordData);
-      onConfirm(newTitle.trim());
+    if (newFolderName.trim()) {
+      console.log(`폴더 추가: ${newFolderName.trim()}`);
+      onConfirm(newFolderName.trim());
       onClose();
     }
   };
@@ -115,8 +110,7 @@ export default function TitleEditModal({
     onClose();
   };
 
-  const isTitleChanged = newTitle.trim() !== currentTitle;
-  const isTitleValid = newTitle.trim().length > 0;
+  const isFolderNameValid = newFolderName.trim().length > 0;
 
   if (!isOpen) return null;
 
@@ -124,15 +118,15 @@ export default function TitleEditModal({
     <ModalOverlay onClick={handleCancel} data-modal="open">
       <ModalContainer onClick={(e) => e.stopPropagation()}>
         <HeaderSection>
-          <Title>제목 수정</Title>
-          <Subtitle>새로운 제목을 입력해주세요</Subtitle>
+          <Title>폴더 추가</Title>
+          <Subtitle>새로운 폴더명을 입력해주세요</Subtitle>
         </HeaderSection>
 
         <InputSection>
-          <TitleInput
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            placeholder="제목을 입력하세요"
+          <FolderInput
+            value={newFolderName}
+            onChange={(e) => setNewFolderName(e.target.value)}
+            placeholder="새로운 폴더명을 입력하세요"
             autoFocus
           />
         </InputSection>
@@ -144,9 +138,9 @@ export default function TitleEditModal({
           <SmallButton
             variant="primary"
             onClick={handleConfirm}
-            disabled={!isTitleValid || !isTitleChanged}
+            disabled={!isFolderNameValid}
           >
-            수정
+            추가
           </SmallButton>
         </ButtonSection>
       </ModalContainer>

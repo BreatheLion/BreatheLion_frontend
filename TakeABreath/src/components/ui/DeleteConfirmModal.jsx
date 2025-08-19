@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { SmallButton } from "./Button";
-import iconConfigureStore from "../../assets/iconConfigureStore.svg";
+import deleteCheckIcon from "../../assets/deleteCheckIcon.svg";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -17,12 +17,13 @@ const ModalOverlay = styled.div`
 
 const ModalCard = styled.div`
   display: flex;
-  width: 21.125rem;
+  width: 23.75rem;
   padding: 3.75rem 0 3.125rem 0;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   gap: 2.5rem;
+  flex-shrink: 0;
   border-radius: 1.875rem;
   background: #fff;
 `;
@@ -37,18 +38,22 @@ const TextContainer = styled.div`
 `;
 
 const Title = styled.h2`
-  color: #313131;
+  color: var(--80, #313131);
+  text-align: center;
   font-family: Pretendard;
   font-size: 1.25rem;
+  font-style: normal;
   font-weight: 500;
   line-height: 1.5rem;
   margin: 0;
 `;
 
 const Subtitle = styled.p`
-  color: #acacac;
+  color: var(--30, #acacac);
+  text-align: center;
   font-family: Pretendard;
   font-size: 0.875rem;
+  font-style: normal;
   font-weight: 500;
   line-height: 1.25rem;
   margin: 0;
@@ -56,7 +61,7 @@ const Subtitle = styled.p`
 
 const IconContainer = styled.div`
   width: 9.375rem;
-  height: 10.8125rem;
+  height: 9.375rem;
   position: relative;
   display: flex;
   align-items: center;
@@ -75,12 +80,12 @@ const ButtonContainer = styled.div`
   justify-content: center;
 `;
 
-export default function ConfirmModal({
+export default function DeleteConfirmModal({
   isOpen,
   onClose,
   onConfirm,
-  title = "정말로 저장하시겠습니까?",
-  subtitle = "저장된 내용은 수정할 수 없습니다.",
+  title = "이 항목을 삭제할까요?",
+  subtitle = "삭제된 항목은 복구할 수 없습니다",
 }) {
   if (!isOpen) return null;
 
@@ -92,14 +97,14 @@ export default function ConfirmModal({
           <Subtitle>{subtitle}</Subtitle>
         </TextContainer>
         <IconContainer>
-          <IconImage src={iconConfigureStore} alt="문서 아이콘" />
+          <IconImage src={deleteCheckIcon} alt="삭제 확인 아이콘" />
         </IconContainer>
         <ButtonContainer>
           <SmallButton variant="secondary" onClick={onClose}>
             취소
           </SmallButton>
           <SmallButton variant="primary" onClick={onConfirm}>
-            저장
+            삭제
           </SmallButton>
         </ButtonContainer>
       </ModalCard>

@@ -2,8 +2,10 @@ import styled from "styled-components";
 
 const HeaderContainer = styled.div`
   display: flex;
-  width: 55.0625rem;
+  width: 100%;
+  max-width: 55rem;
   align-items: center;
+  /*
   background: var(
     --BP-Gradation,
     var(
@@ -16,6 +18,9 @@ const HeaderContainer = styled.div`
       )
     )
   );
+  */
+  border-radius: 0.625rem;
+background: linear-gradient(270deg, var(--Color, #68B8EA) -39.67%, #688AE0 74.83%, #8C68E0 128.22%);
   margin: 0 auto;
   margin-bottom: 1.13rem;
   height: 2.5rem;

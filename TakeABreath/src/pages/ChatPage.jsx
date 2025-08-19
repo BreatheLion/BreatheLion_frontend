@@ -333,11 +333,7 @@ const MessageAudio = styled.audio`
   height: 2rem;
 `;
 
-export default function ChatPage({
-  onNavigateToMain,
-  onNavigateToDrawer,
-  initialChatData,
-}) {
+export default function ChatPage({ onNavigateToMain, initialChatData }) {
   const [messages, setMessages] = useState(() => {
     if (initialChatData) {
       // 서버 응답으로 초기 채팅 구성
@@ -689,11 +685,7 @@ export default function ChatPage({
 
   return (
     <ChatContainer>
-      <Header
-        onRecordClick={() => {}}
-        onDrawerClick={onNavigateToDrawer}
-        currentPage="chat"
-      />
+      <Header currentPage="chat" />
       <ChatWrapper>
         <DateDisplay>
           {initialChatData?.serverResponse?.date ||

@@ -1,18 +1,21 @@
 import styled from "styled-components";
+import iconSymbol from "../../assets/iconSymbol.svg";
 
 const Chip = styled.div`
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.375rem 0.5rem;
-  border-radius: 1rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
   background: #f2f2f2;
   color: #313131;
   font-size: 0.75rem;
   position: relative;
   box-sizing: border-box;
-  width: calc(100% / 3 - 1rem); /* 동일한 시각적 너비 */
-  flex: 0 0 calc(100% / 3 - 1rem); /* 같은 라인에 3개씩 배치 */
+  width: 12rem;
+  height: 7rem;
+  flex: 0 0 12rem;
 
   &:hover .remove-btn {
     opacity: 1;
@@ -20,8 +23,8 @@ const Chip = styled.div`
 `;
 
 const Thumb = styled.div`
-  width: 3rem;
-  height: 2rem;
+  width: 100%;
+  height: 5rem;
   border-radius: 0.25rem;
   overflow: hidden;
   background: #e9e9e9;
@@ -66,6 +69,14 @@ const Name = styled.span`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  max-height: 2rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 `;
 
 export default function AttachmentChip({
@@ -78,21 +89,52 @@ export default function AttachmentChip({
   const rawType = file?.type || kind || "";
   const type = typeof rawType === "string" ? rawType : "";
   const displayName = name || file?.name;
+
+  // 예시 이미지 URL (실제 이미지가 없을 때 사용)
+  const fallbackImageUrl = iconSymbol;
+
+  // 디버깅을 위한 로그
+  console.log("AttachmentChip props:", {
+    type,
+    displayName,
+    previewUrl,
+    fallbackImageUrl,
+    finalImageUrl: previewUrl || fallbackImageUrl,
+  });
+
+  const isImage =
+    type.startsWith("image/") || type === "image" || type === "photo";
+  const isVideo = type.startsWith("video/") || type === "video";
+  const isAudio = type.startsWith("audio/") || type === "audio";
+
   return (
     <Chip>
-      {(type.startsWith("image/") || type === "image") && (
+      {isImage && (
         <Thumb>
-          <img src={previewUrl} alt={displayName} />
+          <img
+            src={previewUrl || fallbackImageUrl}
+            alt={displayName}
+            onLoad={() =>
+              console.log(
+                "Image loaded successfully:",
+                previewUrl || fallbackImageUrl
+              )
+            }
+            onError={(e) => {
+              console.error("Image failed to load:", e.target.src);
+              console.error("Error details:", e);
+            }}
+          />
         </Thumb>
       )}
-      {(type.startsWith("video/") || type === "video") && (
+      {isVideo && (
         <Thumb>
-          <video src={previewUrl} />
+          <video src={previewUrl || fallbackImageUrl} />
         </Thumb>
       )}
-      {(type.startsWith("audio/") || type === "audio") && (
+      {isAudio && (
         <Thumb>
-          <span style={{ fontSize: "0.625rem", color: "#4a4a4a" }}>오디오</span>
+          <span style={{ fontSize: "1.5rem", color: "#4a4a4a" }}>🎵</span>
         </Thumb>
       )}
       <Name title={displayName}>{displayName}</Name>

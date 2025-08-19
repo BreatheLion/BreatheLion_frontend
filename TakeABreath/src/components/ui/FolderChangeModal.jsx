@@ -21,7 +21,7 @@ const ModalContainer = styled.div`
   border-radius: 1.25rem;
   padding: 3.125rem;
   width: 90%;
-  max-width: 31.25rem;
+  max-width: 22rem;
   display: flex;
   flex-direction: column;
   gap: 3.125rem;
@@ -60,11 +60,15 @@ const FolderSection = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 0.875rem;
-  padding: 0.5625rem 0.5rem;
+  padding: 0.5625rem 0;
   border-radius: 0.625rem;
   min-height: 3rem;
   justify-content: center;
   align-items: center;
+  align-content: center;
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
 `;
 
 const FolderTag = styled.div`
@@ -81,6 +85,9 @@ const FolderTag = styled.div`
   font-weight: 500;
   line-height: 1.25rem;
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   ${({ selected }) =>
     selected
@@ -143,8 +150,6 @@ export default function FolderChangeModal({
           { drawer_id: 2, name: "회기동 함박" },
           { drawer_id: 3, name: "사장님" },
           { drawer_id: 4, name: "폴더2" },
-          { drawer_id: 5, name: "상도동ㄴㅇㄹㄴㅇㄹ" },
-          { drawer_id: 6, name: "상도동ㄴㅇㄹ" },
         ];
         console.log("더미 데이터 설정 (빈 응답):", dummyFolders);
         setAvailableFolders(dummyFolders);
@@ -190,7 +195,7 @@ export default function FolderChangeModal({
   if (!isOpen) return null;
 
   return (
-    <ModalOverlay onClick={handleCancel}>
+    <ModalOverlay onClick={handleCancel} data-modal="open">
       <ModalContainer onClick={(e) => e.stopPropagation()}>
         <HeaderSection>
           <Title>폴더 변경</Title>

@@ -8,9 +8,28 @@
 
 ## 🔍 현재 API 호출 현황
 
-### 1. ChatPage.jsx
+### 1. MainPage.jsx
 
-#### 1.1 채팅 메시지 전송
+#### 1.1 첫 메시지 전송
+
+```javascript
+// 파일: src/pages/MainPage.jsx
+// 함수: handleSubmit()
+// 엔드포인트: POST /api/records/start/
+// 상태: ✅ 구현됨 (현재는 더미 데이터 사용)
+
+const response = await axios.post("/api/records/start/", {
+  message: trimmed,
+  role: "user",
+});
+
+// TODO: 백엔드 연동 후 실제 API 호출로 변경
+// 현재는 fallback 응답 사용
+```
+
+### 2. ChatPage.jsx
+
+#### 2.1 채팅 메시지 전송
 
 ```javascript
 // 파일: src/pages/ChatPage.jsx
@@ -33,62 +52,144 @@ const response = await axios.post("/api/chats/attach/", form, {
 // 현재는 USE_FAKE_API = true로 설정되어 더미 데이터 사용
 ```
 
-#### 1.2 첫 메시지 전송 (FinishLoadingModal)
+#### 2.2 기록 저장
 
 ```javascript
-// 파일: src/components/ui/FinishLoadingModal.jsx
-// 엔드포인트: POST /api/records/start/
-// 상태: ✅ 구현됨 (현재는 더미 데이터 사용)
-
-const form = new FormData();
-form.append("chat_session_id", String(chatSessionId));
-
-const response = await axios.post("/api/records/start/", form);
-
-// TODO: 백엔드 연동 후 실제 API 호출로 변경
-// 현재는 autoCloseMs = 3000으로 설정되어 더미 데이터 사용
-```
-
-### 2. DetailModifyPage.jsx
-
-#### 2.1 상세 정보 저장
-
-```javascript
-// 파일: src/pages/DetailModifyPage.jsx
+// 파일: src/pages/ChatPage.jsx
 // 함수: handleDetailSubmit()
 // 엔드포인트: POST /api/records/save/
-// 상태: ✅ 구현됨 (현재는 더미 데이터 사용)
+// 상태: ❌ 주석 처리됨 (현재 미사용)
 
-const form = new FormData();
-form.append("record_id", String(payload.record_id || ""));
-form.append("title", payload.title || "");
-form.append("content", payload.content || "");
-form.append("severity", String(payload.severity ?? ""));
-form.append("location", payload.location || "");
-form.append("occurred_at", payload.occurred_at || "");
-form.append("drawer", payload.drawer || "");
-
-(payload.category || []).forEach((v) => form.append("category[]", v));
-(payload.assailant || []).forEach((v) => form.append("assailant[]", v));
-(payload.witness || []).forEach((v) => form.append("witness[]", v));
-
-// 기존 유지할 서버 파일들
-(payload.existing_evidences || []).forEach((ev) => {
-  if (ev?.filename) form.append("evidences_keep[]", ev.filename);
-});
-
-// 새로 추가된 파일 업로드
-(payload.new_files || []).forEach((file) => {
-  if (file) form.append("evidences[]", file, file.name);
-});
-
-// TODO: 백엔드 연동 후 실제 API 호출로 변경
 // await axios.post("/api/records/save/", form);
 ```
 
-### 3. FolderChangeModal.jsx
+### 3. RecordDetailPage.jsx
 
-#### 3.1 폴더 목록 조회
+#### 3.1 기록 상세 조회
+
+```javascript
+// 파일: src/pages/RecordDetailPage.jsx
+// 함수: fetchRecordData()
+// 엔드포인트: GET /api/records/{record_id}/
+// 상태: ✅ 구현됨 (현재는 더미 데이터 사용)
+
+const response = await fetch(`/api/records/${record_id}/`);
+const data = await response.json();
+setRecordData(data);
+
+// TODO: 백엔드 연동 후 실제 API 호출로 변경
+// 현재는 더미 데이터 사용
+```
+
+#### 3.2 제목 수정
+
+```javascript
+// 파일: src/pages/RecordDetailPage.jsx
+// 함수: handleTitleEditConfirm()
+// 엔드포인트: PUT /api/records/{record_id}/title
+// 상태: ✅ 구현됨 (현재는 더미 데이터 사용)
+
+const response = await fetch(`/api/records/${record_id}/title`, {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ title: newTitle }),
+});
+
+// TODO: 백엔드 연동 후 실제 API 호출로 변경
+// 현재는 콘솔 로그만 출력
+```
+
+#### 3.3 기록 삭제
+
+```javascript
+// 파일: src/pages/RecordDetailPage.jsx
+// 함수: handleDeleteConfirm()
+// 엔드포인트: DELETE /api/records/{record_id}/delete/
+// 상태: ✅ 구현됨 (현재는 더미 데이터 사용)
+
+const response = await fetch(`/api/records/${record_id}/delete/`, {
+  method: "DELETE",
+});
+
+// TODO: 백엔드 연동 후 실제 API 호출로 변경
+// 현재는 콘솔 로그만 출력
+```
+
+#### 3.4 폴더 변경
+
+```javascript
+// 파일: src/pages/RecordDetailPage.jsx
+// 함수: handleFolderChangeConfirm()
+// 엔드포인트: PATCH /api/records/{record_id}/update/
+// 상태: ✅ 구현됨 (현재는 더미 데이터 사용)
+
+const response = await fetch(`/api/records/${record_id}/update/`, {
+  method: "PATCH",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ drawer_id: newFolderName }),
+});
+
+// TODO: 백엔드 연동 후 실제 API 호출로 변경
+// 현재는 콘솔 로그만 출력
+```
+
+### 4. ChatViewPage.jsx
+
+#### 4.1 채팅 히스토리 조회
+
+```javascript
+// 파일: src/pages/ChatViewPage.jsx
+// 함수: fetchChatData()
+// 엔드포인트: GET /api/records/{record_id}/chat/
+// 상태: ✅ 구현됨 (현재는 더미 데이터 사용)
+
+const response = await fetch(`/api/records/${record_id}/chat/`);
+const data = await response.json();
+setChatData(data);
+
+// TODO: 백엔드 연동 후 실제 API 호출로 변경
+// 현재는 더미 데이터 사용
+```
+
+### 5. SummaryPage.jsx
+
+#### 5.1 요약 데이터 조회
+
+```javascript
+// 파일: src/pages/SummaryPage.jsx
+// 함수: fetchSummaryData()
+// 엔드포인트: GET /api/drawers/{drawer_id}/helpai/
+// 상태: ✅ 구현됨 (현재는 더미 데이터 사용)
+
+const response = await fetch(`/api/drawers/${folderId}/helpai/`);
+const data = await response.json();
+setSummaryData(data);
+
+// TODO: 백엔드 연동 후 실제 API 호출로 변경
+// 현재는 더미 데이터 사용
+```
+
+#### 5.2 타임라인 데이터 조회
+
+```javascript
+// 파일: src/pages/SummaryPage.jsx
+// 함수: fetchTimelineData()
+// 엔드포인트: POST /api/drawers/{drawer_id}/timeline/
+// 상태: ✅ 구현됨 (현재는 더미 데이터 사용)
+
+const response = await fetch(`/api/drawers/${folderId}/timeline/`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ keyword: keyword }),
+});
+
+// TODO: 백엔드 연동 후 실제 API 호출로 변경
+// 현재는 더미 데이터에서 필터링
+```
+
+### 6. FolderChangeModal.jsx
+
+#### 6.1 폴더 목록 조회
 
 ```javascript
 // 파일: src/components/ui/FolderChangeModal.jsx
@@ -110,13 +211,65 @@ const dummyFolders = [
 ];
 ```
 
+### 7. FinishLoadingModal.jsx
+
+#### 7.1 기록 완료
+
+```javascript
+// 파일: src/components/ui/FinishLoadingModal.jsx
+// 엔드포인트: POST /api/records/start/
+// 상태: ✅ 구현됨 (현재는 더미 데이터 사용)
+
+apiEndpoint = "/api/records/start/";
+
+// TODO: 백엔드 연동 후 실제 API 호출로 변경
+// 현재는 autoCloseMs = 3000으로 설정되어 더미 데이터 사용
+```
+
 ---
 
 ## 🚧 미구현 API 호출
 
-### 1. TableRow 관련 기능들
+### 1. RecentRecordsPage.jsx
 
-#### 1.1 폴더 변경
+#### 1.1 기록 목록 조회
+
+```javascript
+// 파일: src/pages/RecentRecordsPage.jsx
+// 엔드포인트: GET /api/records/
+// 상태: ❌ 주석 처리됨
+
+// const response = await axios.get("/api/records/");
+// TODO: 실제 기록 목록 조회 API 호출
+```
+
+### 2. IncidentRecordsPage.jsx
+
+#### 2.1 폴더 목록 조회
+
+```javascript
+// 파일: src/pages/IncidentRecordsPage.jsx
+// 엔드포인트: GET /api/drawers/
+// 상태: ❌ 주석 처리됨
+
+// const response = await axios.get("/api/drawers/");
+// TODO: 실제 폴더 목록 조회 API 호출
+```
+
+#### 2.2 폴더 생성
+
+```javascript
+// 파일: src/pages/IncidentRecordsPage.jsx
+// 엔드포인트: POST /api/drawers/
+// 상태: ❌ 주석 처리됨
+
+// const response = await axios.post("/api/drawers/", { name: folderName });
+// TODO: 실제 폴더 생성 API 호출
+```
+
+### 3. TableRow.jsx
+
+#### 3.1 폴더 변경
 
 ```javascript
 // 파일: src/components/ui/TableRow.jsx
@@ -131,7 +284,7 @@ const handleFolderChange = (newFolder) => {
 };
 ```
 
-#### 1.2 제목 수정
+#### 3.2 제목 수정
 
 ```javascript
 // 파일: src/components/ui/TableRow.jsx
@@ -146,7 +299,7 @@ const handleTitleChange = (newTitle) => {
 };
 ```
 
-#### 1.3 파일 다운로드
+#### 3.3 파일 다운로드
 
 ```javascript
 // 파일: src/components/ui/TableRow.jsx
@@ -157,32 +310,29 @@ const handleTitleChange = (newTitle) => {
 // TODO: 파일 다운로드 API 호출
 ```
 
-### 2. DrawerPage 관련
-
-#### 2.1 기록 목록 조회
-
-```javascript
-// 파일: src/pages/DrawerPage.jsx
-// 엔드포인트: 미정
-// 상태: ❌ 미구현 (현재는 하드코딩된 더미 데이터)
-
-// TODO: 실제 기록 목록 조회 API 호출
-```
-
 ---
 
 ## 📊 API 엔드포인트 요약
 
-| 기능             | 엔드포인트            | 메서드 | 상태             | 파일                   |
-| ---------------- | --------------------- | ------ | ---------------- | ---------------------- |
-| 채팅 메시지 전송 | `/api/chats/attach/`  | POST   | ✅ 구현됨 (더미) | ChatPage.jsx           |
-| 첫 메시지 전송   | `/api/records/start/` | POST   | ✅ 구현됨 (더미) | FinishLoadingModal.jsx |
-| 상세 정보 저장   | `/api/records/save/`  | POST   | ✅ 구현됨 (더미) | DetailModifyPage.jsx   |
-| 폴더 목록 조회   | `/api/drawers/list/`  | GET    | ✅ 구현됨 (더미) | FolderChangeModal.jsx  |
-| 폴더 변경        | 미정                  | 미정   | ❌ 미구현        | TableRow.jsx           |
-| 제목 수정        | 미정                  | 미정   | ❌ 미구현        | TableRow.jsx           |
-| 파일 다운로드    | 미정                  | 미정   | ❌ 미구현        | TableRow.jsx           |
-| 기록 목록 조회   | 미정                  | 미정   | ❌ 미구현        | DrawerPage.jsx         |
+| 기능               | 엔드포인트                           | 메서드 | 상태             | 파일                    |
+| ------------------ | ------------------------------------ | ------ | ---------------- | ----------------------- |
+| 첫 메시지 전송     | `/api/records/start/`                | POST   | ✅ 구현됨 (더미) | MainPage.jsx            |
+| 채팅 메시지 전송   | `/api/chats/attach/`                 | POST   | ✅ 구현됨 (더미) | ChatPage.jsx            |
+| 기록 상세 조회     | `/api/records/{record_id}/`          | GET    | ✅ 구현됨 (더미) | RecordDetailPage.jsx    |
+| 제목 수정          | `/api/records/{record_id}/title`     | PUT    | ✅ 구현됨 (더미) | RecordDetailPage.jsx    |
+| 기록 삭제          | `/api/records/{record_id}/delete/`   | DELETE | ✅ 구현됨 (더미) | RecordDetailPage.jsx    |
+| 폴더 변경          | `/api/records/{record_id}/update/`   | PATCH  | ✅ 구현됨 (더미) | RecordDetailPage.jsx    |
+| 채팅 히스토리 조회 | `/api/records/{record_id}/chat/`     | GET    | ✅ 구현됨 (더미) | ChatViewPage.jsx        |
+| 요약 데이터 조회   | `/api/drawers/{drawer_id}/helpai/`   | GET    | ✅ 구현됨 (더미) | SummaryPage.jsx         |
+| 타임라인 조회      | `/api/drawers/{drawer_id}/timeline/` | POST   | ✅ 구현됨 (더미) | SummaryPage.jsx         |
+| 폴더 목록 조회     | `/api/drawers/list/`                 | GET    | ✅ 구현됨 (더미) | FolderChangeModal.jsx   |
+| 기록 완료          | `/api/records/start/`                | POST   | ✅ 구현됨 (더미) | FinishLoadingModal.jsx  |
+| 기록 목록 조회     | `/api/records/`                      | GET    | ❌ 주석 처리됨   | RecentRecordsPage.jsx   |
+| 폴더 목록 조회     | `/api/drawers/`                      | GET    | ❌ 주석 처리됨   | IncidentRecordsPage.jsx |
+| 폴더 생성          | `/api/drawers/`                      | POST   | ❌ 주석 처리됨   | IncidentRecordsPage.jsx |
+| 폴더 변경          | 미정                                 | 미정   | ❌ 미구현        | TableRow.jsx            |
+| 제목 수정          | 미정                                 | 미정   | ❌ 미구현        | TableRow.jsx            |
+| 파일 다운로드      | 미정                                 | 미정   | ❌ 미구현        | TableRow.jsx            |
 
 ---
 
@@ -239,10 +389,9 @@ const handleApiCall = async () => {
 
 ### 중간 우선순위
 
-- [ ] 폴더 변경 API 구현
-- [ ] 제목 수정 API 구현
-- [ ] 파일 다운로드 API 구현
-- [ ] 기록 목록 조회 API 구현
+- [ ] RecentRecordsPage 기록 목록 조회 API 구현
+- [ ] IncidentRecordsPage 폴더 관리 API 구현
+- [ ] TableRow 관련 API 구현 (폴더 변경, 제목 수정, 파일 다운로드)
 
 ### 낮은 우선순위
 
@@ -270,6 +419,12 @@ const handleApiCall = async () => {
 
 - `URL.createObjectURL()` 사용 시 적절한 `URL.revokeObjectURL()` 호출 필요
 - 첨부파일 제거 시 메모리 정리 로직 구현됨
+
+### 4. 네비게이션 연동
+
+- `window.navigation` 객체를 통한 전역 네비게이션 관리
+- 브라우저 뒤로가기 지원
+- 페이지 히스토리 스택 관리
 
 ---
 

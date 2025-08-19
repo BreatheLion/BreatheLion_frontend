@@ -53,7 +53,47 @@ const NavButton = styled.button`
   }
 `;
 
-export default function Header({ onRecordClick, onDrawerClick, currentPage }) {
+const LawyerConsultButton = styled.button`
+  background: transparent;
+  border: none;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.5rem;
+  font-family: "Pretendard", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 2.5rem;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #acacac;
+
+  &:hover {
+    background-color: rgba(172, 172, 172, 0.1);
+  }
+`;
+
+export default function Header({ currentPage }) {
+  const handleRecordClick = () => {
+    if (window.navigation.navigateToMain) {
+      window.navigation.navigateToMain();
+    }
+  };
+
+  const handleDrawerClick = () => {
+    if (window.navigation.navigateToDrawer) {
+      window.navigation.navigateToDrawer();
+    }
+  };
+
+  const handleLawyerConsultClick = () => {
+    if (window.navigation.navigateToLawyer) {
+      window.navigation.navigateToLawyer();
+    }
+  };
+
   return (
     <HeaderContainer>
       <LogoWrapper>
@@ -62,12 +102,21 @@ export default function Header({ onRecordClick, onDrawerClick, currentPage }) {
       <NavButtons>
         <NavButton
           $active={currentPage === "main" || currentPage === "chat"}
-          onClick={onRecordClick}
+          onClick={handleRecordClick}
         >
           기록하기
         </NavButton>
-        <NavButton $active={currentPage === "drawer"} onClick={onDrawerClick}>
+        <NavButton
+          $active={currentPage === "drawer"}
+          onClick={handleDrawerClick}
+        >
           서랍장
+        </NavButton>
+        <NavButton
+          $active={currentPage === "lawyer"}
+          onClick={handleLawyerConsultClick}
+        >
+          변호사 상담
         </NavButton>
       </NavButtons>
     </HeaderContainer>

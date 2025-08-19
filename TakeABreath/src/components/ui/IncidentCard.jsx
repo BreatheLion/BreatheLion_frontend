@@ -6,13 +6,32 @@ import downloadIcon from "../../assets/downloadIcon.svg";
 
 const IncidentCardContainer = styled.div`
   display: flex;
-  width: 48.1875rem;
+  width: 100%;
+  max-width: 50rem;
   padding: 3.125rem 2.5rem 2.5rem 2.5rem;
   align-items: center;
   gap: 2.5rem;
   border-radius: 1.25rem;
-  border: 2px solid var(--seconday, #688ae0);
+  border: 2px solid
+    ${(props) =>
+      props.$isSelectionMode
+        ? props.$isSelected
+          ? "var(--seconday, #688ae0)"
+          : "var(--5, #E9E9E9)"
+        : "var(--seconday, #688ae0)"};
   background: #fff;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
+  cursor: ${(props) => (props.$isSelectionMode ? "pointer" : "default")};
+  transition: all 0.2s ease;
+
+  &:hover {
+    ${(props) =>
+      props.$isSelectionMode &&
+      !props.$isSelected &&
+      `
+      border-color: var(--seconday, #688ae0);
+    `}
+  }
 `;
 
 const TextSection = styled.div`
@@ -22,7 +41,10 @@ const TextSection = styled.div`
 `;
 
 const FirstLine = styled.div`
-  color: var(--80, #313131);
+  color: ${(props) =>
+    props.$isSelectionMode && !props.$isSelected
+      ? "var(--30, #ACACAC)"
+      : "var(--80, #313131)"};
   font-family: Pretendard;
   font-size: 1.25rem;
   font-style: normal;
@@ -32,7 +54,10 @@ const FirstLine = styled.div`
 `;
 
 const SecondLine = styled.div`
-  color: var(--50, #7a7a7a);
+  color: ${(props) =>
+    props.$isSelectionMode && !props.$isSelected
+      ? "var(--30, #ACACAC)"
+      : "var(--50, #7a7a7a)"};
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
@@ -42,7 +67,10 @@ const SecondLine = styled.div`
 `;
 
 const DateText = styled.span`
-  color: var(--80, #313131);
+  color: ${(props) =>
+    props.$isSelectionMode && !props.$isSelected
+      ? "var(--30, #ACACAC)"
+      : "var(--80, #313131)"};
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
@@ -51,7 +79,10 @@ const DateText = styled.span`
 `;
 
 const ThirdLine = styled.div`
-  color: var(--50, #7a7a7a);
+  color: ${(props) =>
+    props.$isSelectionMode && !props.$isSelected
+      ? "var(--30, #ACACAC)"
+      : "var(--50, #7a7a7a)"};
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
@@ -63,7 +94,6 @@ const ButtonSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-right: 2.5rem;
 `;
 
 const ButtonContent = styled.div`
@@ -81,39 +111,70 @@ const ButtonText = styled.span`
   line-height: 1.25rem;
 `;
 
-export default function IncidentCard({ incident }) {
+export default function IncidentCard({
+  incident,
+  isSelectionMode = false,
+  isSelected = false,
+  onSelect,
+}) {
+  const handleClick = () => {
+    if (isSelectionMode && onSelect) {
+      onSelect(incident.drawer_id);
+    }
+  };
+
+  const handleGatheringClick = () => {
+    if (window.navigation.navigateToSummary) {
+      window.navigation.navigateToSummary(incident.drawer_id, incident.name);
+    }
+  };
+
   return (
-    <IncidentCardContainer>
+    <IncidentCardContainer
+      $isSelectionMode={isSelectionMode}
+      $isSelected={isSelected}
+      onClick={handleClick}
+    >
       <TextSection>
-        <FirstLine>{incident.name}</FirstLine>
-        <SecondLine>
-          생성 날짜 <DateText>{incident.date}</DateText>
+        <FirstLine $isSelectionMode={isSelectionMode} $isSelected={isSelected}>
+          {incident.name}
+        </FirstLine>
+        <SecondLine $isSelectionMode={isSelectionMode} $isSelected={isSelected}>
+          생성 날짜{" "}
+          <DateText $isSelectionMode={isSelectionMode} $isSelected={isSelected}>
+            {incident.date}
+          </DateText>
         </SecondLine>
-        <SecondLine>
-          기록 갯수 <DateText>{incident.record_amt}</DateText>
+        <SecondLine $isSelectionMode={isSelectionMode} $isSelected={isSelected}>
+          기록 갯수{" "}
+          <DateText $isSelectionMode={isSelectionMode} $isSelected={isSelected}>
+            {incident.record_amt}
+          </DateText>
         </SecondLine>
       </TextSection>
 
-      <ButtonSection>
-        <MainButton>
-          <ButtonContent>
-            <img src={aiHelperIcon} alt="AI Helper" />
-            <ButtonText $isPrimary={true}>AI 도우미</ButtonText>
-          </ButtonContent>
-        </MainButton>
-        <MainButton variant="secondary">
-          <ButtonContent>
-            <img src={gatheringIcon} alt="Gathering" />
-            <ButtonText $isPrimary={false}>모아보기</ButtonText>
-          </ButtonContent>
-        </MainButton>
-        <MainButton variant="secondary">
-          <ButtonContent>
-            <img src={downloadIcon} alt="Download" />
-            <ButtonText $isPrimary={false}>PDF 추출</ButtonText>
-          </ButtonContent>
-        </MainButton>
-      </ButtonSection>
+      {!isSelectionMode && (
+        <ButtonSection>
+          <MainButton>
+            <ButtonContent>
+              <img src={aiHelperIcon} alt="AI Helper" />
+              <ButtonText $isPrimary={true}>AI 도우미</ButtonText>
+            </ButtonContent>
+          </MainButton>
+          <MainButton variant="secondary" onClick={handleGatheringClick}>
+            <ButtonContent>
+              <img src={gatheringIcon} alt="Gathering" />
+              <ButtonText $isPrimary={false}>모아보기</ButtonText>
+            </ButtonContent>
+          </MainButton>
+          <MainButton variant="secondary">
+            <ButtonContent>
+              <img src={downloadIcon} alt="Download" />
+              <ButtonText $isPrimary={false}>PDF 추출</ButtonText>
+            </ButtonContent>
+          </MainButton>
+        </ButtonSection>
+      )}
     </IncidentCardContainer>
   );
 }

@@ -9,7 +9,8 @@ import TitleEditModal from "./TitleEditModal";
 
 const RowContainer = styled.div`
   display: flex;
-  width: 55.0625rem;
+  width: 100%;
+  max-width: 55rem;
   align-items: center;
   background: #ffffff;
   margin: 0 auto;
@@ -157,7 +158,16 @@ const ModalText = styled.span`
   line-height: 1.125rem;
 `;
 
-export default function TableRow({ id, order, title, date, location, folder }) {
+export default function TableRow({
+  id,
+  order,
+  title,
+  date,
+  location,
+  folder,
+  recordData,
+  onRowClick,
+}) {
   const [showModal, setShowModal] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [showTitleModal, setShowTitleModal] = useState(false);
@@ -209,6 +219,7 @@ export default function TableRow({ id, order, title, date, location, folder }) {
   const handleFolderChange = (newFolder) => {
     console.log(`폴더 변경: ${folder} → ${newFolder}`);
     console.log(`변경할 레코드 ID: ${id}`);
+    console.log(`전체 레코드 데이터:`, recordData);
     console.log(`레코드 정보:`, {
       id,
       order,
@@ -223,6 +234,7 @@ export default function TableRow({ id, order, title, date, location, folder }) {
   const handleTitleChange = (newTitle) => {
     console.log(`제목 변경: ${title} → ${newTitle}`);
     console.log(`변경할 레코드 ID: ${id}`);
+    console.log(`전체 레코드 데이터:`, recordData);
     console.log(`레코드 정보:`, {
       id,
       order,
@@ -234,8 +246,18 @@ export default function TableRow({ id, order, title, date, location, folder }) {
     // TODO: 실제 제목 변경 API 호출
   };
 
+  const handleRowClick = (e) => {
+    // 설정 버튼 클릭 시에는 행 클릭 이벤트를 발생시키지 않음
+    if (e.target.closest("button") || e.target.closest('[role="button"]')) {
+      return;
+    }
+    if (onRowClick) {
+      onRowClick();
+    }
+  };
+
   return (
-    <RowContainer>
+    <RowContainer onClick={handleRowClick} style={{ cursor: "pointer" }}>
       <Spacer $width="1.25rem" />
       <OrderCell>{order}</OrderCell>
       <Spacer $width="3.12rem" />
@@ -278,14 +300,7 @@ export default function TableRow({ id, order, title, date, location, folder }) {
         onConfirm={handleFolderChange}
         currentFolder={folder}
         recordId={id}
-        recordData={{
-          id,
-          order,
-          title,
-          date,
-          location,
-          folder,
-        }}
+        recordData={recordData}
       />
 
       <TitleEditModal
@@ -293,14 +308,7 @@ export default function TableRow({ id, order, title, date, location, folder }) {
         onClose={() => setShowTitleModal(false)}
         onConfirm={handleTitleChange}
         currentTitle={title}
-        recordData={{
-          id,
-          order,
-          title,
-          date,
-          location,
-          folder,
-        }}
+        recordData={recordData}
       />
     </RowContainer>
   );

@@ -2,9 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
 import { TitleDrawerButton } from "../components/ui/Button";
-import TableRow from "../components/ui/TableRow";
-import TableHeader from "../components/ui/TableHeader";
-import IncidentCard from "../components/ui/IncidentCard";
+import RecentRecordsPage from "./RecentRecordsPage";
+import IncidentRecordsPage from "./IncidentRecordsPage";
+import FolderAddModal from "../components/ui/FolderAddModal";
+import FolderDeleteConfirmModal from "../components/ui/DeleteConfirmModal";
 import settingButton from "../assets/settingButton.svg";
 import folderAddIcon from "../assets/folderAddIcon.svg";
 import deleteIcon from "../assets/deleteIcon.svg";
@@ -19,9 +20,8 @@ const PageContainer = styled.div`
 `;
 
 const ContentContainer = styled.div`
-  max-width: 80rem;
+  max-width: 60rem;
   margin: 0 auto;
-  padding: 0 12.5rem;
   height: calc(100vh - 4rem);
   display: flex;
   flex-direction: column;
@@ -118,9 +118,15 @@ const ModalText = styled.span`
   line-height: 1.125rem;
 `;
 
-export default function DrawerPage({ onNavigateToMain }) {
-  const [activeTab, setActiveTab] = useState("recent"); // "recent" | "incident"
+export default function DrawerPage({
+  onNavigateToMain,
+  onNavigateToRecordDetail,
+}) {
+  const [activeTab, setActiveTab] = useState("recent");
   const [showModal, setShowModal] = useState(false);
+  const [showFolderAddModal, setShowFolderAddModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [triggerFolderDelete, setTriggerFolderDelete] = useState(false);
   const modalRef = useRef(null);
 
   const handleTabClick = (tab) => {
@@ -132,9 +138,24 @@ export default function DrawerPage({ onNavigateToMain }) {
   };
 
   const handleModalItemClick = (action) => {
-    console.log(`설정 모달 액션: ${action}`);
     setShowModal(false);
-    // 추후 구현
+    if (action === "폴더 추가") {
+      setShowFolderAddModal(true);
+    } else if (action === "폴더 삭제") {
+      setTriggerFolderDelete(true);
+    }
+  };
+
+  const handleFolderAdd = async (folderName) => {
+    // 폴더 추가 API 호출 로직
+    console.log("폴더 추가:", folderName);
+    setShowFolderAddModal(false);
+  };
+
+  const handleDeleteConfirm = () => {
+    // 폴더 삭제 확인 로직
+    console.log("폴더 삭제 확인");
+    setShowDeleteConfirmModal(false);
   };
 
   useEffect(() => {
@@ -155,11 +176,7 @@ export default function DrawerPage({ onNavigateToMain }) {
 
   return (
     <PageContainer>
-      <Header
-        onRecordClick={onNavigateToMain}
-        onDrawerClick={() => {}}
-        currentPage="drawer"
-      />
+      <Header currentPage="drawer" />
       <ContentContainer>
         <TabSection>
           <TabContainer>
@@ -197,65 +214,33 @@ export default function DrawerPage({ onNavigateToMain }) {
           )}
         </TabSection>
 
-        {activeTab === "recent" ? (
-          <div style={{ flex: 1, overflowY: "auto" }}>
-            <TableHeader />
-            <TableRow
-              id="1"
-              order="1"
-              title="00커피 사장님 막말"
-              date="2025. 8. 3."
-              location="상도동 00 커피"
-              folder="상도동"
-            />
-            <TableRow
-              id="2"
-              order="2"
-              title="00 커피 사장님 무안 줌"
-              date="2025. 7. 12."
-              location="상도동 00 커피"
-              folder="상도동"
-            />
-          </div>
-        ) : (
-          <div
-            style={{
-              flex: 1,
-              overflowY: "auto",
-              display: "flex",
-              flexDirection: "column",
-              gap: "1rem",
-              alignItems: "center",
-              paddingBottom: "2rem",
-            }}
-          >
-            <IncidentCard
-              incident={{
-                drawer_id: 1,
-                name: "상도동 커피 폭언",
-                record_amt: 3,
-                date: "2025.08.16",
-              }}
-            />
-            <IncidentCard
-              incident={{
-                drawer_id: 2,
-                name: "회기동 함박",
-                record_amt: 3,
-                date: "2025.08.16",
-              }}
-            />
-            <IncidentCard
-              incident={{
-                drawer_id: 3,
-                name: "사장님",
-                record_amt: 2,
-                date: "2025.08.15",
-              }}
-            />
-          </div>
+        {activeTab === "recent" && (
+          <RecentRecordsPage
+            onNavigateToMain={onNavigateToMain}
+            onNavigateToRecordDetail={onNavigateToRecordDetail}
+          />
+        )}
+        {activeTab === "incident" && (
+          <IncidentRecordsPage
+            onNavigateToMain={onNavigateToMain}
+            triggerFolderDelete={triggerFolderDelete}
+            onFolderDeleteTriggered={() => setTriggerFolderDelete(false)}
+          />
         )}
       </ContentContainer>
+
+      <FolderAddModal
+        isOpen={showFolderAddModal}
+        onClose={() => setShowFolderAddModal(false)}
+        onConfirm={handleFolderAdd}
+      />
+
+      <FolderDeleteConfirmModal
+        isOpen={showDeleteConfirmModal}
+        onClose={() => setShowDeleteConfirmModal(false)}
+        onConfirm={handleDeleteConfirm}
+        selectedCount={0}
+      />
     </PageContainer>
   );
 }

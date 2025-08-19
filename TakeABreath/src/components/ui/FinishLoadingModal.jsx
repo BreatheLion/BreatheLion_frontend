@@ -20,8 +20,8 @@ export default function FinishLoadingModal({
     location: "동방",
     created_at: "2025-08-05T10:00:00",
     occurred_at: "2025-08-01T14:30:00",
-    assailant: ["서해승", "이예림"],
-    witness: ["오영록"],
+    assailant: [],
+    witness: [],
     drawers: ["00 커피 폭언", "기차역 살인사건"],
     evidences: [
       {

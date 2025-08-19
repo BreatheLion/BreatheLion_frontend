@@ -131,7 +131,7 @@ export default function LoadingModal({
   const isVideo = /\.(mp4|webm)(\?.*)?$/i.test(src);
 
   return (
-    <ModalOverlay>
+    <ModalOverlay data-modal="open">
       <ModalCard>
         <Title>{titleText}</Title>
         <Sub>{subText}</Sub>

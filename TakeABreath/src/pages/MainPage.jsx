@@ -137,7 +137,7 @@ const LoadingText = styled.span`
   font-weight: 500;
 `;
 
-export default function MainPage({ onNavigateToChat, onNavigateToDrawer }) {
+export default function MainPage({ onNavigateToChat }) {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -212,11 +212,7 @@ export default function MainPage({ onNavigateToChat, onNavigateToDrawer }) {
 
   return (
     <MainContainer>
-      <Header
-        onRecordClick={() => {}}
-        onDrawerClick={onNavigateToDrawer}
-        currentPage="main"
-      />
+      <Header currentPage="main" />
       <ContentWrapper>
         {/* 로고 유무 테스트 부분입니다! 
         <Logo style={{ marginTop: "4.5rem" }} /> */}

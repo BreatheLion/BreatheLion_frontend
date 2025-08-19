@@ -1,0 +1,698 @@
+import { useState, useEffect, useRef } from "react";
+import styled from "styled-components";
+import Header from "../components/layout/Header";
+import ArrowIcon from "../assets/ArrowIcon.svg";
+import DownArrowIcon from "../assets/DownArrowIcon.svg";
+import SearchIcon from "../assets/SearchIcon.svg";
+
+const PageContainer = styled.div`
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+`;
+
+const ContentContainer = styled.div`
+  width: 55rem;
+  margin: 0 auto;
+  height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+`;
+
+const TitleContainer = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.62rem;
+  margin-top: 4.5rem;
+`;
+
+const Subtitle = styled.div`
+  color: var(--30, #acacac);
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.25rem;
+  white-space: pre;
+`;
+
+const Title = styled.div`
+  color: var(--70, #4a4a4a);
+  font-family: Pretendard;
+  font-size: 1.25rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.5rem;
+`;
+
+const LoadingText = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: var(--50, #7a7a7a);
+  font-family: Pretendard;
+  font-size: 1rem;
+  font-weight: 500;
+`;
+
+const SummaryContainer = styled.div`
+  display: flex;
+  width: 55rem;
+  padding: 1.5625rem 1.875rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.9375rem;
+  border-radius: 1.25rem;
+  background: #fbfbfb;
+  margin-top: 2rem;
+`;
+
+const SummaryItem = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+`;
+
+const SummaryLabel = styled.div`
+  color: var(--50, #7a7a7a);
+  text-align: left;
+  font-family: Pretendard;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  min-width: 4rem;
+`;
+
+const SummaryContent = styled.div`
+  color: var(--80, #313131);
+  text-align: left;
+  font-family: Pretendard;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  flex: 1;
+`;
+
+const AssailantTags = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+`;
+
+const AssailantTag = styled.div`
+  display: flex;
+  padding: 0.3125rem 0.625rem;
+  justify-content: center;
+  align-items: center;
+  gap: 0.625rem;
+  border-radius: 1.875rem;
+  background: var(--70, #4a4a4a);
+  color: white;
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-weight: 500;
+`;
+
+const TimelineSearchContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 55rem;
+  margin-top: 2rem;
+  padding: 1rem 0;
+`;
+
+const SortButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--80, #313131);
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: var(--5, #f5f5f5);
+  }
+
+  img {
+    width: 1rem;
+    height: 1rem;
+  }
+`;
+
+const SearchContainer = styled.div`
+  display: flex;
+  width: 10.625rem;
+  height: 2rem;
+  padding: 0.25rem 0.5rem;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  border-bottom: 2px solid var(--seconday, #688ae0);
+`;
+
+const SearchInput = styled.input`
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--80, #313131);
+  font-family: Pretendard;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.125rem;
+  flex: 1;
+  margin-right: 0.5rem;
+
+  &::placeholder {
+    color: var(--10, #ddd);
+  }
+`;
+
+const SearchButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+`;
+
+const TimelineContainer = styled.div`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 55rem;
+  margin-top: 1rem;
+  gap: 0.94rem;
+  max-height: 30rem; /* 최대 높이 설정 */
+  overflow-y: auto; /* 세로 스크롤 활성화 */
+  padding-right: 0.5rem; /* 스크롤바 공간 확보 */
+`;
+
+const NoResultsMessage = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 10rem;
+  color: var(--50, #7a7a7a);
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+`;
+
+const TimelineAxis = styled.div`
+  position: absolute;
+  left: 1rem; /* MarkerCol 중앙과 일치 */
+  width: 2px;
+  background: var(--BP-Gradation, #68b8ea);
+  z-index: 0;
+`;
+
+const TimelineRow = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+`;
+
+const MarkerCol = styled.div`
+  position: relative;
+  width: 2rem; /* 축 영역 고정 너비 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+`;
+
+const MarkerDot = styled.div`
+  width: 0.8125rem;
+  height: 0.8125rem;
+  border-radius: 50%;
+  border: 2px solid var(--BP-Gradation, #68b8ea);
+  background: ${({ $filled }) =>
+    $filled ? "var(--BP-Gradation, #68b8ea)" : "#fff"};
+  z-index: 1;
+`;
+
+const TimelineDate = styled.div`
+  color: var(--BP-Gradation, #68b8ea);
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  text-align: left;
+  width: 8rem;
+  margin-left: 2.19rem;
+  flex-shrink: 0;
+`;
+
+const TimelineCard = styled.div`
+  display: flex;
+  padding: 1.25rem 1.875rem;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 1.25rem;
+  border: 2px solid var(--10, #ddd);
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  margin-left: 2.19rem; /* 날짜와 카드 사이 간격만 2.19rem로 고정 */
+
+  &:hover {
+    border-color: var(--BP-Gradation, #68b8ea);
+  }
+`;
+
+const CardContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+`;
+
+const CardHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const CategoryTag = styled.div`
+  display: flex;
+  padding: 0.3125rem 0.625rem;
+  justify-content: center;
+  align-items: center;
+  border-radius: 1.875rem;
+  border: 1px solid var(--5, #e9e9e9);
+  background: #fff;
+  color: var(--50, #7a7a7a);
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+`;
+
+const CardTitle = styled.div`
+  color: var(--80, #313131);
+  font-family: Pretendard;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.25rem;
+`;
+
+const CardSummary = styled.div`
+  color: var(--50, #7a7a7a);
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.25rem;
+`;
+
+const CardArrow = styled.img`
+  width: 1.23rem;
+  height: 1.23rem;
+`;
+
+export default function SummaryPage({ folderId, folderName }) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [summaryData, setSummaryData] = useState(null);
+  const [timelineData, setTimelineData] = useState([]);
+
+  // 검색 관련 상태
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [sortOrder, setSortOrder] = useState("oldest"); // "oldest" | "newest"
+
+  // 축 위치 계산용 ref/state
+  const containerRef = useRef(null);
+  const dotRefs = useRef([]);
+  const [axisStyle, setAxisStyle] = useState({ top: 0, height: 0 });
+  const setDotRef = (el) => {
+    if (el) dotRefs.current.push(el);
+  };
+
+  const getSubtitle = () => {
+    return `모아보기   >   ${folderName || "폴더명"}`;
+  };
+
+  const fetchSummaryData = async () => {
+    try {
+      setIsLoading(true);
+
+      // API 호출: GET /api/drawers/{drawer_id}/helpai/
+      const response = await fetch(`/api/drawers/${folderId}/helpai/`);
+
+      if (response.ok) {
+        const data = await response.json();
+        setSummaryData(data);
+      } else {
+        console.log("요약 데이터 API 호출 실패, 더미 데이터 사용");
+        // 더미 데이터 설정
+        setSummaryData({
+          drawer_id: folderId,
+          drawer_name: folderName,
+          categories: ["직장 내 관계", "직장 내 괴롭힘"],
+          assailant: ["김OO 팀장", "영록이형"],
+          record_count: 10,
+          summary:
+            "회의 중 새로운 제안을 발표했는데 무시당하고, 5분 뒤 상사가 같은 내용을 말함. 지난 회의에서도 비슷한 일이 있었음.",
+          actions: [
+            "아이디어를 제출할 때 익명 혹은 사전에 메일로 정리해 공개적으로 문서화하는 방법 사용",
+            "회의 후 1:1 멘토나 동료에게 피드백을 요청하여 존재감을 회복",
+          ],
+          related_laws: [],
+          organizations: [
+            {
+              name: "고용노동부",
+              description: "직장 내 괴롭힘 익명신고센터",
+              url: "https://www.moel.go.kr",
+            },
+            {
+              name: "노무사",
+              description: "노동 관련 법률 상담 가능",
+              url: "https://www.nomos.or.kr",
+            },
+          ],
+        });
+      }
+    } catch (error) {
+      console.error("요약 데이터 로딩 중 오류:", error);
+      // 에러 시에도 더미 데이터 사용
+      setSummaryData({
+        drawer_id: folderId,
+        drawer_name: folderName,
+        categories: ["직장 내 관계", "직장 내 괴롭힘"],
+        assailant: ["김OO 팀장", "영록이형"],
+        record_count: 3,
+        summary:
+          "회의 중 새로운 제안을 발표했는데 무시당하고, 5분 뒤 상사가 같은 내용을 말함. 지난 회의에서도 비슷한 일이 있었음.",
+        actions: [
+          "아이디어를 제출할 때 익명 혹은 사전에 메일로 정리해 공개적으로 문서화하는 방법 사용",
+          "회의 후 1:1 멘토나 동료에게 피드백을 요청하여 존재감을 회복",
+        ],
+        related_laws: [],
+        organizations: [
+          {
+            name: "고용노동부",
+            description: "직장 내 괴롭힘 익명신고센터",
+            url: "https://www.moel.go.kr",
+          },
+          {
+            name: "노무사",
+            description: "노동 관련 법률 상담 가능",
+            url: "https://www.nomos.or.kr",
+          },
+        ],
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchTimelineData = async (keyword = searchKeyword) => {
+    try {
+      // API 호출: GET /api/drawers/{drawer_id}/timeline/
+      const response = await fetch(`/api/drawers/${folderId}/timeline/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ keyword: keyword }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTimelineData(data);
+      } else {
+        console.log("타임라인 데이터 API 호출 실패, 더미 데이터 사용");
+        // 더미 데이터 설정
+        setTimelineData([
+          {
+            record_id: 1,
+            title: "공부",
+            location: "팀회의실",
+            category: "언어폭력",
+            summary: "내가 낸 아이디어를 무시하고~",
+            occurred_at: "2025-06-13",
+          },
+          {
+            record_id: 3,
+            title: "사내사내",
+            location: "사내 메신저",
+            category: "언어폭력",
+            summary: "메세지에 인사 없이 지시만~",
+            occurred_at: "2025-06-26",
+          },
+          {
+            record_id: 5,
+            title: "회의 중 갈등",
+            location: "회의실",
+            category: "언어폭력",
+            summary:
+              "회의 중 새로운 제안을 발표했는데 무시당하고, 5분 뒤 상사가 같은 내용을 말함.",
+            occurred_at: "2025-07-05",
+          },
+          {
+            record_id: 6,
+            title: "동료 간 갈등",
+            location: "사무실",
+            category: "언어폭력",
+            summary:
+              "동료가 나의 업무 성과를 무시하고 다른 사람에게 공을 돌림.",
+            occurred_at: "2025-07-10",
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("타임라인 데이터 로딩 중 오류:", error);
+      // 에러 시에도 더미 데이터 사용
+      setTimelineData([
+        {
+          record_id: 1,
+          title: "공부",
+          location: "팀회의실",
+          category: "언어폭력",
+          summary: "내가 낸 아이디어를 무시하고~",
+          occurred_at: "2025-06-13",
+        },
+        {
+          record_id: 3,
+          title: "사내사내",
+          location: "사내 메신저",
+          category: "언어폭력",
+          summary: "메세지에 인사 없이 지시만~",
+          occurred_at: "2025-06-26",
+        },
+        {
+          record_id: 5,
+          title: "회의 중 갈등",
+          location: "회의실",
+          category: "언어폭력",
+          summary:
+            "회의 중 새로운 제안을 발표했는데 무시당하고, 5분 뒤 상사가 같은 내용을 말함.",
+          occurred_at: "2025-07-05",
+        },
+        {
+          record_id: 6,
+          title: "동료 간 갈등",
+          location: "사무실",
+          category: "언어폭력",
+          summary: "동료가 나의 업무 성과를 무시하고 다른 사람에게 공을 돌림.",
+          occurred_at: "2025-07-10",
+        },
+      ]);
+    }
+  };
+
+  // 검색 실행 함수
+  const handleSearch = () => {
+    if (searchKeyword.trim()) {
+      fetchTimelineData(searchKeyword);
+    } else {
+      // 검색어가 없으면 초기 데이터로 복원
+      fetchTimelineData("");
+    }
+  };
+
+  // 정렬 변경 함수
+  const handleSortChange = () => {
+    setSortOrder((prev) => (prev === "oldest" ? "newest" : "oldest"));
+  };
+
+  useEffect(() => {
+    fetchSummaryData();
+    fetchTimelineData();
+  }, [folderId]);
+
+  // 초기 로드 시에만 API 호출
+  useEffect(() => {
+    if (folderId) {
+      fetchTimelineData("");
+    }
+  }, [folderId]);
+
+  useEffect(() => {
+    if (!containerRef.current || dotRefs.current.length < 2) return;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const firstRect = dotRefs.current[0].getBoundingClientRect();
+    const lastRect =
+      dotRefs.current[dotRefs.current.length - 1].getBoundingClientRect();
+    const top = firstRect.top - containerRect.top + firstRect.height / 2;
+    const height =
+      lastRect.top - firstRect.top + (lastRect.height - firstRect.height) / 2;
+    setAxisStyle({ top, height });
+  }, [timelineData, isLoading]);
+
+  if (isLoading) {
+    return (
+      <PageContainer>
+        <Header currentPage="summary" />
+        <ContentContainer>
+          <LoadingText>요약 데이터를 불러오는 중...</LoadingText>
+        </ContentContainer>
+      </PageContainer>
+    );
+  }
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}.${month}.${day}`;
+  };
+
+  const sortedTimelineData = timelineData.sort((a, b) => {
+    const dateA = new Date(a.occurred_at);
+    const dateB = new Date(b.occurred_at);
+    return sortOrder === "oldest" ? dateA - dateB : dateB - dateA;
+  });
+
+  // dotRefs 재수집을 위해 렌더링마다 초기화
+  dotRefs.current = [];
+
+  return (
+    <PageContainer>
+      <Header currentPage="summary" />
+      <ContentContainer>
+        <TitleContainer>
+          <Subtitle>{getSubtitle()}</Subtitle>
+          <Title>{summaryData?.folder_name || "폴더명"}</Title>
+        </TitleContainer>
+
+        <SummaryContainer>
+          <SummaryItem>
+            <SummaryLabel>가해자</SummaryLabel>
+            <AssailantTags>
+              {summaryData?.assailant?.map((person, index) => (
+                <AssailantTag key={index}>{person}</AssailantTag>
+              ))}
+            </AssailantTags>
+          </SummaryItem>
+
+          <SummaryItem>
+            <SummaryLabel>기록 갯수</SummaryLabel>
+            <SummaryContent>{summaryData?.record_count || 0}개</SummaryContent>
+          </SummaryItem>
+
+          <SummaryItem>
+            <SummaryLabel>요약</SummaryLabel>
+            <SummaryContent>
+              {summaryData?.summary || "요약 정보가 없습니다."}
+            </SummaryContent>
+          </SummaryItem>
+        </SummaryContainer>
+
+        <TimelineSearchContainer>
+          <SortButton onClick={handleSortChange}>
+            <img src={DownArrowIcon} alt="정렬" />
+            <span>{sortOrder === "oldest" ? "오래된 순" : "최신순"}</span>
+          </SortButton>
+
+          <SearchContainer>
+            <SearchInput
+              type="text"
+              placeholder="검색어를 입력하세요"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  handleSearch();
+                }
+              }}
+            />
+            <SearchButton onClick={handleSearch}>
+              <img src={SearchIcon} alt="검색" />
+            </SearchButton>
+          </SearchContainer>
+        </TimelineSearchContainer>
+
+        <TimelineContainer ref={containerRef}>
+          {sortedTimelineData.length > 0 ? (
+            <>
+              <TimelineAxis
+                style={{ top: axisStyle.top, height: axisStyle.height }}
+              />
+              {sortedTimelineData.map((record, index) => (
+                <TimelineRow key={record.record_id}>
+                  <MarkerCol>
+                    <MarkerDot
+                      ref={setDotRef}
+                      $filled={index === sortedTimelineData.length - 1}
+                    />
+                  </MarkerCol>
+                  <TimelineDate>{formatDate(record.occurred_at)}</TimelineDate>
+                  <TimelineCard
+                    onClick={() => {
+                      if (window.navigation.navigateToRecordDetail) {
+                        window.navigation.navigateToRecordDetail(
+                          "summary",
+                          record.record_id
+                        );
+                      }
+                    }}
+                  >
+                    <CardContent>
+                      <CardHeader>
+                        <CategoryTag>{record.category}</CategoryTag>
+                        <CardTitle>{record.title}</CardTitle>
+                      </CardHeader>
+                      <CardSummary>{record.summary}</CardSummary>
+                    </CardContent>
+                    <CardArrow src={ArrowIcon} alt="더보기" />
+                  </TimelineCard>
+                </TimelineRow>
+              ))}
+            </>
+          ) : (
+            <NoResultsMessage>검색 결과가 없습니다.</NoResultsMessage>
+          )}
+        </TimelineContainer>
+      </ContentContainer>
+    </PageContainer>
+  );
+}
