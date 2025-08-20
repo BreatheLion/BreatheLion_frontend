@@ -12,6 +12,8 @@ import DrawerPage from "./pages/DrawerPage";
 import RecordDetailPage from "./pages/RecordDetailPage";
 import ChatViewPage from "./pages/ChatViewPage";
 import SummaryPage from "./pages/SummaryPage";
+import ExtractPdfPage from "./pages/ExtractPdfPage";
+import GetContentProvePage from "./pages/GetContentProvePage";
 import LawyerPage from "./pages/LawyerPage";
 
 // 전역 네비게이션 함수들을 위한 객체
@@ -49,14 +51,10 @@ function App() {
 
   // 전역 네비게이션(기존 컴포넌트 호환)
   useEffect(() => {
-    // 상단 탭 이동은 히스토리를 쌓지 않도록 replace
-    window.navigation.navigateToMain = () => navigate("/", { replace: true });
-    window.navigation.navigateToChat = () =>
-      navigate("/chat", { replace: true });
-    window.navigation.navigateToDrawer = () =>
-      navigate("/drawer", { replace: true });
-    window.navigation.navigateToLawyer = () =>
-      navigate("/lawyer", { replace: true });
+    window.navigation.navigateToMain = () => navigate("/");
+    window.navigation.navigateToChat = () => navigate("/chat");
+    window.navigation.navigateToDrawer = () => navigate("/drawer");
+    window.navigation.navigateToLawyer = () => navigate("/lawyer");
     window.navigation.navigateToRecordDetail = (previousPage, recordId) =>
       navigate(`/record/${recordId}`, { state: { previousPage } });
     window.navigation.navigateToChatView = (recordId, pageTitle, created_at) =>
@@ -70,8 +68,7 @@ function App() {
     const onPop = () => {
       const hasOpenModal = document.querySelector('[data-modal="open"]');
       if (hasOpenModal) {
-        // 현재 위치를 다시 푸시하여 이동을 취소
-        navigate(location.pathname, { replace: true });
+        window.history.go(1);
       }
     };
     window.addEventListener("popstate", onPop);
@@ -129,6 +126,28 @@ function App() {
     );
   };
 
+  const ExtractPdfRoute = () => {
+    const state = location.state || {};
+    const drawerId = location.pathname.split("/").pop();
+    return (
+      <ExtractPdfPage
+        drawerId={Number(drawerId)}
+        drawerName={state.drawerName}
+      />
+    );
+  };
+
+  const GetContentProveRoute = () => {
+    const state = location.state || {};
+    const drawerId = location.pathname.split("/").pop();
+    return (
+      <GetContentProvePage
+        drawerId={Number(drawerId)}
+        drawerName={state.drawerName}
+      />
+    );
+  };
+
   return (
     <Routes>
       {/* 초기 진입은 MainPage */}
@@ -147,6 +166,11 @@ function App() {
       <Route path="/record/:recordId" element={<RecordDetailRoute />} />
       <Route path="/chat-view/:recordId" element={<ChatViewRoute />} />
       <Route path="/summary/:folderId" element={<SummaryRoute />} />
+      <Route path="/extract-pdf/:drawerId" element={<ExtractPdfRoute />} />
+      <Route
+        path="/get-content-prove/:drawerId"
+        element={<GetContentProveRoute />}
+      />
       <Route path="/lawyer" element={<LawyerPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

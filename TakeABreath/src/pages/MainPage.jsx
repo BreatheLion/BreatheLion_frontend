@@ -2,17 +2,18 @@ import styled from "styled-components";
 import { useState } from "react";
 import Header from "../components/layout/Header";
 import Logo from "../components/common/Logo";
+import MainPageSendButton from "../assets/MainPageSendButton.svg";
 
 const MainContainer = styled.div`
-  background: radial-gradient(
-    70% 90% at 50% 49.93%,
-    #c3e3f7 0%,
-    #e8f4fc 26.28%,
-    #f1f8fd 39.34%,
-    #fff 55.94%
+  background: var(
+    --BP-Gradation,
+    linear-gradient(
+      267deg,
+      var(--Color, #68b8ea) -67.73%,
+      #688ae0 48.44%,
+      #8c68e0 122.38%
+    )
   );
-
-  /*background: radial-gradient(45.56% 69.85% at 50% 49.93%, #FFF 16.15%, #F1F8FD 30.21%, #E8F4FC 55.08%, #C3E3F7 99.43%);*/
   width: 100vw;
   height: 100vh;
   position: fixed;
@@ -29,8 +30,7 @@ const ContentWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  padding-top: 20rem;
+  justify-content: center;
   text-align: center;
 `;
 
@@ -63,19 +63,20 @@ const InputContainer = styled.div`
 const TextInput = styled.input`
   width: 100%;
   height: 3.125rem;
-  background: #68b8ea;
+  background: #fff;
   border: none;
-  border-radius: 2rem;
+  border-radius: 3.125rem;
   padding: 0 4rem 0 1.5rem;
   font-family: "Pretendard", sans-serif;
   font-size: 1rem;
-  font-weight: 400;
-  color: #fff;
+  font-weight: 600;
+  color: var(--seconday, #688ae0);
+  line-height: 1.375rem;
   box-sizing: border-box;
   outline: none;
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--seconday, #688ae0);
   }
 
   &:focus {
@@ -88,22 +89,20 @@ const ArrowButton = styled.button`
   right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  width: 2rem;
-  height: 2rem;
-  background: white;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: transparent;
   border: none;
-  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   aspect-ratio: 1/1;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-  svg {
-    width: 1.25rem;
-    height: 1.25rem;
+  img {
+    width: 1.5rem;
+    height: 1.5rem;
   }
 
   &:hover {
@@ -121,19 +120,36 @@ const ArrowButton = styled.button`
   }
 `;
 
-const ArrowIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 24" fill="none">
-    <path
-      d="M5.00059 19.425C4.66725 19.5583 4.35059 19.529 4.05059 19.337C3.75059 19.145 3.60059 18.866 3.60059 18.5V14L11.6006 12L3.60059 10V5.50001C3.60059 5.13335 3.75059 4.85435 4.05059 4.66301C4.35059 4.47168 4.66725 4.44235 5.00059 4.57501L20.4006 11.075C20.8173 11.2583 21.0256 11.5667 21.0256 12C21.0256 12.4333 20.8173 12.7417 20.4006 12.925L5.00059 19.425Z"
-      fill="#68B8EA"
-    />
-  </svg>
-);
+const ArrowIcon = () => <img src={MainPageSendButton} alt="전송 버튼" />;
 
 const LoadingText = styled.span`
   color: #68b8ea;
   font-size: 0.75rem;
   font-weight: 500;
+`;
+
+const MainText = styled.div`
+  color: rgba(255, 255, 255, 0.37);
+  text-align: center;
+  font-family: Pretendard;
+  font-size: 1.25rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 2.375rem;
+  margin-bottom: 2.06rem;
+`;
+
+const TitleText = styled.div`
+  position: absolute;
+  left: 3.63rem;
+  top: 7.38rem;
+  color: #fff;
+  font-family: Pretendard;
+  font-size: 2.25rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 3.125rem;
+  white-space: pre-line;
 `;
 
 export default function MainPage({ onNavigateToChat }) {
@@ -206,11 +222,7 @@ export default function MainPage({ onNavigateToChat }) {
             minute: "2-digit",
             hour12: false,
           }),
-          message_date: new Date()
-            .toISOString()
-            .split("T")[0]
-            .slice(5)
-            .replace("-", "-"),
+          message_date: new Date().toISOString().split("T")[0],
         },
       };
 
@@ -227,12 +239,10 @@ export default function MainPage({ onNavigateToChat }) {
           date: mockServerResponse.data.message_date,
         };
 
-        // 실제 응답으로 업데이트 (ChatPage에서 처리)
-        onNavigateToChat({
-          userMessage: trimmed,
-          serverResponse: processedResponse,
-          isLoading: false,
-        });
+        // 두 번째 네비게이션을 막고, 응답은 이벤트로 ChatPage에 전달
+        window.dispatchEvent(
+          new CustomEvent("chat_server_response", { detail: processedResponse })
+        );
       } else {
         throw new Error("서버 응답이 올바르지 않습니다.");
       }
@@ -252,17 +262,11 @@ export default function MainPage({ onNavigateToChat }) {
   return (
     <MainContainer>
       <Header currentPage="main" />
+      <TitleText>
+        당신의 상처가{"\n"}잊히지 않도록,{"\n"}왜곡되지 않도록.
+      </TitleText>
       <ContentWrapper>
-        {/* 로고 유무 테스트 부분입니다! 
-        <Logo style={{ marginTop: "4.5rem" }} /> */}
-        <MainTitle>
-          말하지 못한 상처를, 이제는 말해도 괜찮아요.
-          <br />
-          당신의 감정과 이야기를, 증거로 지켜드릴게요.
-        </MainTitle>
-        <SubTitle>
-          아픔은 여기에만 남기고, 당신은 한 걸음 나아가도 좋아요.
-        </SubTitle>
+        <MainText>숨쉬어와 함께 기록해보세요</MainText>
         <InputContainer>
           <TextInput
             type="text"

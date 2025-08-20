@@ -83,7 +83,8 @@
           "s3Url": "https://s3.bucket.com/records/1/file/진술서.pdf",
           "uploaded_at": "2025-08-02T09:07:00"
         }
-      ]
+      ],
+      "id": "388c"
     },
     {
       "record_id": 2,
@@ -113,7 +114,8 @@
           "s3Url": "https://s3.bucket.com/records/2/photo/threat_photo.jpg",
           "uploaded_at": "2025-08-03T13:20:00"
         }
-      ]
+      ],
+      "id": "e0fe"
     },
     {
       "record_id": 3,
@@ -143,7 +145,8 @@
           "s3Url": "https://s3.bucket.com/records/3/video/corridor_incident.mp4",
           "uploaded_at": "2025-08-06T09:50:00"
         }
-      ]
+      ],
+      "id": "da32"
     }
   ],
   "chats": [
@@ -187,7 +190,8 @@
           "message_time": "14:30",
           "message_date": "08-01"
         }
-      ]
+      ],
+      "id": "bf85"
     }
   ],
   "drawers": [
@@ -195,53 +199,63 @@
       "drawer_id": 1,
       "name": "상도동 커피 폭언",
       "record_amt": 3,
-      "date": "2025.08.16"
+      "date": "2025.08.16",
+      "id": "4568"
     },
     {
       "drawer_id": 2,
       "name": "회기동 함박",
       "record_amt": 3,
-      "date": "2025.08.16"
+      "date": "2025.08.16",
+      "id": "97b9"
     },
     {
       "drawer_id": 3,
       "name": "사장님",
       "record_amt": 0,
-      "date": "2025.08.15"
+      "date": "2025.08.15",
+      "id": "7231"
     },
     {
       "drawer_id": 4,
       "name": "폴더2",
       "record_amt": 1,
-      "date": "2025.08.14"
+      "date": "2025.08.14",
+      "id": "eafd"
     },
     {
       "drawer_id": 5,
       "name": "서랍이름",
       "record_amt": 1,
-      "date": "2025.08.13"
+      "date": "2025.08.13",
+      "id": "20eb"
     }
   ],
   "drawers_list": [
     {
       "drawer_id": 1,
-      "name": "상도동"
+      "name": "상도동",
+      "id": "c079"
     },
     {
       "drawer_id": 2,
-      "name": "회기동 함박"
+      "name": "회기동 함박",
+      "id": "7a9e"
     },
     {
       "drawer_id": 3,
-      "name": "사장님"
+      "name": "사장님",
+      "id": "62f9"
     },
     {
       "drawer_id": 4,
-      "name": "폴더2"
+      "name": "폴더2",
+      "id": "4a0f"
     },
     {
       "drawer_id": 5,
-      "name": "서랍이름"
+      "name": "서랍이름",
+      "id": "1295"
     }
   ],
   "helpai": [
@@ -256,7 +270,8 @@
         ],
         "record_count": 10,
         "summary": "회의 중 새로운 제안을 발표했는데 무시당하고, 5분 뒤 상사가 같은 내용을 말함. 지난 회의에서도 비슷한 일이 있었음."
-      }
+      },
+      "id": "f390"
     }
   ],
   "records_start": [
@@ -269,7 +284,8 @@
         "answer": "안녕하세요. 오늘 있으셨던 사건에 대해 이야기해 주셔서 감사합니다. 어떤 일이 있었는지 조금 더 자세히 말씀해 주실 수 있을까요? 어떤 감정을 느끼셨는지도 함께 이야기해 주시면 도움이 될 것 같아요.",
         "message_time": "02:34",
         "message_date": "08-11"
-      }
+      },
+      "id": "8fe8"
     },
     {
       "id": "5514",
@@ -355,6 +371,131 @@
       "id": "85f7",
       "message": "ㄴㅇㄹ",
       "role": "user"
+    },
+    {
+      "id": "b454",
+      "message": "sdf",
+      "role": "user"
+    },
+    {
+      "id": "8662",
+      "message": "sdf",
+      "role": "user"
+    },
+    {
+      "id": "3f43",
+      "message": "아오 어려워",
+      "role": "user"
+    },
+    {
+      "id": "336f",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "9689",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "b5f9",
+      "message": "ㄹㄹㄹ",
+      "role": "user"
+    },
+    {
+      "id": "659e",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "f63b",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "8ca2",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "e4e7",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "91e1",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "4f1c",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "f743",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "6b6f",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "7fa7",
+      "message": "ㄴㅇ",
+      "role": "user"
+    },
+    {
+      "id": "5fe6",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "e813",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "9659",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "9778",
+      "message": "ㅇㄴㄹ",
+      "role": "user"
+    },
+    {
+      "id": "19fa",
+      "message": "ㅇㄴㄹ",
+      "role": "user"
+    },
+    {
+      "id": "9600",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "585e",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "b12e",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "b69b",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "bd81",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
     }
   ],
   "timeline": [
@@ -365,7 +506,8 @@
       "location": "팀회의실",
       "category": "언어폭력",
       "summary": "내가 낸 아이디어를 무시하고~",
-      "occurred_at": "2025-06-13"
+      "occurred_at": "2025-06-13",
+      "id": "372a"
     },
     {
       "record_id": 3,
@@ -374,7 +516,8 @@
       "location": "사내 메신저",
       "category": "언어폭력",
       "summary": "메세지에 인사 없이 지시만~",
-      "occurred_at": "2025-06-26"
+      "occurred_at": "2025-06-26",
+      "id": "eb35"
     },
     {
       "record_id": 5,
@@ -383,7 +526,8 @@
       "location": "회의실",
       "category": "언어폭력",
       "summary": "회의 중 새로운 제안을 발표했는데 무시당하고, 5분 뒤 상사가 같은 내용을 말함.",
-      "occurred_at": "2025-07-05"
+      "occurred_at": "2025-07-05",
+      "id": "a959"
     },
     {
       "record_id": 6,
@@ -392,7 +536,8 @@
       "location": "사무실",
       "category": "언어폭력",
       "summary": "동료가 나의 업무 성과를 무시하고 다른 사람에게 공을 돌림.",
-      "occurred_at": "2025-07-10"
+      "occurred_at": "2025-07-10",
+      "id": "dc41"
     },
     {
       "record_id": 7,
@@ -401,7 +546,8 @@
       "location": "교실",
       "category": "신체폭력",
       "summary": "교실에서 학생 간 신체적 폭력이 발생했습니다.",
-      "occurred_at": "2025-06-15"
+      "occurred_at": "2025-06-15",
+      "id": "42c8"
     },
     {
       "record_id": 8,
@@ -410,7 +556,8 @@
       "location": "SNS",
       "category": "사이버폭력",
       "summary": "SNS를 통한 악성 댓글과 괴롭힘이 지속되었습니다.",
-      "occurred_at": "2025-06-20"
+      "occurred_at": "2025-06-20",
+      "id": "28b1"
     },
     {
       "record_id": 9,
@@ -419,7 +566,8 @@
       "location": "사무실",
       "category": "언어폭력",
       "summary": "상사로부터 지속적인 언어폭력을 받았습니다.",
-      "occurred_at": "2025-06-10"
+      "occurred_at": "2025-06-10",
+      "id": "98ab"
     },
     {
       "record_id": 10,
@@ -428,7 +576,8 @@
       "location": "가정",
       "category": "신체폭력",
       "summary": "가정 내에서 신체적 폭력이 발생했습니다.",
-      "occurred_at": "2025-06-05"
+      "occurred_at": "2025-06-05",
+      "id": "f326"
     }
   ]
 }

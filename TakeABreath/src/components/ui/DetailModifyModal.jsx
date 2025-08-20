@@ -3,10 +3,11 @@ import { useState, useRef } from "react";
 import TimePicker from "react-time-picker";
 import "react-time-picker/dist/TimePicker.css";
 import "react-clock/dist/Clock.css";
-import AttachmentChip from "../components/ui/AttachmentChip";
-import { MainButton } from "../components/ui/Button";
-import ConfirmModal from "../components/ui/ConfirmModal";
-import SavingModal from "../components/ui/SavingModal";
+import AttachmentChip from "./AttachmentChip";
+import { MainButton } from "./Button";
+import ConfirmModal from "./ConfirmModal";
+import SavingModal from "./SavingModal";
+import { evidenceClient } from "../../utils/evidence";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -131,6 +132,30 @@ const Label = styled.label`
 `;
 
 const Input = styled.input`
+  display: flex;
+  width: 34.6875rem;
+  padding: 0.625rem 0.9375rem;
+  align-items: center;
+  gap: 0.625rem;
+  border-radius: 0.625rem;
+  border: 1px solid ${(props) => (props.$highlighted ? "#68b8ea" : "#ddd")};
+  background: ${(props) => (props.$highlighted ? "#e6f6ff" : "#fff")};
+  font-family: "Pretendard", sans-serif;
+  font-size: 0.875rem;
+  outline: none;
+
+  &:focus {
+    border: 1px solid #68b8ea;
+    background: #e6f6ff;
+  }
+
+  &:disabled {
+    background: #f5f5f5;
+    color: #666;
+  }
+`;
+
+const Select = styled.select`
   display: flex;
   width: 34.6875rem;
   padding: 0.625rem 0.9375rem;
@@ -392,6 +417,37 @@ const PREDEFINED_CATEGORIES = [
   "기타",
 ];
 
+// 발생 지역 코드 → 라벨 매핑
+const DISTRICT_CODE_TO_LABEL = {
+  GANGNAM: "강남구",
+  GANGDONG: "강동구",
+  GANGBUK: "강북구",
+  GANGSEO: "강서구",
+  GWANAK: "관악구",
+  GWANGJIN: "광진구",
+  GURO: "구로구",
+  GEUMCHEON: "금천구",
+  NOWON: "노원구",
+  DOBONG: "도봉구",
+  DONGDAEMUN: "동대문구",
+  DONGJAK: "동작구",
+  MAPO: "마포구",
+  SEODAEMUN: "서대문구",
+  SEOCHO: "서초구",
+  SEONGDONG: "성동구",
+  SEONGBUK: "성북구",
+  SONGPA: "송파구",
+  YANGCHEON: "양천구",
+  YEONGDEUNGPO: "영등포구",
+  YONGSAN: "용산구",
+  EUNPYEONG: "은평구",
+  JONGNO: "종로구",
+  JUNG: "중구",
+  JUNGRANG: "중랑구",
+};
+
+const DISTRICT_CODES = Object.keys(DISTRICT_CODE_TO_LABEL);
+
 const toDateTimeLocal = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -404,7 +460,7 @@ const toDateTimeLocal = (dateString) => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
-export default function DetailModifyPage({
+export default function DetailModifyModal({
   data,
   attachments,
   onClose,
@@ -425,23 +481,22 @@ export default function DetailModifyPage({
     occurred_at: initialLocal,
     location: data.location || "",
     content: data.content || "",
-    category: data.category || [],
+    categories: data.categories || data.category || [],
     drawers: data.drawers || [],
     evidences: data.evidence || data.evidences || [],
     witness: data.witness || [],
+    district: data.district || "",
+    created_at: data.created_at || "",
   });
 
   const [occurDate, setOccurDate] = useState(initialDate);
   const [occurTime, setOccurTime] = useState(initialTime);
-  const [localEvidences, setLocalEvidences] = useState(
-    attachments
-      ? attachments.map((att) => ({
-          id: att.id,
-          file: att.file,
-          previewUrl: att.previewUrl,
-        }))
-      : []
+  // 채팅에서 이미 업로드된 첨부 중 유지할 s3Key 집합
+  const [keptS3Keys, setKeptS3Keys] = useState(
+    () => new Set((attachments || []).map((a) => a.s3Key).filter(Boolean))
   );
+  // 모달에서 새로 업로드한 첨부 (즉시 업로드 결과)
+  const [modalNewEvidences, setModalNewEvidences] = useState([]);
   const fileInputRef = useRef(null);
 
   const [addingTag, setAddingTag] = useState({
@@ -484,13 +539,14 @@ export default function DetailModifyPage({
     const requiredFields = new Set();
 
     if (!formData.title?.trim()) requiredFields.add("title");
-    if (!formData.category?.length) requiredFields.add("category");
+    if (!formData.categories?.length) requiredFields.add("categories");
     if (!formData.assailant?.length) requiredFields.add("assailant");
     if (!formData.severity) requiredFields.add("severity");
     if (!formData.occurred_at) requiredFields.add("occurred_at");
     if (!formData.location?.trim()) requiredFields.add("location");
     if (!formData.content?.trim()) requiredFields.add("content");
     if (!formData.drawers?.length) requiredFields.add("drawers");
+    if (!formData.district) requiredFields.add("district");
 
     return requiredFields;
   };
@@ -520,18 +576,26 @@ export default function DetailModifyPage({
   };
 
   const handleSavingComplete = () => {
-    const existingEvidences = (formData.evidences || []).filter(
-      (ev) => !String(ev.url || "").startsWith("blob:")
-    );
-    const newFiles = localEvidences.map((le) => le.file);
-
     const payload = {
-      ...formData,
-      record_id: data.record_id,
+      title: formData.title,
+      assailant: formData.assailant,
+      severity: formData.severity,
       occurred_at: formData.occurred_at ? `${formData.occurred_at}:00` : "",
+      location: formData.location,
+      content: formData.content,
+      categories: formData.categories || [],
+      drawers: formData.drawers || [],
+      witness: formData.witness || [],
+      district: formData.district || "",
+      created_at: formData.created_at || "",
+      record_id: data.record_id,
       drawer: Array.isArray(formData.drawers) ? formData.drawers[0] || "" : "",
-      existing_evidences: existingEvidences,
-      new_files: newFiles,
+      keep_s3Keys: Array.from(keptS3Keys),
+      modal_new_evidences: modalNewEvidences.map((m) => ({
+        type: m.type,
+        filename: m.filename,
+        s3Key: m.s3Key,
+      })),
     };
     onSubmit(payload);
     setShowSavingModal(false);
@@ -576,30 +640,28 @@ export default function DetailModifyPage({
     if (fileInputRef.current) fileInputRef.current.click();
   };
 
-  const handleFilesChosen = (e) => {
+  const handleFilesChosen = async (e) => {
     const chosen = Array.from(e.target.files || []);
     if (chosen.length === 0) return;
 
     const allowTypes = /^(image|audio|video)\//;
-    const current = localEvidences.length;
-    const room = Math.max(0, MAX_ATTACHMENTS - current);
-
-    // 파일 개수 제한 적용
+    const currentCount =
+      (attachments || []).filter((a) => keptS3Keys.has(a.s3Key)).length +
+      modalNewEvidences.length;
+    const room = Math.max(0, MAX_ATTACHMENTS - currentCount);
     const accepted = chosen
       .filter((f) => allowTypes.test(f.type))
       .slice(0, room);
 
-    // 총 파일 크기 계산 및 제한 적용
-    const currentTotalSize = localEvidences.reduce(
-      (sum, ev) => sum + ev.file.size,
+    const currentTotalSize = modalNewEvidences.reduce(
+      (sum, ev) => sum + (ev.size || 0),
       0
     );
-    const newFiles = [];
     let newTotalSize = currentTotalSize;
-
+    const filesWithinLimit = [];
     for (const file of accepted) {
       if (newTotalSize + file.size <= MAX_TOTAL_SIZE) {
-        newFiles.push(file);
+        filesWithinLimit.push(file);
         newTotalSize += file.size;
       } else {
         alert(
@@ -611,49 +673,80 @@ export default function DetailModifyPage({
       }
     }
 
-    const next = newFiles.map((file) => ({
-      id: `${Date.now()}_${file.name}`,
-      file,
-      previewUrl: URL.createObjectURL(file),
-    }));
+    const prefix = `records/${data.record_id || 0}/evidence`;
+    const uploaded = [];
+    for (const file of filesWithinLimit) {
+      try {
+        const info = await evidenceClient.uploadAndGetPreview({
+          prefix,
+          file,
+          readMinutes: 60,
+        });
+        uploaded.push({
+          id: `${Date.now()}_${file.name}`,
+          filename: info.filename,
+          type: info.type, // IMAGE | VIDEO | AUDIO
+          s3Key: info.s3Key,
+          previewUrl: info.previewUrl,
+          mimeType: info.mimeType,
+          size: info.size,
+        });
+      } catch (err) {
+        console.error("모달 첨부 업로드 실패", err);
+      }
+    }
 
-    setLocalEvidences((prev) => [...prev, ...next]);
-    setFormData((prev) => ({
-      ...prev,
-      evidences: [
-        ...prev.evidences,
-        ...next.map((n) => ({
-          filename: n.file.name,
-          type: getEvidenceType(n.file),
-          url: n.previewUrl,
-        })),
-      ],
-    }));
-
+    if (uploaded.length > 0) {
+      setModalNewEvidences((prev) => [...prev, ...uploaded]);
+    }
     e.target.value = "";
   };
 
   const removeLocalEvidence = (id) => {
-    let removedUrl = null;
-    setLocalEvidences((prev) => {
-      const target = prev.find((p) => p.id === id);
-      if (target?.previewUrl) {
-        removedUrl = target.previewUrl;
-        URL.revokeObjectURL(target.previewUrl);
-      }
-      return prev.filter((p) => p.id !== id);
-    });
-    setFormData((prev) => ({
-      ...prev,
-      evidences: prev.evidences.filter((ev) => ev.url !== removedUrl),
-    }));
+    setModalNewEvidences((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const removeServerEvidenceByUrl = (targetUrl) => {
-    setFormData((prev) => ({
-      ...prev,
-      evidences: (prev.evidences || []).filter((ev) => ev.url !== targetUrl),
-    }));
+  const extractS3KeyFromUrl = (url) => {
+    try {
+      const u = new URL(url);
+      // Try common param names first
+      const byParam = u.searchParams.get("s3Key") || u.searchParams.get("key");
+      if (byParam) return byParam;
+      // Try to infer from path if it contains the key
+      // e.g., https://s3.../records/3/evidence/uuid.ext?X-Amz-...
+      const pathname = decodeURIComponent(u.pathname || "");
+      const idx = pathname.indexOf("/records/");
+      if (idx !== -1) {
+        return pathname.slice(idx + 1); // remove leading '/'
+      }
+      return "";
+    } catch (e) {
+      return "";
+    }
+  };
+
+  const handleRemoveServerEvidence = async (item) => {
+    try {
+      const key = item?.s3Key || extractS3KeyFromUrl(item?.url || "");
+      if (key) {
+        await evidenceClient.deleteByKey(key);
+      }
+    } catch (err) {
+      console.error("서버 증거 삭제 실패", err);
+    } finally {
+      setFormData((prev) => ({
+        ...prev,
+        evidences: (prev.evidences || []).filter((ev) => ev !== item),
+      }));
+    }
+  };
+
+  const removeChatAttachmentByS3Key = (s3Key) => {
+    setKeptS3Keys((prev) => {
+      const next = new Set(prev);
+      next.delete(s3Key);
+      return next;
+    });
   };
 
   // const clearAllLocalEvidences = () => {
@@ -707,42 +800,44 @@ export default function DetailModifyPage({
               <FormField>
                 <Label
                   showMark={
-                    !formData.category || formData.category.length === 0
+                    !formData.categories || formData.categories.length === 0
                   }
                 >
                   카테고리
                 </Label>
                 <CategoryContainer
                   style={{
-                    border: highlightedFields.has("category")
+                    border: highlightedFields.has("categories")
                       ? "1px solid #68b8ea"
                       : "none",
-                    borderRadius: highlightedFields.has("category")
+                    borderRadius: highlightedFields.has("categories")
                       ? "0.625rem"
                       : "0",
-                    background: highlightedFields.has("category")
+                    background: highlightedFields.has("categories")
                       ? "#e6f6ff"
                       : "transparent",
-                    padding: highlightedFields.has("category") ? "0.5rem" : "0",
+                    padding: highlightedFields.has("categories")
+                      ? "0.5rem"
+                      : "0",
                   }}
                 >
                   {PREDEFINED_CATEGORIES.map((cat) => {
-                    const selected = (formData.category || []).includes(cat);
+                    const selected = (formData.categories || []).includes(cat);
                     return (
                       <CategoryButton
                         key={cat}
                         selected={selected}
                         onClick={() => {
                           setFormData((prev) => {
-                            const current = new Set(prev.category || []);
+                            const current = new Set(prev.categories || []);
                             if (current.has(cat)) {
                               current.delete(cat);
                             } else {
                               current.add(cat);
                             }
-                            return { ...prev, category: Array.from(current) };
+                            return { ...prev, categories: Array.from(current) };
                           });
-                          clearHighlight("category");
+                          clearHighlight("categories");
                         }}
                       >
                         {cat}
@@ -1107,6 +1202,32 @@ export default function DetailModifyPage({
 
             <FormRow>
               <FormField>
+                <Label showMark={!formData.district}>발생 지역</Label>
+                <Select
+                  value={formData.district || ""}
+                  onChange={(e) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      district: e.target.value,
+                    }));
+                    clearHighlight("district");
+                  }}
+                  $highlighted={highlightedFields.has("district")}
+                >
+                  <option value="" disabled>
+                    선택
+                  </option>
+                  {DISTRICT_CODES.map((code) => (
+                    <option key={code} value={code}>
+                      {DISTRICT_CODE_TO_LABEL[code]}
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+            </FormRow>
+
+            <FormRow>
+              <FormField>
                 <Label showMark={!formData.content}>발생 정황</Label>
                 <TextArea
                   value={formData.content}
@@ -1143,17 +1264,34 @@ export default function DetailModifyPage({
                           name={item.filename}
                           kind={item.type}
                           previewUrl={item.url}
-                          onRemove={() => removeServerEvidenceByUrl(item.url)}
+                          onRemove={() => handleRemoveServerEvidence(item)}
                         />
                       ))}
-                    {localEvidences.map((att) => (
+
+                    {(attachments || [])
+                      .filter((att) => keptS3Keys.has(att.s3Key))
+                      .map((att) => (
+                        <AttachmentChip
+                          key={`chat_${att.id}`}
+                          name={att.filename}
+                          kind={att.type}
+                          previewUrl={att.previewUrl}
+                          onRemove={() =>
+                            removeChatAttachmentByS3Key(att.s3Key)
+                          }
+                        />
+                      ))}
+
+                    {modalNewEvidences.map((att) => (
                       <AttachmentChip
-                        key={att.id}
-                        file={att.file}
+                        key={`modal_${att.id}`}
+                        name={att.filename}
+                        kind={att.type}
                         previewUrl={att.previewUrl}
                         onRemove={() => removeLocalEvidence(att.id)}
                       />
                     ))}
+
                     <AddButton onClick={handleFileSelect}>+</AddButton>
                   </AttachmentsBar>
                   <FileInput

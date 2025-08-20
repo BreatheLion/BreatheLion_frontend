@@ -10,9 +10,10 @@ const HeaderContainer = styled.header`
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 0 12.5rem;
+  padding: 0 2.5rem;
   z-index: 10;
   border-bottom: 1px solid #f2f2f2;
+  background: #fff;
 `;
 
 const LogoWrapper = styled.div`
@@ -83,8 +84,8 @@ export default function Header({ currentPage }) {
   };
 
   const handleRecordClick = () => {
-    if (window.navigation.navigateToChat) {
-      window.navigation.navigateToChat();
+    if (window.navigation.navigateToMain) {
+      window.navigation.navigateToMain();
     }
   };
 

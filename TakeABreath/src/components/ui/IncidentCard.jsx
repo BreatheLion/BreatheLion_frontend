@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 import { MainButton } from "./Button";
 import aiHelperIcon from "../../assets/aiHelperIcon.svg";
 import unableAiHelperIcon from "../../assets/UnableAiHelperIcon.svg";
@@ -118,6 +119,8 @@ export default function IncidentCard({
   isSelected = false,
   onSelect,
 }) {
+  const navigate = useNavigate();
+
   const handleClick = () => {
     if (isSelectionMode && onSelect) {
       onSelect(incident.drawer_id);
@@ -128,6 +131,13 @@ export default function IncidentCard({
     if (window.navigation.navigateToSummary) {
       window.navigation.navigateToSummary(incident.drawer_id, incident.name);
     }
+  };
+
+  const handlePdfExtractClick = () => {
+    // ExtractPdfPage로 이동
+    navigate(`/extract-pdf/${incident.drawer_id}`, {
+      state: { drawerName: incident.name },
+    });
   };
 
   return (
@@ -179,7 +189,11 @@ export default function IncidentCard({
               <ButtonText $isPrimary={false}>모아보기</ButtonText>
             </ButtonContent>
           </MainButton>
-          <MainButton variant="secondary" disabled={incident.record_amt === 0}>
+          <MainButton
+            variant="secondary"
+            disabled={incident.record_amt === 0}
+            onClick={handlePdfExtractClick}
+          >
             <ButtonContent>
               <img src={downloadIcon} alt="Download" />
               <ButtonText $isPrimary={false}>PDF 추출</ButtonText>

@@ -2,10 +2,13 @@ import styled from "styled-components";
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Header from "../components/layout/Header";
-import DetailModifyPage from "./DetailModifyPage";
+import DetailModifyModal from "../components/ui/DetailModifyModal";
+import { evidenceClient } from "../utils/evidence";
 import FinishLoadingModal from "../components/ui/FinishLoadingModal";
 import AttachmentChip from "../components/ui/AttachmentChip";
 import iconSymbol from "../assets/iconSymbol.svg";
+import ChatPagePlusButton from "../assets/ChatPagePlusButton.svg";
+import ChatPageSendButton from "../assets/ChatPageSendButton.svg";
 
 const ChatContainer = styled.div`
   background: #ffffff;
@@ -91,8 +94,15 @@ const MessageBubble = styled.div`
   box-sizing: border-box;
 
   &.user {
-    background: #fbfbfb;
-    color: #4a4a4a;
+    background: linear-gradient(
+      267deg,
+      var(--Color, #68b8ea) -99.74%,
+      #688ae0 37.78%,
+      #8c68e0 177.79%
+    );
+    color: #fff;
+    border-radius: 1.25rem;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
   }
 
   &.ai {
@@ -140,9 +150,16 @@ const InputContainer = styled.div`
   flex-direction: column;
   align-items: stretch;
   border-radius: 1.25rem;
-  border: 3px solid var(--Color, #68b8ea);
-  background: #fff;
-  box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.15);
+  border: 2px solid transparent;
+  background: linear-gradient(#fff, #fff) padding-box,
+    linear-gradient(
+        267deg,
+        var(--Color, #68b8ea) -67.73%,
+        #688ae0 48.44%,
+        #8c68e0 122.38%
+      )
+      border-box;
+  box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.08);
 `;
 
 const ChatInput = styled.textarea`
@@ -182,14 +199,17 @@ const InputActions = styled.div`
 const SendButton = styled.button`
   width: 2rem;
   height: 2rem;
-  background: #68b8ea; /* 배경 파랑 */
-  color: #fff; /* 아이콘 흰색 (currentColor) */
+  background: transparent;
   border: none;
-  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+
+  img {
+    width: 2rem;
+    height: 2rem;
+  }
 
   &:hover {
     opacity: 0.9;
@@ -203,12 +223,12 @@ const PlusIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #68b8ea; /* icon color */
-  font-size: 2rem;
-  line-height: 1;
-  padding: 0;
-  margin: 0;
   cursor: pointer;
+
+  img {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
 
   &:hover {
     opacity: 0.9;
@@ -393,7 +413,9 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
   const [isFinishing, setIsFinishing] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [finishResponse, setFinishResponse] = useState(null);
-  const [attachments, setAttachments] = useState([]); // {id, file, previewUrl}
+  // attachments: 채팅에서 올린 파일을 즉시 S3 업로드하여 s3Key/previewUrl을 보관
+  // { id, filename, type: "IMAGE"|"VIDEO"|"AUDIO", s3Key, previewUrl, mimeType, size }
+  const [attachments, setAttachments] = useState([]);
   const uploadAbortRef = useRef(null);
   const fileInputRef = useRef(null);
   const chatAreaRef = useRef(null);
@@ -404,7 +426,8 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
   const USE_FAKE_API = true; // 테스트가 끝나면 false로 변경하세요
   const SIMULATE_LATENCY_MS = 3000;
   const fakeTimerRef = useRef(null);
-  const MAX_ATTACHMENTS = 5; // 첨부 최대 개수
+  const MAX_ATTACHMENTS = 10; // 첨부 최대 개수
+  const MAX_TOTAL_SIZE = 300 * 1024 * 1024; // 총합 300MB (바이트 단위)
 
   // chat_session_id 추출
   const chatSessionId = initialChatData?.serverResponse?.chat_session_id || 1;
@@ -431,6 +454,36 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
       });
     }
   }, [initialChatData]);
+
+  // MainPage에서 전달되는 실제 서버 응답을 이벤트로 수신해 메시지 교체
+  useEffect(() => {
+    const onServerResponse = (e) => {
+      const detail = e?.detail || {};
+      const answer = detail.answer;
+      const time = detail.time || "";
+      if (!answer) return;
+
+      setMessages((prev) => {
+        const updated = [...prev];
+        const idx = updated.findIndex(
+          (m) => m.type === "ai" && m.content === "응답 중입니다"
+        );
+        if (idx !== -1) {
+          updated[idx] = { ...updated[idx], content: answer, time };
+          return updated;
+        }
+        return [
+          ...updated,
+          { id: updated.length + 1, type: "ai", content: answer, time },
+        ];
+      });
+      setIsLoading(false);
+    };
+
+    window.addEventListener("chat_server_response", onServerResponse);
+    return () =>
+      window.removeEventListener("chat_server_response", onServerResponse);
+  }, []);
 
   // 브라우저 뒤로가기/앞으로가기 시 메시지 복원
   useEffect(() => {
@@ -503,32 +556,73 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
     if (fileInputRef.current) fileInputRef.current.click();
   };
 
-  const handleFilesChosen = (e) => {
+  const handleFilesChosen = async (e) => {
     const chosen = Array.from(e.target.files || []);
     if (chosen.length === 0) return;
-    // 제한: 최대 5개, 영상/이미지/오디오 허용
+
+    // 제한: 최대 10개, 영상/이미지/오디오 허용
     const allowTypes = /^(image|audio|video)\//;
     const current = attachments.length;
     const room = Math.max(0, MAX_ATTACHMENTS - current);
     const accepted = chosen
       .filter((f) => allowTypes.test(f.type))
       .slice(0, room);
-    const next = accepted.map((file) => ({
-      id: `${Date.now()}_${file.name}`,
-      file,
-      previewUrl: URL.createObjectURL(file),
-    }));
-    setAttachments((prev) => [...prev, ...next]);
-    // reset input to allow re-choose same file names
+
+    const currentTotalSize = attachments.reduce(
+      (sum, att) => sum + (att.size || 0),
+      0
+    );
+    const filesWithinLimit = [];
+    let newTotalSize = currentTotalSize;
+    for (const file of accepted) {
+      if (newTotalSize + file.size <= MAX_TOTAL_SIZE) {
+        filesWithinLimit.push(file);
+        newTotalSize += file.size;
+      } else {
+        alert(
+          `파일 크기 제한을 초과했습니다. (최대 ${
+            MAX_TOTAL_SIZE / (1024 * 1024)
+          }MB)`
+        );
+        break;
+      }
+    }
+
+    // 즉시 S3 업로드 후 s3Key/previewUrl 보관
+    const basePrefix = finishResponse?.record_id
+      ? `records/${finishResponse.record_id}`
+      : `chat-sessions/${chatSessionId}`;
+    const prefix = `${basePrefix}/evidence`;
+    const uploaded = [];
+    for (const file of filesWithinLimit) {
+      try {
+        const info = await evidenceClient.uploadAndGetPreview({
+          prefix,
+          file,
+          readMinutes: 60,
+        });
+        uploaded.push({
+          id: `${Date.now()}_${file.name}`,
+          filename: info.filename,
+          type: info.type, // IMAGE | VIDEO | AUDIO
+          s3Key: info.s3Key,
+          previewUrl: info.previewUrl,
+          mimeType: info.mimeType,
+          size: info.size,
+        });
+      } catch (err) {
+        console.error("첨부 업로드 실패", err);
+      }
+    }
+
+    if (uploaded.length > 0) {
+      setAttachments((prev) => [...prev, ...uploaded]);
+    }
     e.target.value = "";
   };
 
   const removeAttachment = (id) => {
-    setAttachments((prev) => {
-      const target = prev.find((p) => p.id === id);
-      if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl);
-      return prev.filter((p) => p.id !== id);
-    });
+    setAttachments((prev) => prev.filter((p) => p.id !== id));
   };
 
   const clearAllAttachments = () => {
@@ -555,32 +649,45 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
 
   const handleDetailSubmit = async (payload) => {
     try {
-      const form = new FormData();
-      form.append("record_id", String(payload.record_id || ""));
-      form.append("title", payload.title || "");
-      form.append("content", payload.content || "");
-      form.append("severity", String(payload.severity ?? ""));
-      form.append("location", payload.location || "");
-      form.append("occurred_at", payload.occurred_at || "");
-      form.append("drawer", payload.drawer || "");
+      // evidence 정리: 모달에서 전달된 유지/신규 첨부 기준으로 최종 JSON 구성
+      const keptS3Keys = Array.isArray(payload.keep_s3Keys)
+        ? payload.keep_s3Keys
+        : attachments.map((a) => a.s3Key).filter(Boolean);
 
-      (payload.category || []).forEach((v) => form.append("category[]", v));
-      (payload.assailant || []).forEach((v) => form.append("assailant[]", v));
-      (payload.witness || []).forEach((v) => form.append("witness[]", v));
+      const body = {
+        record_id: payload.record_id,
+        title: payload.title || "",
+        categories: payload.categories || [],
+        content: payload.content || "",
+        severity: payload.severity,
+        location: payload.location || "",
+        district: payload.district || "",
+        created_at: payload.created_at || "",
+        occurred_at: payload.occurred_at || "",
+        assailant: payload.assailant || [],
+        witness: payload.witness || [],
+        drawer: payload.drawer || "",
+        evidences: [
+          // 채팅에서 이미 올린 파일들 중 유지 선택된 것만
+          ...keptS3Keys.map((s3Key) => {
+            const att = attachments.find((a) => a.s3Key === s3Key);
+            return {
+              type: att?.type || "FILE",
+              filename: att?.filename || "",
+              s3Key,
+            };
+          }),
+          // 모달에서 새로 업로드한 첨부들
+          ...(payload.modal_new_evidences || []).map((m) => ({
+            type: m.type,
+            filename: m.filename,
+            s3Key: m.s3Key,
+          })),
+        ],
+      };
 
-      // 기존 유지할 서버 파일들: 파일명 기준
-      (payload.existing_evidences || []).forEach((ev) => {
-        if (ev?.filename) form.append("evidences_keep[]", ev.filename);
-      });
-
-      // 새로 추가된 파일 업로드
-      (payload.new_files || []).forEach((file) => {
-        if (file) form.append("evidences[]", file, file.name);
-      });
-
-      // TODO: 백엔드 연동 후 실제 API 호출로 변경
-      // 현재는 즉시 메인 화면으로 이동 (임시 로직)
-      console.log("저장 API 호출 시뮬레이션:", form);
+      console.log("저장 요청(JSON)", body);
+      // await axios.post("/api/records/save/", body);
 
       // 대화 완료 시 localStorage에서 해당 세션 메시지 삭제
       try {
@@ -592,8 +699,6 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
       }
 
       onNavigateToMain();
-      // await axios.post("/api/records/save/", form);
-      // onNavigateToMain();
     } catch (error) {
       window.handleApiError(error, "데이터 저장에 실패했습니다.");
     }
@@ -811,41 +916,10 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
               />
               <InputActions>
                 <PlusIcon onClick={handleFileSelect}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="100%"
-                    height="100%"
-                    viewBox="0 0 14 14"
-                    fill="none"
-                  >
-                    <g clipPath="url(#clip0_168_2659)">
-                      <path
-                        d="M1 7H13"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d="M7 1L7 13"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                    </g>
-                    <defs>
-                      <clipPath id="clip0_168_2659">
-                        <rect width="14" height="14" fill="white" />
-                      </clipPath>
-                    </defs>
-                  </svg>
+                  <img src={ChatPagePlusButton} alt="파일 첨부" />
                 </PlusIcon>
                 <SendButton onClick={handleSend} disabled={isLoading}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z"
-                      fill="currentColor"
-                    />
-                  </svg>
+                  <img src={ChatPageSendButton} alt="전송" />
                 </SendButton>
               </InputActions>
               <FileInput
@@ -871,9 +945,9 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
         />
       )}
 
-      {/* DetailModifyPage 모달 */}
+      {/* DetailModifyModal 모달 */}
       {showDetailModal && finishResponse && (
-        <DetailModifyPage
+        <DetailModifyModal
           data={finishResponse}
           attachments={attachments} // 미리보기 URL 포함된 첨부파일 데이터 전달
           onClose={handleDetailClose}

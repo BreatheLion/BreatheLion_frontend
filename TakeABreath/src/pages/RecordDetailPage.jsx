@@ -112,6 +112,14 @@ const FormField = styled.div`
   gap: 1.25rem;
 `;
 
+const District = styled.span`
+  display: inline-flex;
+  align-items: center;
+  font-family: "Pretendard", sans-serif;
+  font-size: 0.875rem;
+  color: #313131;
+`;
+
 const Label = styled.label`
   font-family: "Pretendard", sans-serif;
   font-size: 0.875rem;
@@ -393,6 +401,34 @@ export default function RecordDetailPage({ previousPage, record_id }) {
     return `${year}-${month}-${day} ${hours}:${minutes}`;
   };
 
+  const DISTRICT_CODE_TO_LABEL = {
+    GANGNAM: "강남구",
+    GANGDONG: "강동구",
+    GANGBUK: "강북구",
+    GANGSEO: "강서구",
+    GWANAK: "관악구",
+    GWANGJIN: "광진구",
+    GURO: "구로구",
+    GEUMCHEON: "금천구",
+    NOWON: "노원구",
+    DOBONG: "도봉구",
+    DONGDAEMUN: "동대문구",
+    DONGJAK: "동작구",
+    MAPO: "마포구",
+    SEODAEMUN: "서대문구",
+    SEOCHO: "서초구",
+    SEONGDONG: "성동구",
+    SEONGBUK: "성북구",
+    SONGPA: "송파구",
+    YANGCHEON: "양천구",
+    YEONGDEUNGPO: "영등포구",
+    YONGSAN: "용산구",
+    EUNPYEONG: "은평구",
+    JONGNO: "종로구",
+    JUNG: "중구",
+    JUNGRANG: "중랑구",
+  };
+
   if (isLoading) {
     return (
       <PageContainer>
@@ -545,6 +581,18 @@ export default function RecordDetailPage({ previousPage, record_id }) {
               <FormField>
                 <Label>발생 장소</Label>
                 <Input>{recordData?.location || "발생 장소 정보 없음"}</Input>
+              </FormField>
+            </FormRow>
+
+            <FormRow>
+              <FormField>
+                <Label>발생 지역</Label>
+                <District>
+                  {recordData?.district
+                    ? DISTRICT_CODE_TO_LABEL[recordData.district] ||
+                      recordData.district
+                    : "발생 지역 정보 없음"}
+                </District>
               </FormField>
             </FormRow>
 

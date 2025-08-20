@@ -14,10 +14,11 @@ export default function FinishLoadingModal({
   const fallbackData = {
     record_id: 3,
     title: "동방에서 일어난 무시무시한 사건",
-    category: ["괴롭힘"],
+    categories: ["괴롭힘"],
     content: "오늘 해승이가 해원이를 괴롭혔다",
     severity: 1,
     location: "동방",
+    district: "DONGJAK",
     created_at: "2025-08-05T10:00:00",
     occurred_at: "2025-08-01T14:30:00",
     assailant: [],

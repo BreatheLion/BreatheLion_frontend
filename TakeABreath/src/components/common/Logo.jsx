@@ -13,7 +13,7 @@ const LogoIcon = styled.img`
 `;
 
 const LogoText = styled.span`
-  color: #68b8ea;
+  color: var(--seconday, #688ae0);
   font-family: Pretendard;
   font-size: 1.5rem;
   font-style: normal;
