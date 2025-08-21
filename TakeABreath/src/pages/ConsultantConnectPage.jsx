@@ -45,14 +45,14 @@ const Title = styled.h1`
   margin: 0;
 `;
 
-const LawyerCardsContainer = styled.div`
+const ConsultantCardsContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 15.5rem);
   gap: 1rem;
   justify-content: flex-start;
 `;
 
-const LawyerCard = styled.div`
+const ConsultantCard = styled.div`
   width: 13rem;
   height: 19.4375rem;
   display: flex;
@@ -64,7 +64,7 @@ const LawyerCard = styled.div`
   background: var(--Main-bk, #f8faff);
 `;
 
-const LawyerImage = styled.div`
+const ConsultantImage = styled.div`
   width: 100%;
   height: 100%;
   margin-bottom: 1.25rem;
@@ -76,14 +76,14 @@ const LawyerImage = styled.div`
   background-position: center;
 `;
 
-const LawyerInfo = styled.div`
+const ConsultantInfo = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.19rem;
   width: 100%;
 `;
 
-const LawyerName = styled.div`
+const ConsultantName = styled.div`
   color: var(--80, #313131);
   font-family: Pretendard;
   font-size: 1rem;
@@ -91,7 +91,7 @@ const LawyerName = styled.div`
   line-height: 1.25rem;
 `;
 
-const LawFirm = styled.div`
+const Organization = styled.div`
   color: var(--50, #7a7a7a);
   font-family: Pretendard;
   font-size: 0.875rem;
@@ -118,97 +118,99 @@ const SpecializationTag = styled.div`
   white-space: nowrap;
 `;
 
-// 변호사 더미 데이터
-const lawyerData = [
+// 상담사 더미 데이터
+const consultantData = [
   {
     id: 1,
-    name: "김민수 변호사",
-    lawFirm: "법무법인 한결",
-    specialization: "형사 사건",
-    image: "/src/assets/lawyers/lawyer1.png",
+    name: "김하늘 상담사",
+    organization: "경력 8년",
+    specialization: "우울증·불안장애",
+    image: "/src/assets/consultants/Consultant1.svg",
   },
   {
     id: 2,
-    name: "이서현 변호사",
-    lawFirm: "법무법인 미래",
-    specialization: "지적재산권·특허",
-    image: "/src/assets/lawyers/lawyer2.png",
+    name: "이민준 상담사",
+    organization: "경력 12년",
+    specialization: "커리어·직무 스트레스",
+    image: "/src/assets/consultants/Consultant2.svg",
   },
   {
     id: 3,
-    name: "박준호 변호사",
-    lawFirm: "법무법인 대륙아주",
-    specialization: "이혼·가사 사건",
-    image: "/src/assets/lawyers/lawyer3.png",
+    name: "박소영 상담사",
+    organization: "경력 5년",
+    specialization: "청소년 상담",
+    image: "/src/assets/consultants/Consultant3.svg",
   },
   {
     id: 4,
-    name: "정다은 변호사",
-    lawFirm: "법무법인 바른길",
-    specialization: "지적재산권·특허",
-    image: "/src/assets/lawyers/lawyer4.png",
+    name: "최지훈 상담사",
+    organization: "경력 10년",
+    specialization: "부부 상담",
+    image: "/src/assets/consultants/Consultant4.svg",
   },
   {
     id: 5,
-    name: "최현우 변호사",
-    lawFirm: "법무법인 해우",
-    specialization: "부동산, 건설",
-    image: "/src/assets/lawyers/lawyer5.png",
+    name: "한예린 상담사",
+    organization: "경력 5년",
+    specialization: "대인관계",
+    image: "/src/assets/consultants/Consultant5.svg",
   },
   {
     id: 6,
-    name: "오지민 변호사",
-    lawFirm: "법무법인 새빛",
-    specialization: "노동, 재산",
-    image: "/src/assets/lawyers/laweyer6.png",
+    name: "정우진 상담사",
+    organization: "경력 8년",
+    specialization: "불안장애·스트레스",
+    image: "/src/assets/consultants/Consultant6.svg",
   },
   {
     id: 7,
-    name: "한지수 변호사",
-    lawFirm: "법무법인 정윤",
-    specialization: "국제거래, 부채",
-    image: "/src/assets/lawyers/lawyer7.png",
+    name: "윤채원 상담사",
+    organization: "경력 12년",
+    specialization: "대인관계",
+    image: "/src/assets/consultants/Consultant7.svg",
   },
   {
     id: 8,
-    name: "서강훈 변호사",
-    lawFirm: "법무법인 다온",
-    specialization: "형사, 마약",
-    image: "/src/assets/lawyers/lawyer8.png",
+    name: "강태호 상담사",
+    organization: "경력 11년",
+    specialization: "정신건강",
+    image: "/src/assets/consultants/Consultant8.svg",
   },
 ];
 
-export default function LawyerPage() {
+export default function ConsultantConnectPage() {
   const navigate = useNavigate();
 
-  const handleLawyerCardClick = (lawyer) => {
-    navigate("/lawyer-details", { state: { lawyerData: lawyer } });
+  const handleConsultantCardClick = (consultant) => {
+    navigate("/consultant-details", { state: { consultantData: consultant } });
   };
 
   return (
     <PageContainer>
-      <Header currentPage="lawyer" />
+      <Header currentPage="consultant-connect" />
       <ContentContainer>
         <TitleContainer>
-          <Title>변호사 상담</Title>
+          <Title>상담사 상담</Title>
         </TitleContainer>
 
-        <LawyerCardsContainer>
-          {lawyerData.map((lawyer) => (
-            <LawyerCard
-              key={lawyer.id}
-              onClick={() => handleLawyerCardClick(lawyer)}
+        <ConsultantCardsContainer>
+          {consultantData.map((consultant) => (
+            <ConsultantCard
+              key={consultant.id}
+              onClick={() => handleConsultantCardClick(consultant)}
               style={{ cursor: "pointer" }}
             >
-              <LawyerImage src={lawyer.image} />
-              <LawyerInfo>
-                <LawyerName>{lawyer.name}</LawyerName>
-                <LawFirm>{lawyer.lawFirm}</LawFirm>
-                <SpecializationTag>{lawyer.specialization}</SpecializationTag>
-              </LawyerInfo>
-            </LawyerCard>
+              <ConsultantImage src={consultant.image} />
+              <ConsultantInfo>
+                <ConsultantName>{consultant.name}</ConsultantName>
+                <Organization>{consultant.organization}</Organization>
+                <SpecializationTag>
+                  {consultant.specialization}
+                </SpecializationTag>
+              </ConsultantInfo>
+            </ConsultantCard>
           ))}
-        </LawyerCardsContainer>
+        </ConsultantCardsContainer>
       </ContentContainer>
     </PageContainer>
   );

@@ -238,14 +238,19 @@ const PlusIcon = styled.div`
 const FinishButton = styled.button`
   height: 2.75rem;
   width: 7rem;
-  background: #fff;
-  border: 1px solid var(--10, #ddd);
-  margin-bottom: 0.5rem;
   border-radius: 0.5rem;
+  border: 1px solid var(--seconday, #688ae0);
+  background: linear-gradient(
+    267deg,
+    var(--Color, #68b8ea) -99.74%,
+    #688ae0 37.78%,
+    #8c68e0 177.79%
+  );
+  margin-bottom: 0.5rem;
   font-family: "Pretendard", sans-serif;
   font-size: 0.9375rem;
   font-weight: 500;
-  color: #313131;
+  color: #fff;
   cursor: pointer;
   line-height: 1.125rem;
 `;

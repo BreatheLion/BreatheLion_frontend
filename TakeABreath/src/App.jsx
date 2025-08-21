@@ -15,6 +15,10 @@ import SummaryPage from "./pages/SummaryPage";
 import ExtractPdfPage from "./pages/ExtractPdfPage";
 import GetContentProvePage from "./pages/GetContentProvePage";
 import LawyerPage from "./pages/LawyerPage";
+import ConsultantPage from "./pages/ConsultantPage";
+import ConsultantConnectPage from "./pages/ConsultantConnectPage";
+import LawyerDetailsPage from "./pages/LawyerDetailsPage";
+import ConsultantConnectDetailPage from "./pages/ConsultantConnectDetailPage";
 
 // 전역 네비게이션 함수들을 위한 객체
 window.navigation = {};
@@ -55,6 +59,7 @@ function App() {
     window.navigation.navigateToChat = () => navigate("/chat");
     window.navigation.navigateToDrawer = () => navigate("/drawer");
     window.navigation.navigateToLawyer = () => navigate("/lawyer");
+    window.navigation.navigateToConsultant = () => navigate("/consultant");
     window.navigation.navigateToRecordDetail = (previousPage, recordId) =>
       navigate(`/record/${recordId}`, { state: { previousPage } });
     window.navigation.navigateToChatView = (recordId, pageTitle, created_at) =>
@@ -172,6 +177,13 @@ function App() {
         element={<GetContentProveRoute />}
       />
       <Route path="/lawyer" element={<LawyerPage />} />
+      <Route path="/consultant" element={<ConsultantPage />} />
+      <Route path="/consultant-connect" element={<ConsultantConnectPage />} />
+      <Route path="/lawyer-details" element={<LawyerDetailsPage />} />
+      <Route
+        path="/consultant-details"
+        element={<ConsultantConnectDetailPage />}
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

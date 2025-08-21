@@ -96,8 +96,8 @@ export default function Header({ currentPage }) {
   };
 
   const handleLawyerConsultClick = () => {
-    if (window.navigation.navigateToLawyer) {
-      window.navigation.navigateToLawyer();
+    if (window.navigation.navigateToConsultant) {
+      window.navigation.navigateToConsultant();
     }
   };
 
@@ -117,10 +117,10 @@ export default function Header({ currentPage }) {
           서랍장
         </NavButton>
         <NavButton
-          $active={currentPage === "lawyer"}
+          $active={currentPage === "consultant"}
           onClick={handleLawyerConsultClick}
         >
-          변호사 상담
+          상담
         </NavButton>
       </NavButtons>
     </HeaderContainer>

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
+import MainButton from "../components/ui/Button/MainButton";
+import WarningIcon from "../assets/warningIcon.svg";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -42,6 +44,27 @@ const Title = styled.div`
   font-style: normal;
   font-weight: 500;
   line-height: 1.5rem;
+`;
+
+const DescriptionText = styled.div`
+  color: var(--50, #7a7a7a);
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.375rem;
+  text-align: left;
+  white-space: pre-line;
+  margin-top: 0.63rem;
+`;
+
+const HighlightedText = styled.span`
+  color: var(--seconday, #688ae0);
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.375rem;
 `;
 
 const MainContent = styled.div`
@@ -111,6 +134,31 @@ const InputContainer = styled.div`
   gap: 1rem;
 `;
 
+const WarningContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1.06rem;
+  width: 100%;
+  height: 2.75rem;
+  margin-bottom: 1.38rem;
+`;
+
+const WarningIconImage = styled.img`
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+`;
+
+const WarningText = styled.div`
+  color: #e44343;
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.375rem;
+  white-space: pre-line;
+`;
+
 const InputRow = styled.div`
   display: flex;
   align-items: center;
@@ -139,15 +187,15 @@ const Input = styled.input`
   align-items: center;
   gap: 0.625rem;
   border-radius: 0.625rem;
-  border: 1px solid #ddd;
-  background: #fff;
+  border: 1px solid ${(props) => (props.$isInvalid ? "#ff6b6b" : "#ddd")};
+  background: ${(props) => (props.$isInvalid ? "#fff5f5" : "#fff")};
   font-family: "Pretendard", sans-serif;
   font-size: 0.875rem;
   outline: none;
 
   &:focus {
-    border: 1px solid #68b8ea;
-    background: #e6f6ff;
+    border: 1px solid ${(props) => (props.$isInvalid ? "#ff6b6b" : "#68b8ea")};
+    background: ${(props) => (props.$isInvalid ? "#fff5f5" : "#e6f6ff")};
   }
 
   &:disabled {
@@ -205,10 +253,18 @@ const InputGroup = styled.div`
   gap: 1.88rem;
 `;
 
+const ButtonContainer = styled.div`
+  width: 100%;
+  margin-top: 5rem;
+  display: flex;
+  justify-content: center;
+`;
+
 export default function GetContentProvePage({ drawerName }) {
   const [selectedCard, setSelectedCard] = useState(null);
   const [inputValue, setInputValue] = useState("");
   const [additionalInputValue, setAdditionalInputValue] = useState("");
+  const [isPhoneNumberValid, setIsPhoneNumberValid] = useState(true);
 
   useEffect(() => {
     // 다음 주소 API 스크립트 로드
@@ -237,11 +293,12 @@ export default function GetContentProvePage({ drawerName }) {
     setSelectedCard(selectedCard === cardType ? null : cardType);
     setInputValue(""); // 카드 선택이 변경되면 입력값 초기화
     setAdditionalInputValue(""); // 추가 입력값도 초기화
+    setIsPhoneNumberValid(true); // 유효성 상태 초기화
   };
 
   const getInputLabel = () => {
     if (selectedCard === "상대방의 주소를 알아요") {
-      return "상대방 주소 입력";
+      return "우편 번호";
     } else if (selectedCard === "상대방의 주소를 몰라요") {
       return "상대방 전화번호 입력";
     }
@@ -270,6 +327,52 @@ export default function GetContentProvePage({ drawerName }) {
     }
   };
 
+  const handlePhoneNumberChange = (e) => {
+    const value = e.target.value;
+    // 숫자만 추출
+    const numbers = value.replace(/[^0-9]/g, "");
+
+    // 11자리로 제한
+    if (numbers.length <= 11) {
+      let formatted = numbers;
+
+      // 3자리, 7자리마다 '-' 추가
+      if (numbers.length > 3) {
+        formatted = numbers.slice(0, 3) + "-" + numbers.slice(3);
+      }
+      if (numbers.length > 7) {
+        formatted =
+          numbers.slice(0, 3) +
+          "-" +
+          numbers.slice(3, 7) +
+          "-" +
+          numbers.slice(7);
+      }
+
+      setInputValue(formatted);
+
+      // 유효성 검사: 11자리이고 010으로 시작하는지 확인
+      const isValid = numbers.length === 11 && numbers.startsWith("010");
+      setIsPhoneNumberValid(isValid);
+    }
+  };
+
+  const handleRecordButtonClick = () => {
+    console.log("이대로 기록할게요 버튼 클릭됨");
+    // 추후 구현
+  };
+
+  const shouldShowRecordButton = () => {
+    if (selectedCard === "상대방의 주소를 알아요") {
+      // 좌측 카드: 두 입력 필드 모두 작성된 경우
+      return inputValue.trim() !== "" && additionalInputValue.trim() !== "";
+    } else if (selectedCard === "상대방의 주소를 몰라요") {
+      // 우측 카드: 전화번호가 유효한 경우
+      return isPhoneNumberValid && inputValue.trim() !== "";
+    }
+    return false;
+  };
+
   return (
     <PageContainer>
       <Header currentPage="get-content-prove" />
@@ -277,6 +380,17 @@ export default function GetContentProvePage({ drawerName }) {
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>
           <Title>내용 증명 받기</Title>
+          <DescriptionText>
+            내용증명은{" "}
+            <HighlightedText>
+              내가 상대방에게 보낸 말을 공식적으로 증명해 주는 제도
+            </HighlightedText>
+            입니다.
+            {"\n"}작성자는 같은 문서를 3부 준비해 발신인/ 수신인/ 우체국이 각각
+            보관합니다.
+            {"\n"}이 기록은 '내가 이런 요구/주장을 했다'는 강력한 증거가 되며,
+            {"\n"}법원이나 경찰에 제출하면 신빙성을 높여주는 자료로 활용됩니다.
+          </DescriptionText>
         </TitleContainer>
 
         <MainContent>
@@ -318,19 +432,37 @@ export default function GetContentProvePage({ drawerName }) {
 
         {selectedCard && (
           <InputContainer>
+            <WarningContainer>
+              <WarningIconImage src={WarningIcon} alt="경고" />
+              <WarningText>
+                내용증명 제출시 3부 모두 동일해야만 효력이 인정됩니다.{"\n"}작성
+                후 임의로 줄을 긋거나 수정할 수 없으므로, 제출 전 반드시 내용을
+                충분히 확인해 주십시오.
+              </WarningText>
+            </WarningContainer>
+
             <InputRow>
               <InputLabel>{getInputLabel()}</InputLabel>
               <InputGroup>
                 <Input
                   type="text"
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
+                  onChange={
+                    selectedCard === "상대방의 주소를 알아요"
+                      ? (e) => setInputValue(e.target.value)
+                      : handlePhoneNumberChange
+                  }
                   placeholder={
                     selectedCard === "상대방의 주소를 알아요"
                       ? "주소 찾기를 통해 상대방의 주소를 입력하세요"
-                      : "상대방 전화번호를 입력하세요"
+                      : "상대방 전화번호를 입력하세요 (예: 010-1234-5678)"
                   }
                   readOnly={selectedCard === "상대방의 주소를 알아요"}
+                  $isInvalid={
+                    selectedCard === "상대방의 주소를 몰라요" &&
+                    !isPhoneNumberValid &&
+                    inputValue.length > 0
+                  }
                 />
                 {selectedCard === "상대방의 주소를 알아요" && (
                   <AddressSearchButton onClick={handleAddressSearch}>
@@ -352,6 +484,14 @@ export default function GetContentProvePage({ drawerName }) {
               </InputRow>
             )}
           </InputContainer>
+        )}
+
+        {shouldShowRecordButton() && (
+          <ButtonContainer>
+            <MainButton onClick={handleRecordButtonClick}>
+              이대로 기록할게요
+            </MainButton>
+          </ButtonContainer>
         )}
       </ContentContainer>
     </PageContainer>
