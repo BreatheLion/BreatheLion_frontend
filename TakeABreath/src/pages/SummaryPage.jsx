@@ -10,7 +10,7 @@ import Header from "../components/layout/Header";
 import ArrowIcon from "../assets/ArrowIcon.svg";
 import DownArrowIcon from "../assets/DownArrowIcon.svg";
 import SearchIcon from "../assets/SearchIcon.svg";
-import { jsonServerHelpers } from "../utils/api";
+import { realApiHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -372,16 +372,19 @@ export default function SummaryPage({ folderId, folderName }) {
     try {
       setIsLoading(true);
 
-      // JSON Server API 호출
-      const response = await jsonServerHelpers.getHelpaiByDrawerId(folderId);
+      // 실제 API 호출
+      const response = await fetch(`/api/drawers/${folderId}/helpai/`);
+      const responseData = await response.json();
 
-      if (response && response.isSuccess && response.data) {
+      console.log("API 응답 데이터:", responseData);
+
+      if (responseData && responseData.isSuccess && responseData.data) {
         // 실제 API 구조에 맞게 데이터 가공
         const processedData = {
-          drawer_name: response.data.drawer_name,
-          assailant: response.data.assailant,
-          record_count: response.data.record_count,
-          summary: response.data.summary,
+          drawer_name: responseData.data.drawer_name,
+          assailant: responseData.data.assailant,
+          record_count: responseData.data.record_count,
+          summary: responseData.data.summary,
         };
         setSummaryData(processedData);
       } else {
@@ -397,32 +400,13 @@ export default function SummaryPage({ folderId, folderName }) {
   const fetchTimelineData = useCallback(
     async (keyword = "") => {
       try {
-        // JSON Server API 호출 (현재 사용 중)
-        const data = await jsonServerHelpers.getTimelineByDrawerId(folderId);
-
-        if (data && data.length > 0) {
-          // 키워드 필터링 (JSON Server에서는 클라이언트 사이드 필터링)
-          if (keyword && keyword.trim()) {
-            const filteredData = data.filter(
-              (item) =>
-                item.title.includes(keyword) ||
-                item.summary.includes(keyword) ||
-                item.category.includes(keyword)
-            );
-            setTimelineData(filteredData);
-          } else {
-            setTimelineData(data);
-          }
-        } else {
-          setTimelineData([]);
-        }
-
-        // TODO: 실제 API로 전환 시 아래 코드로 교체
-        /*
-      // 실제 API 호출 (서버 사이드 검색)
-      const data = await realApiHelpers.getTimelineByDrawerId(folderId, keyword);
-      setTimelineData(data || []);
-      */
+        // 실제 API 호출 (서버 사이드 검색)
+        const data = await realApiHelpers.getTimelineByDrawerId(
+          folderId,
+          keyword
+        );
+        console.log("타임라인 API 응답 데이터:", data);
+        setTimelineData(data || []);
       } catch (error) {
         window.handleApiError(error, "타임라인 데이터 로딩에 실패했습니다.");
       }

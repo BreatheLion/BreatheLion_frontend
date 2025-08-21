@@ -396,7 +396,7 @@ const MessageAudio = styled.audio`
   height: 2rem;
 `;
 
-export default function ChatPage({ onNavigateToMain, initialChatData }) {
+export default function ChatPage({ initialChatData }) {
   // localStorage에서 메시지 복원 또는 초기화
   const getStoredMessages = () => {
     try {
@@ -676,7 +676,66 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
   };
 
   const handleFinish = async () => {
+    if (isFinishing) return;
     setIsFinishing(true);
+
+    try {
+      const response = await fetch("/api/chats/end/", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chat_session_id: chatSessionId,
+        }),
+      });
+
+      const responseData = await response.json();
+
+      if (responseData.isSuccess) {
+        setFinishResponse(responseData.data);
+        setShowDetailModal(true);
+      } else {
+        throw new Error(responseData.message || "채팅 종료 실패");
+      }
+    } catch {
+      // 목업 데이터 사용 (추후 제거 예정)
+      const mockResponse = {
+        isSuccess: true,
+        code: "200",
+        message: "채팅 끝",
+        data: {
+          record_id: 3,
+          title: "동방에서 일어난 무시무시한 사건",
+          categories: ["괴롭힘"],
+          content: "오늘 해승이가 해원이를 괴롭혔다",
+          severity: 1,
+          location: "동방",
+          created_at: "2025-08-05T10:00:00",
+          occurred_at: "2025-08-01T14:30:00",
+          assailant: ["서해승", "이예림"],
+          witness: ["오영록"],
+          drawers: ["00 커피 폭언", "기차역 살인사건"],
+          evidences: [
+            {
+              filename: "해원이 욕설 파일",
+              type: "audio",
+              url: "url~~",
+            },
+            {
+              filename: "폭행 당시 사진",
+              type: "image",
+              url: "url2~~",
+            },
+          ],
+        },
+      };
+
+      setFinishResponse(mockResponse.data);
+      setShowDetailModal(true);
+    } finally {
+      setIsFinishing(false);
+    }
   };
 
   const handleFinishDone = (data) => {
@@ -688,62 +747,6 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
   const handleDetailClose = () => {
     setShowDetailModal(false);
     setFinishResponse(null);
-  };
-
-  const handleDetailSubmit = async (payload) => {
-    try {
-      // evidence 정리: 모달에서 전달된 유지/신규 첨부 기준으로 최종 JSON 구성
-      const keptS3Keys = Array.isArray(payload.keep_s3Keys)
-        ? payload.keep_s3Keys
-        : attachments.map((a) => a.s3Key).filter(Boolean);
-
-      const body = {
-        record_id: payload.record_id,
-        title: payload.title || "",
-        categories: payload.categories || [],
-        content: payload.content || "",
-        severity: payload.severity,
-        location: payload.location || "",
-        created_at: payload.created_at || "",
-        occurred_at: payload.occurred_at || "",
-        assailant: payload.assailant || [],
-        witness: payload.witness || [],
-        drawer: payload.drawer || "",
-        evidences: [
-          // 채팅에서 이미 올린 파일들 중 유지 선택된 것만
-          ...keptS3Keys.map((s3Key) => {
-            const att = attachments.find((a) => a.s3Key === s3Key);
-            return {
-              type: att?.type || "FILE",
-              filename: att?.filename || "",
-              s3Key,
-            };
-          }),
-          // 모달에서 새로 업로드한 첨부들
-          ...(payload.modal_new_evidences || []).map((m) => ({
-            type: m.type,
-            filename: m.filename,
-            s3Key: m.s3Key,
-          })),
-        ],
-      };
-
-      console.log("저장 요청(JSON)", body);
-      // await axios.post("/api/records/save/", body);
-
-      // 대화 완료 시 localStorage에서 해당 세션 메시지 삭제
-      try {
-        const chatSessionId =
-          initialChatData?.serverResponse?.chat_session_id || 1;
-        localStorage.removeItem(`chat_messages_${chatSessionId}`);
-      } catch (error) {
-        console.error("localStorage에서 메시지 삭제 실패:", error);
-      }
-
-      onNavigateToMain();
-    } catch (error) {
-      window.handleApiError(error, "데이터 저장에 실패했습니다.");
-    }
   };
 
   // 진행률 데모 제거
@@ -777,8 +780,8 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
       }),
       attachments: attachments.map((att) => ({
         id: att.id,
-        name: att.file.name,
-        type: att.file.type,
+        name: att.filename,
+        type: att.mimeType,
         previewUrl: att.previewUrl,
       })),
     };
@@ -806,9 +809,6 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
           date: new Date().toISOString().split("T")[0],
         };
 
-        // 가짜 API 응답 데이터 콘솔 출력 (테스트용)
-        console.log("가짜 API 응답 데이터:", mockResponse);
-
         setMessages((prev) => {
           const updated = [...prev];
           const idx = updated.findIndex(
@@ -833,36 +833,72 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
     }
 
     try {
-      // 실제 업로드
-      const form = new FormData();
-      form.append("chat_session_id", String(chatSessionId));
-      form.append("text", trimmed);
-
-      // attachments에서 s3Key만 전송 (이미 S3에 업로드됨)
-      attachments.forEach((att) => {
-        if (att.s3Key) {
-          form.append("evidences[]", att.s3Key);
-        }
-      });
-
-      // API 요청 데이터 콘솔 출력 (테스트용)
-      console.log("API 요청 데이터:");
-      console.log("- chat_session_id:", chatSessionId);
-      console.log("- text:", trimmed);
-      console.log("- attachments count:", attachments.length);
-      console.log("API 엔드포인트: /api/chats/attach/");
+      // 실제 API 요청 데이터 준비
+      const requestData = {
+        chat_session_id: chatSessionId, // 숫자 타입
+        text: trimmed,
+        evidences:
+          attachments.length > 0
+            ? attachments.map((att) => ({
+                type: att.type, // "IMAGE" | "VIDEO" | "AUDIO"
+                filename: att.filename, // 원본 파일명
+                s3Key: att.s3Key, // S3 키
+              }))
+            : [], // 첨부 파일이 없을 때는 빈 배열 (추후 확인 필요)
+      };
 
       const controller = new AbortController();
       uploadAbortRef.current = controller;
 
-      const response = await axios.post("/api/chats/attach/", form, {
+      const response = await axios.post("/api/chats/attach/", requestData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
         signal: controller.signal,
       });
 
       const serverResponse = response.data;
 
-      // API 응답 데이터 콘솔 출력 (테스트용)
-      console.log("API 응답 데이터:", serverResponse);
+      if (serverResponse && serverResponse.isSuccess && serverResponse.data) {
+        setMessages((prev) => {
+          const updated = [...prev];
+          const idx = updated.findIndex(
+            (m) => m.type === "ai" && m.content === "응답 중입니다"
+          );
+          if (idx !== -1) {
+            updated[idx] = {
+              ...updated[idx],
+              content: serverResponse.data.answer,
+              time: serverResponse.data.time || "",
+              date:
+                serverResponse.data.date ||
+                new Date().toISOString().split("T")[0],
+            };
+          }
+          return updated;
+        });
+      } else {
+        throw new Error("서버 응답이 올바르지 않습니다.");
+      }
+
+      setInputValue("");
+      clearAllAttachments();
+    } catch {
+      // 목업 데이터 사용 (추후 제거 예정)
+      const mockResponse = {
+        isSuccess: true,
+        code: "200",
+        message: "채팅성공",
+        data: {
+          answer: "어 고생했어",
+          time: new Date().toLocaleTimeString("ko-KR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          }),
+          date: new Date().toISOString().split("T")[0],
+        },
+      };
 
       setMessages((prev) => {
         const updated = [...prev];
@@ -872,9 +908,9 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
         if (idx !== -1) {
           updated[idx] = {
             ...updated[idx],
-            content: serverResponse.answer,
-            time: serverResponse.time || "",
-            date: serverResponse.date || new Date().toISOString().split("T")[0],
+            content: mockResponse.data.answer,
+            time: mockResponse.data.time,
+            date: mockResponse.data.date,
           };
         }
         return updated;
@@ -882,10 +918,7 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
 
       setInputValue("");
       clearAllAttachments();
-    } catch (error) {
-      window.handleApiError(error, "메시지 전송에 실패했습니다.");
     } finally {
-      // 데모 모드에서는 여기 오지 않음
       setIsLoading(false);
       uploadAbortRef.current = null;
     }
@@ -939,16 +972,16 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
                       <MessageAttachments>
                         {message.attachments.map((att) => (
                           <div key={att.id}>
-                            {att.type.startsWith("image/") && (
+                            {att.type && att.type.startsWith("image/") && (
                               <MessageImage
                                 src={att.previewUrl}
                                 alt={att.name}
                               />
                             )}
-                            {att.type.startsWith("video/") && (
+                            {att.type && att.type.startsWith("video/") && (
                               <MessageVideo src={att.previewUrl} controls />
                             )}
-                            {att.type.startsWith("audio/") && (
+                            {att.type && att.type.startsWith("audio/") && (
                               <MessageAudio src={att.previewUrl} controls />
                             )}
                           </div>
@@ -1021,7 +1054,6 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
           data={finishResponse}
           attachments={attachments} // 미리보기 URL 포함된 첨부파일 데이터 전달
           onClose={handleDetailClose}
-          onSubmit={handleDetailSubmit}
         />
       )}
     </ChatContainer>

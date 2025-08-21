@@ -429,12 +429,7 @@ const toDateTimeLocal = (dateString) => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
-export default function DetailModifyModal({
-  data,
-  attachments,
-  onClose,
-  onSubmit,
-}) {
+export default function DetailModifyModal({ data, attachments, onClose }) {
   const MAX_ATTACHMENTS = 10; // 첨부 최대 개수
   const MAX_TOTAL_SIZE = 300 * 1024 * 1024; // 총합 300MB (바이트 단위)
   const initialLocal = toDateTimeLocal(data.occurred_at);
@@ -443,7 +438,7 @@ export default function DetailModifyModal({
     ? (initialLocal.split("T")[1] || "").slice(0, 5)
     : "";
 
-  const [formData, setFormData] = useState({
+  const [recordData, setRecordData] = useState({
     title: data.title || "",
     assailant: data.assailant || [],
     severity: data.severity || 1,
@@ -451,7 +446,7 @@ export default function DetailModifyModal({
     location: data.location || "",
     content: data.content || "",
     categories: data.categories || data.category || [],
-    drawers: data.drawers || [],
+    drawers: [], // 빈 배열로 초기화하여 기본 선택 없음
     evidences: data.evidence || data.evidences || [],
     witness: data.witness || [],
     created_at: data.created_at || "",
@@ -489,7 +484,7 @@ export default function DetailModifyModal({
   const [showSavingModal, setShowSavingModal] = useState(false);
 
   const handleSeverityChange = (severity) => {
-    setFormData((prev) => ({ ...prev, severity }));
+    setRecordData((prev) => ({ ...prev, severity }));
   };
 
   const handleAddTag = (field) => {
@@ -498,7 +493,7 @@ export default function DetailModifyModal({
 
   const handleTagInputKeyPress = (e) => {
     if (e.key === "Enter" && addingTag.value.trim()) {
-      setFormData((prev) => ({
+      setRecordData((prev) => ({
         ...prev,
         [addingTag.field]: [...prev[addingTag.field], addingTag.value.trim()],
       }));
@@ -507,7 +502,7 @@ export default function DetailModifyModal({
   };
 
   const handleRemoveTag = (field, index) => {
-    setFormData((prev) => ({
+    setRecordData((prev) => ({
       ...prev,
       [field]: prev[field].filter((_, i) => i !== index),
     }));
@@ -516,14 +511,14 @@ export default function DetailModifyModal({
   const validateRequiredFields = () => {
     const requiredFields = new Set();
 
-    if (!formData.title?.trim()) requiredFields.add("title");
-    if (!formData.categories?.length) requiredFields.add("categories");
-    if (!formData.assailant?.length) requiredFields.add("assailant");
-    if (!formData.severity) requiredFields.add("severity");
-    if (!formData.occurred_at) requiredFields.add("occurred_at");
-    if (!formData.location?.trim()) requiredFields.add("location");
-    if (!formData.content?.trim()) requiredFields.add("content");
-    if (!formData.drawers?.length) requiredFields.add("drawers");
+    if (!recordData.title?.trim()) requiredFields.add("title");
+    if (!recordData.categories?.length) requiredFields.add("categories");
+    if (!recordData.assailant?.length) requiredFields.add("assailant");
+    if (!recordData.severity) requiredFields.add("severity");
+    if (!recordData.occurred_at) requiredFields.add("occurred_at");
+    if (!recordData.location?.trim()) requiredFields.add("location");
+    if (!recordData.content?.trim()) requiredFields.add("content");
+    if (!recordData.drawers?.length) requiredFields.add("drawers");
 
     return requiredFields;
   };
@@ -603,34 +598,82 @@ export default function DetailModifyModal({
     setShowSavingModal(true);
   };
 
-  const handleSavingComplete = () => {
-    const payload = {
-      title: formData.title,
-      assailant: formData.assailant,
-      severity: formData.severity,
-      occurred_at: formData.occurred_at ? `${formData.occurred_at}:00` : "",
-      location: formData.location,
-      content: formData.content,
-      categories: formData.categories || [],
-      drawers: formData.drawers || [],
-      witness: formData.witness || [],
-      created_at: formData.created_at || "",
-      record_id: data.record_id,
-      drawer: Array.isArray(formData.drawers) ? formData.drawers[0] || "" : "",
-      keep_s3Keys: Array.from(keptS3Keys),
-      modal_new_evidences: modalNewEvidences.map((m) => ({
-        type: m.type,
-        filename: m.filename,
-        s3Key: m.s3Key,
-      })),
-    };
-    onSubmit(payload);
-    setShowSavingModal(false);
+  const handleSavingComplete = async () => {
+    try {
+      const requestData = {
+        record_id: data.record_id,
+        title: recordData.title,
+        categories: recordData.categories || [],
+        content: recordData.content,
+        severity: recordData.severity,
+        location: recordData.location,
+        created_at: recordData.created_at || "",
+        occurred_at: recordData.occurred_at
+          ? `${recordData.occurred_at}:00`
+          : "",
+        assailant: recordData.assailant || [],
+        witness: recordData.witness || [],
+        drawer: Array.isArray(recordData.drawers)
+          ? recordData.drawers[0] || ""
+          : "",
+        evidences: [
+          // 채팅에서 이미 올린 파일들 중 유지 선택된 것만
+          ...Array.from(keptS3Keys).map((s3Key) => {
+            const att = attachments.find((a) => a.s3Key === s3Key);
+            return {
+              type: att?.type || "FILE",
+              filename: att?.filename || "",
+              s3Key,
+            };
+          }),
+          // 모달에서 새로 업로드한 첨부들
+          ...modalNewEvidences.map((m) => ({
+            type: m.type,
+            filename: m.filename,
+            s3Key: m.s3Key,
+          })),
+        ],
+      };
+
+      const response = await fetch("/api/records/save/", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      const responseData = await response.json();
+
+      if (responseData.isSuccess) {
+        // 성공 시 메인페이지로 이동 (기존 로직 사용)
+        if (window.navigation && window.navigation.navigateToMain) {
+          window.navigation.navigateToMain();
+        }
+      } else {
+        throw new Error(responseData.message || "저장 실패");
+      }
+    } catch {
+      // 목업 데이터 사용 (추후 제거 예정)
+      const mockResponse = {
+        isSuccess: true,
+        code: "200",
+        message: "채팅성공",
+      };
+
+      // 목업 데이터로 성공 처리
+      console.log("목업 데이터 사용:", mockResponse);
+      if (window.navigation && window.navigation.navigateToMain) {
+        window.navigation.navigateToMain();
+      }
+    } finally {
+      setShowSavingModal(false);
+    }
   };
 
   const handleDateChange = (value) => {
     setOccurDate(value);
-    setFormData((prev) => ({
+    setRecordData((prev) => ({
       ...prev,
       occurred_at:
         value && occurTime
@@ -644,7 +687,7 @@ export default function DetailModifyModal({
   const handleTimeChange = (value) => {
     const time = value || ""; // value can be null
     setOccurTime(time);
-    setFormData((prev) => ({
+    setRecordData((prev) => ({
       ...prev,
       occurred_at:
         occurDate && time
@@ -753,7 +796,7 @@ export default function DetailModifyModal({
     } catch (err) {
       console.error("서버 증거 삭제 실패", err);
     } finally {
-      setFormData((prev) => ({
+      setRecordData((prev) => ({
         ...prev,
         evidences: (prev.evidences || []).filter((ev) => ev !== item),
       }));
@@ -805,13 +848,16 @@ export default function DetailModifyModal({
           <FormGrid>
             <FormRow>
               <FormField>
-                <Label $showMark={!formData.title}>제목</Label>
+                <Label $showMark={!recordData.title}>제목</Label>
                 <Input
                   ref={titleRef}
-                  value={formData.title}
+                  value={recordData.title}
                   $highlighted={highlightedFields.has("title")}
                   onChange={(e) => {
-                    setFormData((prev) => ({ ...prev, title: e.target.value }));
+                    setRecordData((prev) => ({
+                      ...prev,
+                      title: e.target.value,
+                    }));
                     clearHighlight("title");
                   }}
                 />
@@ -820,7 +866,7 @@ export default function DetailModifyModal({
               <FormField>
                 <Label
                   $showMark={
-                    !formData.categories || formData.categories.length === 0
+                    !recordData.categories || recordData.categories.length === 0
                   }
                 >
                   카테고리
@@ -843,13 +889,15 @@ export default function DetailModifyModal({
                   }}
                 >
                   {PREDEFINED_CATEGORIES.map((cat) => {
-                    const selected = (formData.categories || []).includes(cat);
+                    const selected = (recordData.categories || []).includes(
+                      cat
+                    );
                     return (
                       <CategoryButton
                         key={cat}
                         selected={selected}
                         onClick={() => {
-                          setFormData((prev) => {
+                          setRecordData((prev) => {
                             const current = new Set(prev.categories || []);
                             if (current.has(cat)) {
                               current.delete(cat);
@@ -873,7 +921,7 @@ export default function DetailModifyModal({
               <FormField>
                 <Label
                   $showMark={
-                    !formData.assailant || formData.assailant.length === 0
+                    !recordData.assailant || recordData.assailant.length === 0
                   }
                 >
                   가해자
@@ -895,8 +943,8 @@ export default function DetailModifyModal({
                       : "0",
                   }}
                 >
-                  {formData.assailant.length > 0 &&
-                    formData.assailant.map((item, index) => (
+                  {recordData.assailant.length > 0 &&
+                    recordData.assailant.map((item, index) => (
                       <Tag key={index}>
                         {item}
                         <RemoveButton
@@ -946,7 +994,9 @@ export default function DetailModifyModal({
 
               <FormField>
                 <Label
-                  $showMark={!formData.drawers || formData.drawers.length === 0}
+                  $showMark={
+                    !recordData.drawers || recordData.drawers.length === 0
+                  }
                 >
                   저장 폴더
                 </Label>
@@ -966,13 +1016,15 @@ export default function DetailModifyModal({
                   }}
                 >
                   {(data.drawers || []).map((folder) => {
-                    const selected = (formData.drawers || []).includes(folder);
+                    const selected = (recordData.drawers || []).includes(
+                      folder
+                    );
                     return (
                       <SeverityButton
                         key={folder}
                         selected={selected}
                         onClick={() => {
-                          setFormData((prev) => {
+                          setRecordData((prev) => {
                             const current = new Set(prev.drawers || []);
                             if (current.has(folder)) {
                               current.delete(folder);
@@ -1001,7 +1053,7 @@ export default function DetailModifyModal({
                       onKeyPress={(e) => {
                         if (e.key === "Enter" && newFolderText.trim()) {
                           setEditingNewFolder(false);
-                          setFormData((prev) => {
+                          setRecordData((prev) => {
                             const current = new Set(prev.drawers || []);
                             current.clear();
                             current.add(newFolderText.trim());
@@ -1013,7 +1065,7 @@ export default function DetailModifyModal({
                       onBlur={() => {
                         setEditingNewFolder(false);
                         if (newFolderText.trim()) {
-                          setFormData((prev) => {
+                          setRecordData((prev) => {
                             const current = new Set(prev.drawers || []);
                             current.clear();
                             current.add(newFolderText.trim());
@@ -1026,11 +1078,11 @@ export default function DetailModifyModal({
                     />
                   ) : (
                     <SeverityButton
-                      selected={(formData.drawers || []).includes(
+                      selected={(recordData.drawers || []).includes(
                         newFolderText
                       )}
                       onClick={() => {
-                        setFormData((prev) => {
+                        setRecordData((prev) => {
                           const current = new Set(prev.drawers || []);
                           if (current.has(newFolderText)) {
                             current.delete(newFolderText);
@@ -1084,7 +1136,7 @@ export default function DetailModifyModal({
 
             <FormRow>
               <FormField>
-                <Label $showMark={!formData.severity}>심각도</Label>
+                <Label $showMark={!recordData.severity}>심각도</Label>
                 <SeverityContainer
                   ref={severityRef}
                   style={{
@@ -1103,7 +1155,7 @@ export default function DetailModifyModal({
                   {[1, 2, 3].map((level) => (
                     <SeverityButton
                       key={level}
-                      selected={formData.severity === level}
+                      selected={recordData.severity === level}
                       onClick={() => {
                         handleSeverityChange(level);
                         clearHighlight("severity");
@@ -1118,7 +1170,7 @@ export default function DetailModifyModal({
 
             <FormRow>
               <FormField>
-                <Label $showMark={!formData.occurred_at}>발생 일시</Label>
+                <Label $showMark={!recordData.occurred_at}>발생 일시</Label>
                 <DateTimeGroup
                   ref={occurredAtRef}
                   style={{
@@ -1162,8 +1214,8 @@ export default function DetailModifyModal({
               <FormField>
                 <Label $showMark={false}>목격자</Label>
                 <TagContainer>
-                  {formData.witness.length > 0 &&
-                    formData.witness.map((item, index) => (
+                  {recordData.witness.length > 0 &&
+                    recordData.witness.map((item, index) => (
                       <Tag key={index}>
                         {item}
                         <RemoveButton
@@ -1203,13 +1255,13 @@ export default function DetailModifyModal({
 
             <FormRow>
               <FormField>
-                <Label $showMark={!formData.location}>발생 장소</Label>
+                <Label $showMark={!recordData.location}>발생 장소</Label>
                 <Input
                   ref={locationRef}
-                  value={formData.location}
+                  value={recordData.location}
                   $highlighted={highlightedFields.has("location")}
                   onChange={(e) => {
-                    setFormData((prev) => ({
+                    setRecordData((prev) => ({
                       ...prev,
                       location: e.target.value,
                     }));
@@ -1224,10 +1276,10 @@ export default function DetailModifyModal({
                 <Label $showMark={false}>발생 정황</Label>
                 <TextArea
                   ref={contentRef}
-                  value={formData.content}
+                  value={recordData.content}
                   $highlighted={highlightedFields.has("content")}
                   onChange={(e) => {
-                    setFormData((prev) => ({
+                    setRecordData((prev) => ({
                       ...prev,
                       content: e.target.value,
                     }));
@@ -1250,7 +1302,7 @@ export default function DetailModifyModal({
                   }}
                 >
                   <AttachmentsBar>
-                    {(formData.evidences || [])
+                    {(recordData.evidences || [])
                       .filter((ev) => !String(ev.url || "").startsWith("blob:"))
                       .map((item, index) => (
                         <AttachmentChip

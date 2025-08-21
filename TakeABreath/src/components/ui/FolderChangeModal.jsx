@@ -136,11 +136,11 @@ export default function FolderChangeModal({
   const fetchFolders = async () => {
     setIsLoading(true);
     try {
-      // JSON Server API 호출
-      const response = await fetch("http://localhost:3001/drawers_list");
+      // 실제 API 호출
+      const response = await fetch("/api/drawers/list/");
       const data = await response.json();
       const folders = Array.isArray(data) ? data : [];
-      console.log("JSON Server 응답 폴더:", folders);
+      console.log("API 응답 폴더:", folders);
       setAvailableFolders(folders);
     } catch (error) {
       console.error("폴더 목록 가져오기 실패:", error);

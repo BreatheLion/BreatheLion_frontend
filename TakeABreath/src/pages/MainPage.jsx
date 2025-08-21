@@ -188,8 +188,8 @@ export default function MainPage({ onNavigateToChat }) {
       console.log("API 요청 데이터:", requestData);
       console.log("API 엔드포인트: /api/chats/start/");
 
-      // JSON Server API 호출 (POST 요청 시뮬레이션)
-      const response = await fetch("http://localhost:3001/records_start", {
+      // 실제 API 호출
+      const response = await fetch("/api/chats/start/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -200,9 +200,31 @@ export default function MainPage({ onNavigateToChat }) {
       const responseData = await response.json();
       console.log("API 응답 데이터:", responseData);
 
-      // POST 요청은 성공했지만, 응답은 미리 정의된 데이터 사용
-      // 실제 API에서는 서버가 이 응답을 반환할 것
-      const mockServerResponse = {
+      // 실제 서버 응답 사용
+      const serverResponse = responseData;
+
+      if (serverResponse && serverResponse.isSuccess && serverResponse.data) {
+        // API 응답에서 받은 answer를 사용
+        const tempResponse = {
+          chat_session_id: serverResponse.data.session_id,
+          answer: serverResponse.data.answer, // API 응답의 answer 사용
+          time: serverResponse.data.message_time,
+          date: serverResponse.data.message_date,
+        };
+
+        onNavigateToChat({
+          userMessage: trimmed,
+          serverResponse: tempResponse,
+          isLoading: false, // API 응답을 받았으므로 로딩 상태 해제
+        });
+      } else {
+        throw new Error("서버 응답이 올바르지 않습니다.");
+      }
+    } catch (error) {
+      console.log("API 호출 실패, 목업 데이터 사용:", error);
+
+      // 목업 데이터 사용 (FINAL_API_DOCUMENTATION 기반)
+      const mockResponse = {
         isSuccess: true,
         code: "200",
         message: "채팅성공",
@@ -219,29 +241,21 @@ export default function MainPage({ onNavigateToChat }) {
         },
       };
 
-      if (
-        mockServerResponse &&
-        mockServerResponse.isSuccess &&
-        mockServerResponse.data
-      ) {
-        // API 응답에서 받은 answer를 사용
-        const tempResponse = {
-          chat_session_id: mockServerResponse.data.session_id,
-          answer: mockServerResponse.data.answer, // API 응답의 answer 사용
-          time: mockServerResponse.data.message_time,
-          date: mockServerResponse.data.message_date,
-        };
+      console.log("목업 응답 데이터:", mockResponse);
 
-        onNavigateToChat({
-          userMessage: trimmed,
-          serverResponse: tempResponse,
-          isLoading: false, // API 응답을 받았으므로 로딩 상태 해제
-        });
-      } else {
-        throw new Error("서버 응답이 올바르지 않습니다.");
-      }
-    } catch (error) {
-      window.handleApiError(error, "채팅 시작에 실패했습니다.");
+      // 목업 응답에서 받은 answer를 사용
+      const tempResponse = {
+        chat_session_id: mockResponse.data.session_id,
+        answer: mockResponse.data.answer,
+        time: mockResponse.data.message_time,
+        date: mockResponse.data.message_date,
+      };
+
+      onNavigateToChat({
+        userMessage: trimmed,
+        serverResponse: tempResponse,
+        isLoading: false,
+      });
     } finally {
       setIsLoading(false);
     }

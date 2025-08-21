@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
-import { jsonServerHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -349,18 +348,17 @@ export default function AiHelperPage({ drawerId, drawerName }) {
       const targetDrawerId = drawerId || 1; // drawerId가 없으면 기본값 1 사용
       console.log("API 호출 시작, drawerId:", targetDrawerId);
 
-      // JSON Server API 호출
-      const response = await jsonServerHelpers.getHelpaiByDrawerId(
-        targetDrawerId
-      );
-      console.log("API 응답:", response);
+      // 실제 API 호출
+      const response = await fetch(`/api/drawers/${targetDrawerId}/helpai/`);
+      const responseData = await response.json();
+      console.log("API 응답:", responseData);
 
-      if (response && response.isSuccess && response.data) {
+      if (responseData && responseData.isSuccess && responseData.data) {
         // API 응답의 data 객체를 그대로 사용
-        console.log("설정할 데이터:", response.data);
-        setSummaryData(response.data);
+        console.log("설정할 데이터:", responseData.data);
+        setSummaryData(responseData.data);
       } else {
-        console.log("응답이 유효하지 않음:", response);
+        console.log("응답이 유효하지 않음:", responseData);
         setSummaryData(null);
       }
     } catch (error) {

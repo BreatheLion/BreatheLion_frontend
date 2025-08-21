@@ -12,18 +12,18 @@ export default function RecentRecordsPage({ onNavigateToRecordDetail }) {
   const [recentRecords, setRecentRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // JSON Server API 호출 함수
+  // 실제 API 호출 함수
   const fetchRecentRecords = async () => {
     setIsLoading(true);
     try {
-      // JSON Server에서 모든 records 조회
-      const response = await fetch("http://localhost:3001/records");
+      // 실제 API에서 모든 records 조회
+      const response = await fetch("/api/records/");
       const data = await response.json();
 
-      console.log(data);
+      console.log("API 응답 데이터:", data);
 
-      if (data && data.records && Array.isArray(data.records)) {
-        setRecentRecords(data.records);
+      if (data && Array.isArray(data)) {
+        setRecentRecords(data);
       } else {
         setRecentRecords([]);
       }

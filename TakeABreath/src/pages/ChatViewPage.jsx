@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
-import { jsonServerHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -150,16 +149,14 @@ export default function ChatViewPage({ record_id, pageTitle, created_at }) {
     try {
       setIsLoading(true);
 
-      // JSON Server API 호출
-      const chatData = await jsonServerHelpers.getChatByRecordId(record_id);
+      // 실제 API 호출
+      const response = await fetch(`/api/records/${record_id}/chat/`);
+      const responseData = await response.json();
 
-      if (chatData) {
-        setChatData({
-          isSuccess: true,
-          code: "200",
-          message: "채팅 조회 성공!",
-          data: chatData,
-        });
+      console.log("API 응답 데이터:", responseData);
+
+      if (responseData && responseData.data) {
+        setChatData(responseData);
       } else {
         throw new Error("채팅 데이터를 찾을 수 없습니다.");
       }

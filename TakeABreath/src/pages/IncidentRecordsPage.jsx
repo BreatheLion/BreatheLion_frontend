@@ -103,13 +103,15 @@ export default function IncidentRecordsPage({
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const modalRef = useRef(null);
 
-  // JSON Server API 호출 함수
+  // 실제 API 호출 함수
   const fetchIncidentData = async () => {
     setIsLoading(true);
     try {
-      // JSON Server에서 모든 drawers 조회
-      const response = await fetch("http://localhost:3001/drawers");
+      // 실제 API에서 모든 drawers 조회
+      const response = await fetch("/api/drawers/");
       const data = await response.json();
+
+      console.log("API 응답 데이터:", data);
 
       if (data && Array.isArray(data)) {
         setIncidentData(data);
@@ -159,19 +161,32 @@ export default function IncidentRecordsPage({
   // 폴더 추가 핸들러
   const handleFolderAdd = async (folderName) => {
     try {
-      // API 호출 (추후 실제 엔드포인트로 변경)
+      // 실제 API 호출
       console.log("폴더 추가 API 호출:", folderName);
-      // const response = await axios.post("/api/drawers/", { name: folderName });
+      const response = await fetch("/api/drawers/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: folderName }),
+      });
 
-      // 성공 시 상태 업데이트
-      const newFolder = {
-        drawer_id: Date.now(),
-        name: folderName,
-        record_amt: 0,
-        date: new Date().toISOString().split("T")[0],
-      };
+      const responseData = await response.json();
+      console.log("폴더 추가 API 응답:", responseData);
 
-      setIncidentData((prev) => [...prev, newFolder]);
+      if (response.ok) {
+        // 성공 시 상태 업데이트
+        const newFolder = {
+          drawer_id: Date.now(),
+          name: folderName,
+          record_amt: 0,
+          date: new Date().toISOString().split("T")[0],
+        };
+
+        setIncidentData((prev) => [...prev, newFolder]);
+      } else {
+        throw new Error("폴더 추가에 실패했습니다.");
+      }
     } catch (error) {
       window.handleApiError(error, "폴더 추가에 실패했습니다.");
     }

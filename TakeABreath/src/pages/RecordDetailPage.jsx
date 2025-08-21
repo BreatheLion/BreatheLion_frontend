@@ -7,7 +7,6 @@ import DeleteConfirmModal from "../components/ui/DeleteConfirmModal";
 import FolderChangeModal from "../components/ui/FolderChangeModal";
 import FileShowModal from "../components/ui/FileShowModal";
 import titleEditInRecordIcon from "../assets/titleEditInRecordIcon.svg";
-import { jsonServerHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -415,11 +414,14 @@ export default function RecordDetailPage({ previousPage, record_id }) {
     try {
       setIsLoading(true);
 
-      // JSON Server API 호출
-      const data = await jsonServerHelpers.getRecordByRecordId(record_id);
+      // 실제 API 호출
+      const response = await fetch(`/api/records/${record_id}/`);
+      const responseData = await response.json();
 
-      if (data) {
-        setRecordData(data);
+      console.log("API 응답 데이터:", responseData);
+
+      if (responseData) {
+        setRecordData(responseData);
       } else {
         throw new Error("기록 데이터를 찾을 수 없습니다.");
       }
