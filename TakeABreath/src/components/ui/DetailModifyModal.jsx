@@ -126,7 +126,7 @@ const Label = styled.label`
   min-width: 5rem;
 
   &::after {
-    content: ${({ showMark }) => (showMark ? '"*"' : '""')};
+    content: ${({ $showMark }) => ($showMark ? '"*"' : '""')};
     color: #68b8ea;
   }
 `;
@@ -417,37 +417,6 @@ const PREDEFINED_CATEGORIES = [
   "기타",
 ];
 
-// 발생 지역 코드 → 라벨 매핑
-const DISTRICT_CODE_TO_LABEL = {
-  GANGNAM: "강남구",
-  GANGDONG: "강동구",
-  GANGBUK: "강북구",
-  GANGSEO: "강서구",
-  GWANAK: "관악구",
-  GWANGJIN: "광진구",
-  GURO: "구로구",
-  GEUMCHEON: "금천구",
-  NOWON: "노원구",
-  DOBONG: "도봉구",
-  DONGDAEMUN: "동대문구",
-  DONGJAK: "동작구",
-  MAPO: "마포구",
-  SEODAEMUN: "서대문구",
-  SEOCHO: "서초구",
-  SEONGDONG: "성동구",
-  SEONGBUK: "성북구",
-  SONGPA: "송파구",
-  YANGCHEON: "양천구",
-  YEONGDEUNGPO: "영등포구",
-  YONGSAN: "용산구",
-  EUNPYEONG: "은평구",
-  JONGNO: "종로구",
-  JUNG: "중구",
-  JUNGRANG: "중랑구",
-};
-
-const DISTRICT_CODES = Object.keys(DISTRICT_CODE_TO_LABEL);
-
 const toDateTimeLocal = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -485,9 +454,18 @@ export default function DetailModifyModal({
     drawers: data.drawers || [],
     evidences: data.evidence || data.evidences || [],
     witness: data.witness || [],
-    district: data.district || "",
     created_at: data.created_at || "",
   });
+
+  // Refs for required fields
+  const titleRef = useRef(null);
+  const categoriesRef = useRef(null);
+  const assailantRef = useRef(null);
+  const severityRef = useRef(null);
+  const occurredAtRef = useRef(null);
+  const locationRef = useRef(null);
+  const contentRef = useRef(null);
+  const drawersRef = useRef(null);
 
   const [occurDate, setOccurDate] = useState(initialDate);
   const [occurTime, setOccurTime] = useState(initialTime);
@@ -546,7 +524,6 @@ export default function DetailModifyModal({
     if (!formData.location?.trim()) requiredFields.add("location");
     if (!formData.content?.trim()) requiredFields.add("content");
     if (!formData.drawers?.length) requiredFields.add("drawers");
-    if (!formData.district) requiredFields.add("district");
 
     return requiredFields;
   };
@@ -559,11 +536,62 @@ export default function DetailModifyModal({
     });
   };
 
+  const scrollToFirstMissingField = (missingFields) => {
+    const fieldOrder = [
+      "title",
+      "categories",
+      "assailant",
+      "severity",
+      "occurred_at",
+      "location",
+      "content",
+      "drawers",
+    ];
+
+    for (const field of fieldOrder) {
+      if (missingFields.has(field)) {
+        const refMap = {
+          title: titleRef,
+          categories: categoriesRef,
+          assailant: assailantRef,
+          severity: severityRef,
+          occurred_at: occurredAtRef,
+          location: locationRef,
+          content: contentRef,
+          drawers: drawersRef,
+        };
+
+        const targetRef = refMap[field];
+        if (targetRef?.current) {
+          // Smooth scroll to the field
+          targetRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+
+          // Focus on the field after a short delay
+          setTimeout(() => {
+            if (
+              field === "title" ||
+              field === "location" ||
+              field === "content"
+            ) {
+              targetRef.current.focus();
+            }
+          }, 500);
+
+          break; // Only scroll to the first missing field
+        }
+      }
+    }
+  };
+
   const handleSubmit = () => {
     const missingFields = validateRequiredFields();
 
     if (missingFields.size > 0) {
       setHighlightedFields(missingFields);
+      scrollToFirstMissingField(missingFields);
       return;
     }
 
@@ -586,7 +614,6 @@ export default function DetailModifyModal({
       categories: formData.categories || [],
       drawers: formData.drawers || [],
       witness: formData.witness || [],
-      district: formData.district || "",
       created_at: formData.created_at || "",
       record_id: data.record_id,
       drawer: Array.isArray(formData.drawers) ? formData.drawers[0] || "" : "",
@@ -626,14 +653,6 @@ export default function DetailModifyModal({
           ? `${occurDate}T00:00`
           : "",
     }));
-  };
-
-  const getEvidenceType = (file) => {
-    if (!file?.type) return "other";
-    if (file.type.startsWith("image/")) return "image";
-    if (file.type.startsWith("video/")) return "video";
-    if (file.type.startsWith("audio/")) return "audio";
-    return "other";
   };
 
   const handleFileSelect = () => {
@@ -720,7 +739,7 @@ export default function DetailModifyModal({
         return pathname.slice(idx + 1); // remove leading '/'
       }
       return "";
-    } catch (e) {
+    } catch {
       return "";
     }
   };
@@ -786,8 +805,9 @@ export default function DetailModifyModal({
           <FormGrid>
             <FormRow>
               <FormField>
-                <Label showMark={!formData.title}>제목</Label>
+                <Label $showMark={!formData.title}>제목</Label>
                 <Input
+                  ref={titleRef}
                   value={formData.title}
                   $highlighted={highlightedFields.has("title")}
                   onChange={(e) => {
@@ -799,13 +819,14 @@ export default function DetailModifyModal({
 
               <FormField>
                 <Label
-                  showMark={
+                  $showMark={
                     !formData.categories || formData.categories.length === 0
                   }
                 >
                   카테고리
                 </Label>
                 <CategoryContainer
+                  ref={categoriesRef}
                   style={{
                     border: highlightedFields.has("categories")
                       ? "1px solid #68b8ea"
@@ -851,91 +872,86 @@ export default function DetailModifyModal({
             <FormRow>
               <FormField>
                 <Label
-                  showMark={
+                  $showMark={
                     !formData.assailant || formData.assailant.length === 0
                   }
                 >
                   가해자
                 </Label>
-                <TagContainer>
-                  <div
-                    style={{
-                      border: highlightedFields.has("assailant")
-                        ? "1px solid #68b8ea"
-                        : "none",
-                      borderRadius: highlightedFields.has("assailant")
-                        ? "0.625rem"
-                        : "0",
-                      background: highlightedFields.has("assailant")
-                        ? "#e6f6ff"
-                        : "transparent",
-                      padding: highlightedFields.has("assailant")
-                        ? "0.5rem"
-                        : "0",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      minWidth: "fit-content",
-                      maxWidth: "20rem",
-                    }}
-                  >
-                    {formData.assailant.length > 0 &&
-                      formData.assailant.map((item, index) => (
-                        <Tag key={index}>
-                          {item}
-                          <RemoveButton
-                            className="remove-btn"
-                            onClick={() => {
-                              handleRemoveTag("assailant", index);
-                              clearHighlight("assailant");
-                            }}
-                          >
-                            ×
-                          </RemoveButton>
-                        </Tag>
-                      ))}
-                    {addingTag.field === "assailant" ? (
-                      <AddInput
-                        $widthCh={Math.min(
-                          Math.max((addingTag.value?.length || 0) + 1, 6),
-                          30
-                        )}
-                        value={addingTag.value}
-                        onChange={(e) =>
-                          setAddingTag((prev) => ({
-                            ...prev,
-                            value: e.target.value,
-                          }))
-                        }
-                        onKeyPress={(e) => {
-                          handleTagInputKeyPress(e);
-                          clearHighlight("assailant");
-                        }}
-                        onBlur={() => setAddingTag({ field: null, value: "" })}
-                        autoFocus
-                        placeholder="가해자 입력"
-                      />
-                    ) : (
-                      <AddButton
-                        onClick={() => {
-                          handleAddTag("assailant");
-                          clearHighlight("assailant");
-                        }}
-                      >
-                        +
-                      </AddButton>
-                    )}
-                  </div>
+                <TagContainer
+                  ref={assailantRef}
+                  style={{
+                    border: highlightedFields.has("assailant")
+                      ? "1px solid #68b8ea"
+                      : "none",
+                    borderRadius: highlightedFields.has("assailant")
+                      ? "0.625rem"
+                      : "0",
+                    background: highlightedFields.has("assailant")
+                      ? "#e6f6ff"
+                      : "transparent",
+                    padding: highlightedFields.has("assailant")
+                      ? "0.5rem"
+                      : "0",
+                  }}
+                >
+                  {formData.assailant.length > 0 &&
+                    formData.assailant.map((item, index) => (
+                      <Tag key={index}>
+                        {item}
+                        <RemoveButton
+                          className="remove-btn"
+                          onClick={() => {
+                            handleRemoveTag("assailant", index);
+                            clearHighlight("assailant");
+                          }}
+                        >
+                          ×
+                        </RemoveButton>
+                      </Tag>
+                    ))}
+                  {addingTag.field === "assailant" ? (
+                    <AddInput
+                      $widthCh={Math.min(
+                        Math.max((addingTag.value?.length || 0) + 1, 6),
+                        30
+                      )}
+                      value={addingTag.value}
+                      onChange={(e) =>
+                        setAddingTag((prev) => ({
+                          ...prev,
+                          value: e.target.value,
+                        }))
+                      }
+                      onKeyPress={(e) => {
+                        handleTagInputKeyPress(e);
+                        clearHighlight("assailant");
+                      }}
+                      onBlur={() => setAddingTag({ field: null, value: "" })}
+                      autoFocus
+                      placeholder="가해자 입력"
+                    />
+                  ) : (
+                    <AddButton
+                      onClick={() => {
+                        handleAddTag("assailant");
+                        clearHighlight("assailant");
+                      }}
+                    >
+                      +
+                    </AddButton>
+                  )}
                 </TagContainer>
               </FormField>
 
               <FormField>
                 <Label
-                  showMark={!formData.drawers || formData.drawers.length === 0}
+                  $showMark={!formData.drawers || formData.drawers.length === 0}
                 >
                   저장 폴더
                 </Label>
-                <SeverityContainer
+                <TagContainer
+                  ref={drawersRef}
                   style={{
                     border: highlightedFields.has("drawers")
                       ? "1px solid #68b8ea"
@@ -1062,14 +1078,15 @@ export default function DetailModifyModal({
                       />
                     </SeverityButton>
                   )}
-                </SeverityContainer>
+                </TagContainer>
               </FormField>
             </FormRow>
 
             <FormRow>
               <FormField>
-                <Label showMark={!formData.severity}>심각도</Label>
+                <Label $showMark={!formData.severity}>심각도</Label>
                 <SeverityContainer
+                  ref={severityRef}
                   style={{
                     border: highlightedFields.has("severity")
                       ? "1px solid #68b8ea"
@@ -1101,8 +1118,9 @@ export default function DetailModifyModal({
 
             <FormRow>
               <FormField>
-                <Label showMark={!formData.occurred_at}>발생 일시</Label>
+                <Label $showMark={!formData.occurred_at}>발생 일시</Label>
                 <DateTimeGroup
+                  ref={occurredAtRef}
                   style={{
                     border: highlightedFields.has("occurred_at")
                       ? "1px solid #68b8ea"
@@ -1142,7 +1160,7 @@ export default function DetailModifyModal({
               </FormField>
 
               <FormField>
-                <Label showMark={false}>목격자</Label>
+                <Label $showMark={false}>목격자</Label>
                 <TagContainer>
                   {formData.witness.length > 0 &&
                     formData.witness.map((item, index) => (
@@ -1185,8 +1203,9 @@ export default function DetailModifyModal({
 
             <FormRow>
               <FormField>
-                <Label showMark={!formData.location}>발생 장소</Label>
+                <Label $showMark={!formData.location}>발생 장소</Label>
                 <Input
+                  ref={locationRef}
                   value={formData.location}
                   $highlighted={highlightedFields.has("location")}
                   onChange={(e) => {
@@ -1202,34 +1221,9 @@ export default function DetailModifyModal({
 
             <FormRow>
               <FormField>
-                <Label showMark={!formData.district}>발생 지역</Label>
-                <Select
-                  value={formData.district || ""}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      district: e.target.value,
-                    }));
-                    clearHighlight("district");
-                  }}
-                  $highlighted={highlightedFields.has("district")}
-                >
-                  <option value="" disabled>
-                    선택
-                  </option>
-                  {DISTRICT_CODES.map((code) => (
-                    <option key={code} value={code}>
-                      {DISTRICT_CODE_TO_LABEL[code]}
-                    </option>
-                  ))}
-                </Select>
-              </FormField>
-            </FormRow>
-
-            <FormRow>
-              <FormField>
-                <Label showMark={!formData.content}>발생 정황</Label>
+                <Label $showMark={false}>발생 정황</Label>
                 <TextArea
+                  ref={contentRef}
                   value={formData.content}
                   $highlighted={highlightedFields.has("content")}
                   onChange={(e) => {
@@ -1246,7 +1240,7 @@ export default function DetailModifyModal({
             {/* 자료: 마지막 행 */}
             <FormRow>
               <FormField>
-                <Label showMark={false}>자료</Label>
+                <Label $showMark={false}>자료</Label>
                 <div
                   style={{
                     display: "flex",

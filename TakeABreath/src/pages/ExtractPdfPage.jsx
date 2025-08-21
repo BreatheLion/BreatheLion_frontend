@@ -104,16 +104,16 @@ const CardDescription = styled.div`
   margin-bottom: 3.56rem;
 `;
 
-export default function ExtractPdfPage({ drawerId, drawerName }) {
+export default function ExtractPdfPage({ recordId, recordName }) {
   const navigate = useNavigate();
 
   const getSubtitle = () => {
-    return `${drawerName || "폴더명"}   >   자료 내려받기`;
+    return `${recordName || "기록명"}   >   자료 내려받기`;
   };
 
   const handleCardClick = (cardType) => {
     if (cardType === "내용 증명 받기") {
-      navigate(`/get-content-prove/${drawerId}`, { state: { drawerName } });
+      navigate(`/get-content-prove/${recordId}`, { state: { recordName } });
     } else {
       console.log(`${cardType} 카드 클릭됨`);
       // 추후 구현

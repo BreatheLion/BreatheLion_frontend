@@ -123,10 +123,6 @@ TakeABreath 프로젝트의 프론트엔드-백엔드 통신을 위한 API 명�
 - RecordDetailPage에서 기록의 상세 정보를 조회할 때 사용
 - 증거 자료 목록도 함께 반환
 
-추가 필드:
-
-- `district`: 발생 지역 코드(예: `DONGJAK`). 프론트엔드는 코드→라벨로 변환하여 표시함.
-
 ---
 
 ### 3.5 기록 저장
@@ -143,7 +139,6 @@ TakeABreath 프로젝트의 프론트엔드-백엔드 통신을 위한 API 명�
   "content": "오늘 해승이가 해원이를 괴롭혔다",
   "severity": 1,
   "location": "동방",
-  "district": "DONGJAK",
   "created_at": "2025-08-05T10:00:00",
   "occurred_at": "2025-08-01T14:30:00",
   "assailant": ["서해승", "이예림"],
@@ -166,7 +161,6 @@ TakeABreath 프로젝트의 프론트엔드-백엔드 통신을 위한 API 명�
 
 설명:
 
-- `district`는 코드값(예: `DONGJAK`)으로 전송하며, 화면에는 라벨(예: "동작구")을 표시합니다.
 - `categories`는 1개 이상 필수입니다.
 - `evidences[].type`은 `AUDIO/IMAGE/VIDEO`만 사용합니다.
 - 첨부는 presigned 업로드 완료 후 받은 `s3Key`를 전송합니다.

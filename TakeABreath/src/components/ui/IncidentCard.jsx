@@ -134,8 +134,13 @@ export default function IncidentCard({
   };
 
   const handlePdfExtractClick = () => {
-    // ExtractPdfPage로 이동
-    navigate(`/extract-pdf/${incident.drawer_id}`, {
+    // 추후 다른 기능으로 변경 예정
+    console.log("PDF 추출 기능은 추후 구현 예정입니다.");
+  };
+
+  const handleAiHelperClick = () => {
+    // AiHelperPage로 이동
+    navigate(`/ai-helper/${incident.drawer_id}`, {
       state: { drawerName: incident.name },
     });
   };
@@ -166,7 +171,10 @@ export default function IncidentCard({
 
       {!isSelectionMode && (
         <ButtonSection>
-          <MainButton disabled={incident.record_amt === 0}>
+          <MainButton
+            disabled={incident.record_amt === 0}
+            onClick={handleAiHelperClick}
+          >
             <ButtonContent>
               <img
                 src={

@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
-import AttachmentChip from "../components/ui/AttachmentChip";
 import { SmallButton } from "../components/ui/Button";
 import TitleEditModal from "../components/ui/TitleEditModal";
 import DeleteConfirmModal from "../components/ui/DeleteConfirmModal";
 import FolderChangeModal from "../components/ui/FolderChangeModal";
+import FileShowModal from "../components/ui/FileShowModal";
 import titleEditInRecordIcon from "../assets/titleEditInRecordIcon.svg";
-import iconSymbol from "../assets/iconSymbol.svg";
 import { jsonServerHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
@@ -110,14 +109,6 @@ const FormField = styled.div`
   display: flex;
   align-items: center;
   gap: 1.25rem;
-`;
-
-const District = styled.span`
-  display: inline-flex;
-  align-items: center;
-  font-family: "Pretendard", sans-serif;
-  font-size: 0.875rem;
-  color: #313131;
 `;
 
 const Label = styled.label`
@@ -229,6 +220,47 @@ const AttachmentsBar = styled.div`
   width: 37rem;
 `;
 
+const NewAttachmentsContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+  width: 34.6875rem;
+`;
+
+const AttachmentPreview = styled.div`
+  width: 16rem;
+  height: 12rem;
+  border-radius: 0.5rem;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+const PreviewImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const AudioIcon = styled.div`
+  font-size: 3rem;
+  color: #4a4a4a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+`;
+
 const severityMap = {
   1: "높음",
   2: "보통",
@@ -241,6 +273,8 @@ export default function RecordDetailPage({ previousPage, record_id }) {
   const [showTitleEditModal, setShowTitleEditModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [showFolderChangeModal, setShowFolderChangeModal] = useState(false);
+  const [showFileModal, setShowFileModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const getPageTitle = () => {
     switch (previousPage) {
@@ -367,6 +401,16 @@ export default function RecordDetailPage({ previousPage, record_id }) {
     }
   };
 
+  const handleFileClick = (evidence) => {
+    setSelectedFile(evidence);
+    setShowFileModal(true);
+  };
+
+  const handleFileModalClose = () => {
+    setShowFileModal(false);
+    setSelectedFile(null);
+  };
+
   const fetchRecordData = async () => {
     try {
       setIsLoading(true);
@@ -399,34 +443,6 @@ export default function RecordDetailPage({ previousPage, record_id }) {
     const minutes = String(date.getMinutes()).padStart(2, "0");
 
     return `${year}-${month}-${day} ${hours}:${minutes}`;
-  };
-
-  const DISTRICT_CODE_TO_LABEL = {
-    GANGNAM: "강남구",
-    GANGDONG: "강동구",
-    GANGBUK: "강북구",
-    GANGSEO: "강서구",
-    GWANAK: "관악구",
-    GWANGJIN: "광진구",
-    GURO: "구로구",
-    GEUMCHEON: "금천구",
-    NOWON: "노원구",
-    DOBONG: "도봉구",
-    DONGDAEMUN: "동대문구",
-    DONGJAK: "동작구",
-    MAPO: "마포구",
-    SEODAEMUN: "서대문구",
-    SEOCHO: "서초구",
-    SEONGDONG: "성동구",
-    SEONGBUK: "성북구",
-    SONGPA: "송파구",
-    YANGCHEON: "양천구",
-    YEONGDEUNGPO: "영등포구",
-    YONGSAN: "용산구",
-    EUNPYEONG: "은평구",
-    JONGNO: "종로구",
-    JUNG: "중구",
-    JUNGRANG: "중랑구",
   };
 
   if (isLoading) {
@@ -586,18 +602,6 @@ export default function RecordDetailPage({ previousPage, record_id }) {
 
             <FormRow>
               <FormField>
-                <Label>발생 지역</Label>
-                <District>
-                  {recordData?.district
-                    ? DISTRICT_CODE_TO_LABEL[recordData.district] ||
-                      recordData.district
-                    : "발생 지역 정보 없음"}
-                </District>
-              </FormField>
-            </FormRow>
-
-            <FormRow>
-              <FormField>
                 <Label>발생 정황</Label>
                 <TextArea>
                   {recordData?.content || "발생 정황 정보 없음"}
@@ -608,16 +612,54 @@ export default function RecordDetailPage({ previousPage, record_id }) {
             <FormRow>
               <FormField>
                 <Label>자료</Label>
-                <AttachmentsBar>
-                  {recordData?.evidences?.map((evidence, index) => (
-                    <AttachmentChip
-                      key={index}
-                      name={evidence.filename}
-                      kind={evidence.type}
-                      previewUrl={evidence.S3url}
-                    />
-                  ))}
-                </AttachmentsBar>
+                <NewAttachmentsContainer>
+                  {recordData?.evidences?.map((evidence, index) => {
+                    const isImage =
+                      evidence.type === "PHOTO" || evidence.type === "IMAGE";
+                    const isVideo = evidence.type === "VIDEO";
+                    const isAudio = evidence.type === "AUDIO";
+
+                    return (
+                      <AttachmentPreview
+                        key={index}
+                        onClick={() => handleFileClick(evidence)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {isImage && (
+                          <PreviewImage
+                            src={evidence.s3Url}
+                            alt={evidence.filename}
+                            onError={(e) => {
+                              console.error(
+                                "Image failed to load:",
+                                e.target.src
+                              );
+                              e.target.style.display = "none";
+                            }}
+                          />
+                        )}
+                        {isVideo && (
+                          <video
+                            src={evidence.s3Url}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                            onError={(e) => {
+                              console.error(
+                                "Video failed to load:",
+                                e.target.src
+                              );
+                              e.target.style.display = "none";
+                            }}
+                          />
+                        )}
+                        {isAudio && <AudioIcon>🎵</AudioIcon>}
+                      </AttachmentPreview>
+                    );
+                  })}
+                </NewAttachmentsContainer>
               </FormField>
             </FormRow>
           </FormGrid>
@@ -647,6 +689,13 @@ export default function RecordDetailPage({ previousPage, record_id }) {
         currentFolder={recordData?.drawer_name}
         recordId={record_id}
         recordData={recordData}
+      />
+
+      <FileShowModal
+        isOpen={showFileModal}
+        onClose={handleFileModalClose}
+        file={selectedFile}
+        fileUrl={selectedFile?.s3Url}
       />
     </PageContainer>
   );

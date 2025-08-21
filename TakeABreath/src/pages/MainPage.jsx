@@ -175,37 +175,30 @@ export default function MainPage({ onNavigateToChat }) {
     clearPreviousChatSessions();
     setIsLoading(true);
 
-    // 로딩 중일 때 임시 응답으로 ChatPage로 이동
-    const tempResponse = {
-      chat_session_id: 1,
-      answer: "응답 중입니다",
-      time: new Date().toLocaleTimeString("ko-KR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
-      date: new Date().toISOString().split("T")[0],
-    };
-
     setInputValue("");
-    onNavigateToChat({
-      userMessage: trimmed,
-      serverResponse: tempResponse,
-      isLoading: true,
-    });
 
+    // API 호출 후 응답을 받아서 ChatPage로 이동
     try {
+      // API 요청 데이터 준비
+      const requestData = {
+        message: trimmed,
+      };
+
+      // API 요청 데이터 콘솔 출력 (테스트용)
+      console.log("API 요청 데이터:", requestData);
+      console.log("API 엔드포인트: /api/chats/start/");
+
       // JSON Server API 호출 (POST 요청 시뮬레이션)
-      await fetch("http://localhost:3001/records_start", {
+      const response = await fetch("http://localhost:3001/records_start", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          message: trimmed,
-          role: "user",
-        }),
+        body: JSON.stringify(requestData),
       });
+
+      const responseData = await response.json();
+      console.log("API 응답 데이터:", responseData);
 
       // POST 요청은 성공했지만, 응답은 미리 정의된 데이터 사용
       // 실제 API에서는 서버가 이 응답을 반환할 것
@@ -231,18 +224,19 @@ export default function MainPage({ onNavigateToChat }) {
         mockServerResponse.isSuccess &&
         mockServerResponse.data
       ) {
-        // 실제 API 구조에 맞게 데이터 가공
-        const processedResponse = {
+        // API 응답에서 받은 answer를 사용
+        const tempResponse = {
           chat_session_id: mockServerResponse.data.session_id,
-          answer: mockServerResponse.data.answer,
+          answer: mockServerResponse.data.answer, // API 응답의 answer 사용
           time: mockServerResponse.data.message_time,
           date: mockServerResponse.data.message_date,
         };
 
-        // 두 번째 네비게이션을 막고, 응답은 이벤트로 ChatPage에 전달
-        window.dispatchEvent(
-          new CustomEvent("chat_server_response", { detail: processedResponse })
-        );
+        onNavigateToChat({
+          userMessage: trimmed,
+          serverResponse: tempResponse,
+          isLoading: false, // API 응답을 받았으므로 로딩 상태 해제
+        });
       } else {
         throw new Error("서버 응답이 올바르지 않습니다.");
       }

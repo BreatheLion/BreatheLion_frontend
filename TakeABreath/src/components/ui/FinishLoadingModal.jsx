@@ -18,7 +18,6 @@ export default function FinishLoadingModal({
     content: "오늘 해승이가 해원이를 괴롭혔다",
     severity: 1,
     location: "동방",
-    district: "DONGJAK",
     created_at: "2025-08-05T10:00:00",
     occurred_at: "2025-08-01T14:30:00",
     assailant: [],

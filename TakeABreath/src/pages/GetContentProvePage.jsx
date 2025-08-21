@@ -260,7 +260,7 @@ const ButtonContainer = styled.div`
   justify-content: center;
 `;
 
-export default function GetContentProvePage({ drawerName }) {
+export default function GetContentProvePage({ recordName }) {
   const [selectedCard, setSelectedCard] = useState(null);
   const [inputValue, setInputValue] = useState("");
   const [additionalInputValue, setAdditionalInputValue] = useState("");
@@ -286,7 +286,7 @@ export default function GetContentProvePage({ drawerName }) {
   }, []);
 
   const getSubtitle = () => {
-    return `${drawerName || "폴더명"}   >   자료 내려받기   >   내용 증명 받기`;
+    return `${recordName || "기록명"}   >   자료 내려받기   >   내용 증명 받기`;
   };
 
   const handleCardClick = (cardType) => {
@@ -489,7 +489,7 @@ export default function GetContentProvePage({ drawerName }) {
         {shouldShowRecordButton() && (
           <ButtonContainer>
             <MainButton onClick={handleRecordButtonClick}>
-              이대로 기록할게요
+              내용 증명 받기
             </MainButton>
           </ButtonContainer>
         )}

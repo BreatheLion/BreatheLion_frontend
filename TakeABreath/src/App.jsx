@@ -5,6 +5,7 @@ import {
   useLocation,
   useNavigate,
   Navigate,
+  useParams,
 } from "react-router-dom";
 import MainPage from "./pages/MainPage";
 import ChatPage from "./pages/ChatPage";
@@ -19,6 +20,7 @@ import ConsultantPage from "./pages/ConsultantPage";
 import ConsultantConnectPage from "./pages/ConsultantConnectPage";
 import LawyerDetailsPage from "./pages/LawyerDetailsPage";
 import ConsultantConnectDetailPage from "./pages/ConsultantConnectDetailPage";
+import AiHelperPage from "./pages/AiHelperPage";
 
 // 전역 네비게이션 함수들을 위한 객체
 window.navigation = {};
@@ -66,6 +68,8 @@ function App() {
       navigate(`/chat-view/${recordId}`, { state: { pageTitle, created_at } });
     window.navigation.navigateToSummary = (folderId, folderName) =>
       navigate(`/summary/${folderId}`, { state: { folderName } });
+    window.navigation.navigateToExtractPdf = (recordId, recordName) =>
+      navigate(`/extract-pdf/${recordId}`, { state: { recordName } });
   }, [navigate]);
 
   // 모달 오픈 시 뒤로가기를 무시
@@ -132,25 +136,23 @@ function App() {
   };
 
   const ExtractPdfRoute = () => {
+    const { recordId } = useParams();
     const state = location.state || {};
-    const drawerId = location.pathname.split("/").pop();
-    return (
-      <ExtractPdfPage
-        drawerId={Number(drawerId)}
-        drawerName={state.drawerName}
-      />
-    );
+    return <ExtractPdfPage recordId={recordId} recordName={state.recordName} />;
   };
 
   const GetContentProveRoute = () => {
+    const { recordId } = useParams();
     const state = location.state || {};
-    const drawerId = location.pathname.split("/").pop();
     return (
-      <GetContentProvePage
-        drawerId={Number(drawerId)}
-        drawerName={state.drawerName}
-      />
+      <GetContentProvePage recordId={recordId} recordName={state.recordName} />
     );
+  };
+
+  const AiHelperRoute = () => {
+    const { drawerId } = useParams();
+    const state = location.state || {};
+    return <AiHelperPage drawerId={drawerId} drawerName={state.drawerName} />;
   };
 
   return (
@@ -171,11 +173,12 @@ function App() {
       <Route path="/record/:recordId" element={<RecordDetailRoute />} />
       <Route path="/chat-view/:recordId" element={<ChatViewRoute />} />
       <Route path="/summary/:folderId" element={<SummaryRoute />} />
-      <Route path="/extract-pdf/:drawerId" element={<ExtractPdfRoute />} />
+      <Route path="/extract-pdf/:recordId" element={<ExtractPdfRoute />} />
       <Route
-        path="/get-content-prove/:drawerId"
+        path="/get-content-prove/:recordId"
         element={<GetContentProveRoute />}
       />
+      <Route path="/ai-helper/:drawerId" element={<AiHelperRoute />} />
       <Route path="/lawyer" element={<LawyerPage />} />
       <Route path="/consultant" element={<ConsultantPage />} />
       <Route path="/consultant-connect" element={<ConsultantConnectPage />} />

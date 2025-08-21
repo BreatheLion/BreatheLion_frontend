@@ -4,14 +4,14 @@
       {
         "record_id": 1,
         "drawer_id": 5,
-        "title": "긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목",
+        "title": "긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목",
         "location": "동방",
         "drawer": "동방에서 벌어진 일",
         "assailant": [
           "조해원",
           "오영록"
         ],
-        "created_at": "2025-08-05T10:00:00"
+        "created_at": "2025-11-25T10:00:00"
       },
       {
         "record_id": 2,
@@ -43,7 +43,7 @@
       "record_id": 1,
       "drawer_id": 5,
       "drawer_name": "사장님",
-      "title": "교내에서 열린   잔악무도한 일",
+      "title": "교내에서 열린 잔악무도한 일",
       "categories": "언어폭력",
       "content": "교내에서 학생 간 심한 욕설이 발생하였습니다.",
       "severity": 2,
@@ -260,6 +260,7 @@
   ],
   "helpai": [
     {
+      "drawer_id": 1,
       "isSuccess": true,
       "code": "200",
       "message": "채팅성공",
@@ -269,7 +270,39 @@
           "김OO 팀장"
         ],
         "record_count": 10,
-        "summary": "회의 중 새로운 제안을 발표했는데 무시당하고, 5분 뒤 상사가 같은 내용을 말함. 지난 회의에서도 비슷한 일이 있었음."
+        "summary": "회의 중 새로운 제안을 발표했는데 무시당하고, 5분 뒤 상사가 같은 내용을 말함. 지난 회의에서도 비슷한 일이 있었음.",
+        "care_guide": "커피 전문점에서의 폭언을 기록해 주신 용기에 깊이 감사드려요.",
+        "related_laws": [
+          {
+            "law_name": "폭력행위 등 처벌에 관한 법률",
+            "article": "제2조(범죄의 종류)",
+            "content": "폭력행위 등 처벌에 관한 법률 제2조는 폭력행위의 종류와 처벌 기준을 규정하고 있다."
+          },
+          {
+            "law_name": "폭력행위 등 처벌에 관한 법률",
+            "article": "제3조(상해)",
+            "content": "이 법은 사람을 폭행하여 상해를 입힌 경우 처벌한다."
+          },
+          {
+            "law_name": "형법",
+            "article": "제2조(절도)",
+            "content": "이 법은 타인의 재물을 절취하는 행위를 처벌한다.\n이 법은 타인의 재물을 절취하는 행위를 처벌한다."
+          }
+        ],
+        "organizations": [
+          {
+            "name": "고용노동부",
+            "description": "직장 내 괴롭힘 익명신고센터",
+            "phone": "1350",
+            "url": "https://www.moel.go.kr"
+          },
+          {
+            "name": "국세청",
+            "description": "세금 내야된다.",
+            "phone": "126",
+            "url": "https://www.nts.go.kr/nts/main.do"
+          }
+        ]
       },
       "id": "f390"
     }
@@ -526,6 +559,50 @@
       "id": "696f",
       "message": "ㄴㅇㄹ",
       "role": "user"
+    },
+    {
+      "id": "106a",
+      "message": "sdf",
+      "role": "user"
+    },
+    {
+      "id": "0143",
+      "message": "sdf",
+      "role": "user"
+    },
+    {
+      "id": "e592",
+      "message": "sdf",
+      "role": "user"
+    },
+    {
+      "id": "7cbe",
+      "message": "ㄴㅇㄴㄹㅇ",
+      "role": "user"
+    },
+    {
+      "id": "7518",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "1b47",
+      "message": "ㄴㅇㄹㅇㄴ",
+      "role": "user"
+    },
+    {
+      "id": "bca5",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "fc2f",
+      "message": "ㄴㅇㄹ",
+      "role": "user"
+    },
+    {
+      "id": "459d",
+      "message": "ㄴㅇㄹ"
     }
   ],
   "timeline": [

@@ -202,7 +202,12 @@ export default function TableRow({
     console.log(`${action} 클릭`);
     setShowModal(false);
 
-    if (action === "폴더 변경") {
+    if (action === "다운로드") {
+      // ExtractPdfPage로 이동
+      if (window.navigation && window.navigation.navigateToExtractPdf) {
+        window.navigation.navigateToExtractPdf(id, title);
+      }
+    } else if (action === "폴더 변경") {
       setShowFolderModal(true);
     } else if (action === "제목 수정") {
       setShowTitleModal(true);

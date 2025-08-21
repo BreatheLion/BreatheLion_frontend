@@ -30,9 +30,45 @@ const ChatWrapper = styled.div`
   flex-direction: column;
 `;
 
+const FinishContainer = styled.div`
+  position: fixed;
+  top: calc(4rem + 1.44rem);
+  left: 1.44rem;
+  display: flex;
+  width: 9.75rem;
+  padding: 1.25rem 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8125rem;
+  flex-shrink: 0;
+  border-radius: 0.9375rem;
+  background: var(--Main-bk, #f8faff);
+  box-shadow: 2px 2px 2px 0 rgba(0, 0, 0, 0.09);
+  z-index: 10;
+`;
+
+const FinishDateDisplay = styled.div`
+  color: var(--seconday, #688ae0);
+  text-align: center;
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.375rem;
+`;
+
+const FinishDateContainer = styled.div`
+  display: flex;
+  width: 7.5rem;
+  height: 2.75rem;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+`;
+
 const DateDisplay = styled.div`
   text-align: center;
-  padding: 2.5rem 0 1.5rem 0;
+  padding: 0.625rem 2.6875rem;
   font-family: "Pretendard", sans-serif;
   font-size: 0.875rem;
   font-weight: 700;
@@ -43,6 +79,7 @@ const DateDisplay = styled.div`
 const ChatArea = styled.div`
   flex: 1;
   padding: 0 12.5rem;
+  padding-top: 1.44rem;
   overflow-y: auto;
 
   display: flex;
@@ -138,6 +175,7 @@ const TimeStamp = styled.div`
 const InputArea = styled.div`
   padding: 0 12.5rem 2rem 12.5rem;
   display: flex;
+  justify-content: center;
   align-items: flex-end; /* 하단 정렬로 라인 일치 */
   gap: 1rem;
 `;
@@ -145,7 +183,8 @@ const InputArea = styled.div`
 const InputContainer = styled.div`
   position: relative;
   display: flex;
-  width: 45.9375rem;
+  width: 100%;
+  max-width: 60rem;
   padding: 0.9375rem 1.25rem 0 1.25rem; /* 하단 패딩 제거 */
   flex-direction: column;
   align-items: stretch;
@@ -246,7 +285,6 @@ const FinishButton = styled.button`
     #688ae0 37.78%,
     #8c68e0 177.79%
   );
-  margin-bottom: 0.5rem;
   font-family: "Pretendard", sans-serif;
   font-size: 0.9375rem;
   font-weight: 500;
@@ -666,7 +704,6 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
         content: payload.content || "",
         severity: payload.severity,
         location: payload.location || "",
-        district: payload.district || "",
         created_at: payload.created_at || "",
         occurred_at: payload.occurred_at || "",
         assailant: payload.assailant || [],
@@ -717,6 +754,15 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
 
+    // chat_session_id 검증
+    if (!chatSessionId) {
+      window.handleApiError(
+        new Error("채팅 세션 ID가 없습니다."),
+        "채팅 세션을 찾을 수 없습니다."
+      );
+      return;
+    }
+
     setIsLoading(true);
 
     // 사용자/로딩 메시지 추가
@@ -760,6 +806,9 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
           date: new Date().toISOString().split("T")[0],
         };
 
+        // 가짜 API 응답 데이터 콘솔 출력 (테스트용)
+        console.log("가짜 API 응답 데이터:", mockResponse);
+
         setMessages((prev) => {
           const updated = [...prev];
           const idx = updated.findIndex(
@@ -788,9 +837,20 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
       const form = new FormData();
       form.append("chat_session_id", String(chatSessionId));
       form.append("text", trimmed);
-      attachments.forEach((att) =>
-        form.append("evidences[]", att.file, att.file.name)
-      );
+
+      // attachments에서 s3Key만 전송 (이미 S3에 업로드됨)
+      attachments.forEach((att) => {
+        if (att.s3Key) {
+          form.append("evidences[]", att.s3Key);
+        }
+      });
+
+      // API 요청 데이터 콘솔 출력 (테스트용)
+      console.log("API 요청 데이터:");
+      console.log("- chat_session_id:", chatSessionId);
+      console.log("- text:", trimmed);
+      console.log("- attachments count:", attachments.length);
+      console.log("API 엔드포인트: /api/chats/attach/");
 
       const controller = new AbortController();
       uploadAbortRef.current = controller;
@@ -800,6 +860,9 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
       });
 
       const serverResponse = response.data;
+
+      // API 응답 데이터 콘솔 출력 (테스트용)
+      console.log("API 응답 데이터:", serverResponse);
 
       setMessages((prev) => {
         const updated = [...prev];
@@ -811,6 +874,7 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
             ...updated[idx],
             content: serverResponse.answer,
             time: serverResponse.time || "",
+            date: serverResponse.date || new Date().toISOString().split("T")[0],
           };
         }
         return updated;
@@ -839,12 +903,18 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
   return (
     <ChatContainer>
       <Header currentPage="chat" />
+      <FinishContainer>
+        <FinishButton onClick={handleFinish} disabled={isFinishing}>
+          {isFinishing ? "기록 완료 중..." : "기록 마치기"}
+        </FinishButton>
+        <FinishDateContainer>
+          <FinishDateDisplay>
+            {initialChatData?.serverResponse?.date ||
+              new Date().toISOString().split("T")[0]}
+          </FinishDateDisplay>
+        </FinishDateContainer>
+      </FinishContainer>
       <ChatWrapper>
-        <DateDisplay>
-          {initialChatData?.serverResponse?.date ||
-            new Date().toISOString().split("T")[0]}
-        </DateDisplay>
-
         <ChatArea ref={chatAreaRef}>
           {messages.map((message) => (
             <MessageContainer key={message.id} className={message.type}>
@@ -908,7 +978,6 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
           {/* 진행률 바 제거: 로딩 상태는 메시지 버블의 "응답 중입니다"로만 표시 */}
 
           <InputArea>
-            <Spacer />
             <InputContainer>
               <ChatInput
                 ref={inputRef}
@@ -935,10 +1004,6 @@ export default function ChatPage({ onNavigateToMain, initialChatData }) {
                 onChange={handleFilesChosen}
               />
             </InputContainer>
-
-            <FinishButton onClick={handleFinish} disabled={isFinishing}>
-              {isFinishing ? "기록 완료 중..." : "기록 마치기"}
-            </FinishButton>
           </InputArea>
         </BottomPanel>
       </ChatWrapper>
