@@ -1,6 +1,9 @@
 // API 설정 관리
 // TODO: 실제 배포 시 환경변수로 변경 필요
 
+// 런타임 BASE_URL 설정 (외부에서 주입 가능)
+let RUNTIME_API_BASE_URL = null;
+
 // 개발 환경 설정
 const DEV_CONFIG = {
   // JSON Server URL (개발용)
@@ -27,8 +30,19 @@ const PROD_CONFIG = {
 const isDevelopment = import.meta.env.DEV;
 const config = isDevelopment ? DEV_CONFIG : PROD_CONFIG;
 
+// 런타임 BASE_URL 설정 함수
+export const setRuntimeApiBaseUrl = (baseUrl) => {
+  RUNTIME_API_BASE_URL = baseUrl;
+  console.log("Runtime API Base URL 설정:", baseUrl);
+};
+
 // API Base URL 결정
 export const getApiBaseUrl = () => {
+  // 런타임 설정이 우선
+  if (RUNTIME_API_BASE_URL) {
+    return RUNTIME_API_BASE_URL;
+  }
+
   if (config.API_TYPE === "json-server") {
     return config.JSON_SERVER_BASE;
   }

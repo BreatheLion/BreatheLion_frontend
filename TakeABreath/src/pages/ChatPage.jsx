@@ -472,8 +472,9 @@ export default function ChatPage({ initialChatData }) {
   const MAX_ATTACHMENTS = 10; // 첨부 최대 개수
   const MAX_TOTAL_SIZE = 300 * 1024 * 1024; // 총합 300MB (바이트 단위)
 
-  // chat_session_id 추출
+  // chat_session_id와 record_id 추출
   const chatSessionId = initialChatData?.serverResponse?.chat_session_id || 1;
+  const recordId = initialChatData?.serverResponse?.record_id || null;
 
   // 로딩 상태에 따라 메시지 업데이트
   useEffect(() => {
@@ -632,9 +633,7 @@ export default function ChatPage({ initialChatData }) {
     }
 
     // 즉시 S3 업로드 후 s3Key/previewUrl 보관
-    const basePrefix = finishResponse?.record_id
-      ? `records/${finishResponse.record_id}`
-      : `chat-sessions/${chatSessionId}`;
+    const basePrefix = `records/${finishResponse?.record_id || recordId}`;
     const prefix = `${basePrefix}/evidence`;
     const uploaded = [];
     for (const file of filesWithinLimit) {
@@ -687,6 +686,7 @@ export default function ChatPage({ initialChatData }) {
         },
         body: JSON.stringify({
           chat_session_id: chatSessionId,
+          record_id: recordId,
         }),
       });
 
@@ -706,16 +706,17 @@ export default function ChatPage({ initialChatData }) {
         message: "채팅 끝",
         data: {
           record_id: 3,
-          title: "동방에서 일어난 무시무시한 사건",
-          categories: ["괴롭힘"],
-          content: "오늘 해승이가 해원이를 괴롭혔다",
-          severity: 1,
-          location: "동방",
-          created_at: "2025-08-05T10:00:00",
-          occurred_at: "2025-08-01T14:30:00",
-          assailant: ["서해승", "이예림"],
-          witness: ["오영록"],
-          drawers: ["00 커피 폭언", "기차역 살인사건"],
+          drawers: ["동방에서 일어난 거", "커피집 진상"],
+          record_detail: {
+            title: "동방에서 일어난 무시무시한 사건",
+            categories: ["괴롭힘", "기타"],
+            content: "오늘 해승이가 해원이를 괴롭혔다",
+            severity: 1,
+            location: "동방",
+            occurred_at: "2025.08.01 (14:30)",
+            assailant: ["서해승", "이예림"],
+            witness: ["오영록"],
+          },
           evidences: [
             {
               filename: "해원이 욕설 파일",
@@ -844,7 +845,7 @@ export default function ChatPage({ initialChatData }) {
                 filename: att.filename, // 원본 파일명
                 s3Key: att.s3Key, // S3 키
               }))
-            : [], // 첨부 파일이 없을 때는 빈 배열 (추후 확인 필요)
+            : null, // 첨부 파일이 없을 때는 null
       };
 
       const controller = new AbortController();

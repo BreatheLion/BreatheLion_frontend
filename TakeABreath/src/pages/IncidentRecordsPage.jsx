@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { TitleDrawerButton } from "../components/ui/Button";
 import IncidentCard from "../components/ui/IncidentCard";
-import FolderAddModal from "../components/ui/FolderAddModal";
 import FolderDeleteSelectionUI from "../components/ui/FolderDeleteSelectionUI";
 import FolderDeleteConfirmModal from "../components/ui/DeleteConfirmModal";
-import settingButton from "../assets/settingButton.svg";
+import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
+import FailureNotificationModal from "../components/ui/FailureNotificationModal";
 
 const SettingButtonContainer = styled.div`
   position: absolute;
@@ -90,36 +90,118 @@ const CardsContainer = styled.div`
 `;
 
 export default function IncidentRecordsPage({
-  onNavigateToMain,
   triggerFolderDelete,
   onFolderDeleteTriggered,
+  refreshTrigger,
+  onFolderDeleteSuccess,
 }) {
   const [incidentData, setIncidentData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [showFolderAddModal, setShowFolderAddModal] = useState(false);
   const [isDeleteSelectionMode, setIsDeleteSelectionMode] = useState(false);
   const [selectedFolders, setSelectedFolders] = useState([]);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const modalRef = useRef(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showFailureModal, setShowFailureModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [failureMessage, setFailureMessage] = useState("");
+
+  // PDF 다운로드 핸들러
+  const handlePdfDownload = async (drawerId) => {
+    try {
+      const response = await fetch(`/api/drawers/${drawerId}/pdf`);
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+      const blob = await response.blob();
+      const filename = "timeline.pdf";
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("PDF 다운로드 실패:", error);
+      setFailureMessage("다운로드에 실패했습니다");
+      setShowFailureModal(true);
+    }
+  };
 
   // 실제 API 호출 함수
   const fetchIncidentData = async () => {
     setIsLoading(true);
     try {
       // 실제 API에서 모든 drawers 조회
-      const response = await fetch("/api/drawers/");
+      const response = await fetch("/api/drawers/list/");
       const data = await response.json();
 
       console.log("API 응답 데이터:", data);
 
-      if (data && Array.isArray(data)) {
-        setIncidentData(data);
+      if (
+        data &&
+        data.data &&
+        data.data.drawers &&
+        Array.isArray(data.data.drawers)
+      ) {
+        // record_count를 record_amt로 매핑하고 create_at을 date로 매핑
+        const mappedData = data.data.drawers.map((drawer) => ({
+          ...drawer,
+          record_amt: drawer.record_count,
+          date: drawer.create_at,
+        }));
+        setIncidentData(mappedData);
       } else {
         setIncidentData([]);
       }
     } catch (error) {
-      window.handleApiError(error, "사건별 기록 조회에 실패했습니다.");
+      // 목업 데이터 사용 (추후 제거 예정)
+      console.log("API 호출 실패, 목업 데이터 사용:", error);
+      const mockData = {
+        isSuccess: true,
+        code: "200",
+        message: "서랍 목록 조회 성공",
+        data: {
+          drawers: [
+            {
+              drawer_id: 1,
+              name: "상도동 커피 폭언",
+              record_count: 3,
+              create_at: "2025.08.16",
+              update_at: "2025.08.20",
+            },
+            {
+              drawer_id: 2,
+              name: "회기동 함박",
+              record_count: 0,
+              create_at: "2025.08.06",
+              update_at: "2025.08.19",
+            },
+            {
+              drawer_id: 3,
+              name: "동방에서 벌어진 일",
+              record_count: 5,
+              create_at: "2025.08.10",
+              update_at: "2025.08.18",
+            },
+            {
+              drawer_id: 4,
+              name: "교실에서 일어난 위협",
+              record_count: 2,
+              create_at: "2025.08.12",
+              update_at: "2025.08.15",
+            },
+          ],
+        },
+      };
+
+      // record_count를 record_amt로 매핑하고 create_at을 date로 매핑
+      const mappedData = mockData.data.drawers.map((drawer) => ({
+        ...drawer,
+        record_amt: drawer.record_count,
+        date: drawer.create_at,
+      }));
+      setIncidentData(mappedData);
     } finally {
       setIsLoading(false);
     }
@@ -129,6 +211,13 @@ export default function IncidentRecordsPage({
     fetchIncidentData();
   }, []);
 
+  // DrawerPage에서 폴더 추가 후 데이터 갱신 트리거 감지
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      fetchIncidentData();
+    }
+  }, [refreshTrigger]);
+
   // DrawerPage에서 폴더 삭제 트리거 감지
   useEffect(() => {
     if (triggerFolderDelete) {
@@ -137,60 +226,6 @@ export default function IncidentRecordsPage({
       onFolderDeleteTriggered();
     }
   }, [triggerFolderDelete, onFolderDeleteTriggered]);
-
-  // 설정 버튼 관련 핸들러
-  const handleSettingClick = () => {
-    setShowModal(!showModal);
-  };
-
-  const handleModalItemClick = (action) => {
-    console.log(`설정 모달 액션: ${action}`);
-    setShowModal(false);
-
-    switch (action) {
-      case "폴더 추가":
-        setShowFolderAddModal(true);
-        break;
-      case "폴더 삭제":
-        setIsDeleteSelectionMode(true);
-        setSelectedFolders([]);
-        break;
-    }
-  };
-
-  // 폴더 추가 핸들러
-  const handleFolderAdd = async (folderName) => {
-    try {
-      // 실제 API 호출
-      console.log("폴더 추가 API 호출:", folderName);
-      const response = await fetch("/api/drawers/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name: folderName }),
-      });
-
-      const responseData = await response.json();
-      console.log("폴더 추가 API 응답:", responseData);
-
-      if (response.ok) {
-        // 성공 시 상태 업데이트
-        const newFolder = {
-          drawer_id: Date.now(),
-          name: folderName,
-          record_amt: 0,
-          date: new Date().toISOString().split("T")[0],
-        };
-
-        setIncidentData((prev) => [...prev, newFolder]);
-      } else {
-        throw new Error("폴더 추가에 실패했습니다.");
-      }
-    } catch (error) {
-      window.handleApiError(error, "폴더 추가에 실패했습니다.");
-    }
-  };
 
   // 폴더 선택 관련 핸들러
   const handleFolderSelect = (folderId) => {
@@ -214,33 +249,60 @@ export default function IncidentRecordsPage({
     }
   };
 
-  const handleDeleteConfirm = () => {
-    // 선택된 폴더들 삭제
-    setIncidentData((prev) =>
-      prev.filter((folder) => !selectedFolders.includes(folder.drawer_id))
-    );
-    console.log("선택된 폴더들 삭제:", selectedFolders);
-    setShowDeleteConfirmModal(false);
-    setIsDeleteSelectionMode(false);
-    setSelectedFolders([]);
-  };
+  const handleDeleteConfirm = async () => {
+    try {
+      // 선택된 폴더들을 한 번의 요청으로 삭제
+      const response = await fetch("/api/drawers/delete/", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          drawer_id: selectedFolders,
+        }),
+      });
 
-  // 모달 외부 클릭 감지
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        setShowModal(false);
+      const responseData = await response.json();
+
+      if (responseData.isSuccess) {
+        // 성공 시 선택된 폴더들을 로컬 상태에서 제거
+        setIncidentData((prev) =>
+          prev.filter((folder) => !selectedFolders.includes(folder.drawer_id))
+        );
+
+        console.log("삭제 성공:", selectedFolders);
+
+        // 성공 모달 표시
+        setSuccessMessage(
+          `${selectedFolders.length}개의 폴더가 삭제되었습니다.`
+        );
+        setShowSuccessModal(true);
+
+        // 성공 콜백 호출
+        if (onFolderDeleteSuccess) {
+          onFolderDeleteSuccess(selectedFolders.length);
+        }
+      } else {
+        throw new Error(responseData.message || "폴더 삭제에 실패했습니다.");
       }
-    };
+    } catch (error) {
+      // 목업 데이터 사용 (추후 제거 예정)
+      console.log("API 호출 실패, 목업 데이터 사용:", error);
 
-    if (showModal) {
-      document.addEventListener("mousedown", handleClickOutside);
+      // 실패 모달 표시
+      setFailureMessage("폴더 삭제에 실패했습니다. 다시 시도해주세요.");
+      setShowFailureModal(true);
+
+      // 목업 데이터로 로컬 상태 업데이트 (테스트용)
+      setIncidentData((prev) =>
+        prev.filter((folder) => !selectedFolders.includes(folder.drawer_id))
+      );
+    } finally {
+      setShowDeleteConfirmModal(false);
+      setIsDeleteSelectionMode(false);
+      setSelectedFolders([]);
     }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showModal]);
+  };
 
   return (
     <>
@@ -265,23 +327,32 @@ export default function IncidentRecordsPage({
                 isSelectionMode={isDeleteSelectionMode}
                 isSelected={selectedFolders.includes(incident.drawer_id)}
                 onSelect={handleFolderSelect}
+                onPdfDownload={handlePdfDownload}
               />
             ))}
           </>
         )}
       </CardsContainer>
 
-      <FolderAddModal
-        isOpen={showFolderAddModal}
-        onClose={() => setShowFolderAddModal(false)}
-        onConfirm={handleFolderAdd}
-      />
-
       <FolderDeleteConfirmModal
         isOpen={showDeleteConfirmModal}
         onClose={() => setShowDeleteConfirmModal(false)}
         onConfirm={handleDeleteConfirm}
         selectedCount={selectedFolders.length}
+      />
+
+      <SuccessNotificationModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="폴더 삭제 완료"
+        message={successMessage}
+      />
+
+      <FailureNotificationModal
+        isOpen={showFailureModal}
+        onClose={() => setShowFailureModal(false)}
+        title="폴더 삭제 실패"
+        message={failureMessage}
       />
     </>
   );

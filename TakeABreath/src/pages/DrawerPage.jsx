@@ -6,6 +6,8 @@ import RecentRecordsPage from "./RecentRecordsPage";
 import IncidentRecordsPage from "./IncidentRecordsPage";
 import FolderAddModal from "../components/ui/FolderAddModal";
 import FolderDeleteConfirmModal from "../components/ui/DeleteConfirmModal";
+import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
+import FailureNotificationModal from "../components/ui/FailureNotificationModal";
 import settingButton from "../assets/settingButton.svg";
 import folderAddIcon from "../assets/folderAddIcon.svg";
 import deleteIcon from "../assets/deleteIcon.svg";
@@ -127,7 +129,17 @@ export default function DrawerPage({
   const [showFolderAddModal, setShowFolderAddModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [triggerFolderDelete, setTriggerFolderDelete] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showFailureModal, setShowFailureModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [failureMessage, setFailureMessage] = useState("");
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const modalRef = useRef(null);
+
+  const handleFolderDeleteSuccess = (deletedCount) => {
+    setSuccessMessage(`${deletedCount}개의 폴더가 삭제되었습니다.`);
+    setShowSuccessModal(true);
+  };
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
@@ -147,9 +159,34 @@ export default function DrawerPage({
   };
 
   const handleFolderAdd = async (folderName) => {
-    // 폴더 추가 API 호출 로직
-    console.log("폴더 추가:", folderName);
-    setShowFolderAddModal(false);
+    try {
+      const response = await fetch("/api/drawers/create/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          drawer_name: folderName,
+        }),
+      });
+
+      const responseData = await response.json();
+
+      if (responseData.isSuccess) {
+        setSuccessMessage(`"${folderName}" 폴더가 생성되었습니다.`);
+        setShowSuccessModal(true);
+        setRefreshTrigger((prev) => prev + 1); // IncidentRecordsPage 데이터 갱신 트리거
+      } else {
+        throw new Error(responseData.message || "폴더 생성에 실패했습니다.");
+      }
+    } catch (error) {
+      // 실패 모달 표시
+      setFailureMessage("폴더 생성에 실패했습니다. 다시 시도해주세요.");
+      setShowFailureModal(true);
+      console.error("폴더 생성 실패:", error);
+    } finally {
+      setShowFolderAddModal(false);
+    }
   };
 
   const handleDeleteConfirm = () => {
@@ -225,6 +262,8 @@ export default function DrawerPage({
             onNavigateToMain={onNavigateToMain}
             triggerFolderDelete={triggerFolderDelete}
             onFolderDeleteTriggered={() => setTriggerFolderDelete(false)}
+            refreshTrigger={refreshTrigger}
+            onFolderDeleteSuccess={handleFolderDeleteSuccess}
           />
         )}
       </ContentContainer>
@@ -240,6 +279,20 @@ export default function DrawerPage({
         onClose={() => setShowDeleteConfirmModal(false)}
         onConfirm={handleDeleteConfirm}
         selectedCount={0}
+      />
+
+      <SuccessNotificationModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="폴더 생성 완료"
+        message={successMessage}
+      />
+
+      <FailureNotificationModal
+        isOpen={showFailureModal}
+        onClose={() => setShowFailureModal(false)}
+        title="폴더 생성 실패"
+        message={failureMessage}
       />
     </PageContainer>
   );

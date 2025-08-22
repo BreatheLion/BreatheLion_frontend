@@ -1,22 +1,33 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
 import MainButton from "../components/ui/Button/MainButton";
+import ConfirmModal from "../components/ui/ConfirmModal";
 import WarningIcon from "../assets/warningIcon.svg";
+import { API_ENDPOINTS, apiCall } from "../utils/api";
 
 const PageContainer = styled.div`
   width: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
 `;
 
 const ContentContainer = styled.div`
-  width: 55rem;
+  width: 59rem;
   margin: 0 auto;
   height: calc(100vh - 4rem);
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+  box-sizing: border-box;
+  padding-left: 1rem;
+  padding-right: 1rem;
 `;
 
 const TitleContainer = styled.div`
@@ -69,7 +80,7 @@ const HighlightedText = styled.span`
 
 const MainContent = styled.div`
   width: 100%;
-  margin-top: 3.63rem;
+  margin-top: 1.4rem;
   display: flex;
   gap: 2.5rem;
   align-items: center;
@@ -127,7 +138,7 @@ const CardDescription = styled.div`
 
 const InputContainer = styled.div`
   width: 100%;
-  margin-top: 3.19rem;
+  margin-top: 1.4rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -164,6 +175,7 @@ const InputRow = styled.div`
   align-items: center;
   gap: 1rem;
   width: 100%;
+  margin-bottom: 0.8rem;
 `;
 
 const InputLabel = styled.div`
@@ -253,6 +265,22 @@ const InputGroup = styled.div`
   gap: 1.88rem;
 `;
 
+const PersonSection = styled.div`
+  width: 100%;
+`;
+
+const VictimSection = styled.div`
+  width: 100%;
+`;
+
+const PersonSectionTitle = styled.div`
+  color: #000;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-family: Pretendard;
+`;
+
 const ButtonContainer = styled.div`
   width: 100%;
   margin-top: 5rem;
@@ -260,11 +288,79 @@ const ButtonContainer = styled.div`
   justify-content: center;
 `;
 
+// 재사용 가능한 입력 래퍼 컴포넌트들
+const LabeledInputRow = ({ label, children }) => (
+  <InputRow>
+    <InputLabel>{label}</InputLabel>
+    {children}
+  </InputRow>
+);
+
+const TextField = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  readOnly,
+  isInvalid,
+}) => (
+  <LabeledInputRow label={label}>
+    <Input
+      type="text"
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      readOnly={readOnly}
+      $isInvalid={isInvalid}
+    />
+  </LabeledInputRow>
+);
+
+const AddressField = ({ value, onChange, onSearch, placeholder }) => (
+  <LabeledInputRow label="주소">
+    <InputGroup>
+      <Input
+        type="text"
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        readOnly
+      />
+      <AddressSearchButton onClick={onSearch}>주소 찾기</AddressSearchButton>
+    </InputGroup>
+  </LabeledInputRow>
+);
+
+const PhoneField = ({ value, onChange, isInvalid, placeholder }) => (
+  <LabeledInputRow label="전화번호">
+    <Input
+      type="text"
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      $isInvalid={isInvalid}
+    />
+  </LabeledInputRow>
+);
+
 export default function GetContentProvePage({ recordName }) {
   const [selectedCard, setSelectedCard] = useState(null);
-  const [inputValue, setInputValue] = useState("");
-  const [additionalInputValue, setAdditionalInputValue] = useState("");
-  const [isPhoneNumberValid, setIsPhoneNumberValid] = useState(true);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const contentContainerRef = React.useRef(null);
+
+  // 가해자 상태
+  const [perpetratorName, setPerpetratorName] = useState("");
+  const [perpetratorAddress, setPerpetratorAddress] = useState("");
+  const [perpetratorDetailAddress, setPerpetratorDetailAddress] = useState("");
+  const [perpetratorPhone, setPerpetratorPhone] = useState("");
+  const [isPerpetratorPhoneValid, setIsPerpetratorPhoneValid] = useState(true);
+
+  // 피해자 상태
+  const [victimName, setVictimName] = useState("");
+  const [victimAddress, setVictimAddress] = useState("");
+  const [victimDetailAddress, setVictimDetailAddress] = useState("");
+  const [victimPhone, setVictimPhone] = useState("");
+  const [isVictimPhoneValid, setIsVictimPhoneValid] = useState(true);
 
   useEffect(() => {
     // 다음 주소 API 스크립트 로드
@@ -291,35 +387,31 @@ export default function GetContentProvePage({ recordName }) {
 
   const handleCardClick = (cardType) => {
     setSelectedCard(selectedCard === cardType ? null : cardType);
-    setInputValue(""); // 카드 선택이 변경되면 입력값 초기화
-    setAdditionalInputValue(""); // 추가 입력값도 초기화
-    setIsPhoneNumberValid(true); // 유효성 상태 초기화
+    // 모든 입력값 초기화
+    setPerpetratorName("");
+    setPerpetratorAddress("");
+    setPerpetratorDetailAddress("");
+    setPerpetratorPhone("");
+    setVictimName("");
+    setVictimAddress("");
+    setVictimDetailAddress("");
+    setVictimPhone("");
+    setIsPerpetratorPhoneValid(true);
+    setIsVictimPhoneValid(true);
   };
 
-  const getInputLabel = () => {
-    if (selectedCard === "상대방의 주소를 알아요") {
-      return "우편 번호";
-    } else if (selectedCard === "상대방의 주소를 몰라요") {
-      return "상대방 전화번호 입력";
-    }
-    return "";
-  };
-
-  const getAdditionalInputLabel = () => {
-    if (selectedCard === "상대방의 주소를 알아요") {
-      return "상세 주소";
-    }
-    return "";
-  };
-
-  const handleAddressSearch = () => {
+  const handleAddressSearch = (type) => {
     if (window.daum && window.daum.Postcode) {
       new window.daum.Postcode({
         oncomplete: function (data) {
           const fullAddress = data.address;
           const postcode = data.zonecode;
           const formattedAddress = `${fullAddress} [${postcode}]`;
-          setInputValue(formattedAddress);
+          if (type === "perpetrator") {
+            setPerpetratorAddress(formattedAddress);
+          } else {
+            setVictimAddress(formattedAddress);
+          }
         },
       }).open();
     } else {
@@ -327,7 +419,7 @@ export default function GetContentProvePage({ recordName }) {
     }
   };
 
-  const handlePhoneNumberChange = (e) => {
+  const handlePhoneNumberChange = (e, type) => {
     const value = e.target.value;
     // 숫자만 추출
     const numbers = value.replace(/[^0-9]/g, "");
@@ -349,34 +441,123 @@ export default function GetContentProvePage({ recordName }) {
           numbers.slice(7);
       }
 
-      setInputValue(formatted);
-
-      // 유효성 검사: 11자리이고 010으로 시작하는지 확인
-      const isValid = numbers.length === 11 && numbers.startsWith("010");
-      setIsPhoneNumberValid(isValid);
+      if (type === "perpetrator") {
+        setPerpetratorPhone(formatted);
+        // 유효성 검사: 11자리이고 010으로 시작하는지 확인
+        const isValid = numbers.length === 11 && numbers.startsWith("010");
+        setIsPerpetratorPhoneValid(isValid);
+      } else {
+        setVictimPhone(formatted);
+        // 유효성 검사: 11자리이고 010으로 시작하는지 확인
+        const isValid = numbers.length === 11 && numbers.startsWith("010");
+        setIsVictimPhoneValid(isValid);
+      }
     }
   };
 
   const handleRecordButtonClick = () => {
-    console.log("이대로 기록할게요 버튼 클릭됨");
-    // 추후 구현
+    setIsConfirmModalOpen(true);
   };
 
-  const shouldShowRecordButton = () => {
+  const handleConfirmModalClose = () => {
+    setIsConfirmModalOpen(false);
+  };
+
+  const handleConfirmModalConfirm = async () => {
+    console.log("내용증명 추출 확인됨");
+    setIsConfirmModalOpen(false);
+
+    try {
+      // 선택된 카드에 따라 데이터 구조 결정
+      const requestData =
+        selectedCard === "상대방의 주소를 알아요"
+          ? {
+              reciever_name: victimName,
+              sender_name: perpetratorName,
+              reciever_address: victimAddress,
+              sender_address: perpetratorAddress,
+              reciever_phone: null,
+              sender_phone: null,
+            }
+          : {
+              reciever_name: victimName,
+              sender_name: perpetratorName,
+              reciever_address: null,
+              sender_address: null,
+              reciever_phone: victimPhone,
+              sender_phone: perpetratorPhone,
+            };
+
+      console.log("API 요청 데이터:", requestData);
+      console.log("API 엔드포인트:", API_ENDPOINTS.CONTENT_PROVE());
+
+      const response = await apiCall(API_ENDPOINTS.CONTENT_PROVE(), {
+        method: "POST",
+        body: JSON.stringify(requestData),
+      });
+
+      console.log("API 응답 데이터:", response);
+
+      // 성공 시 처리 (예: 성공 메시지 표시, 다른 페이지로 이동 등)
+      alert("내용증명이 성공적으로 생성되었습니다.");
+    } catch (error) {
+      console.error("내용증명 생성 중 오류:", error);
+      alert("내용증명 생성에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
+  const isRecordButtonVisible = useMemo(() => {
     if (selectedCard === "상대방의 주소를 알아요") {
-      // 좌측 카드: 두 입력 필드 모두 작성된 경우
-      return inputValue.trim() !== "" && additionalInputValue.trim() !== "";
-    } else if (selectedCard === "상대방의 주소를 몰라요") {
-      // 우측 카드: 전화번호가 유효한 경우
-      return isPhoneNumberValid && inputValue.trim() !== "";
+      return (
+        perpetratorName.trim() !== "" &&
+        perpetratorAddress.trim() !== "" &&
+        perpetratorDetailAddress.trim() !== "" &&
+        victimName.trim() !== "" &&
+        victimAddress.trim() !== "" &&
+        victimDetailAddress.trim() !== ""
+      );
+    }
+    if (selectedCard === "상대방의 주소를 몰라요") {
+      return (
+        perpetratorName.trim() !== "" &&
+        isPerpetratorPhoneValid &&
+        perpetratorPhone.trim() !== "" &&
+        victimName.trim() !== "" &&
+        isVictimPhoneValid &&
+        victimPhone.trim() !== ""
+      );
     }
     return false;
-  };
+  }, [
+    selectedCard,
+    perpetratorName,
+    perpetratorAddress,
+    perpetratorDetailAddress,
+    victimName,
+    victimAddress,
+    victimDetailAddress,
+    perpetratorPhone,
+    isPerpetratorPhoneValid,
+    victimPhone,
+    isVictimPhoneValid,
+  ]);
+
+  // 버튼이 활성화될 때 자동 스크롤
+  useEffect(() => {
+    if (isRecordButtonVisible && contentContainerRef.current) {
+      setTimeout(() => {
+        contentContainerRef.current.scrollTo({
+          top: contentContainerRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }, 100);
+    }
+  }, [isRecordButtonVisible]);
 
   return (
     <PageContainer>
       <Header currentPage="get-content-prove" />
-      <ContentContainer>
+      <ContentContainer ref={contentContainerRef}>
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>
           <Title>내용 증명 받기</Title>
@@ -441,52 +622,87 @@ export default function GetContentProvePage({ recordName }) {
               </WarningText>
             </WarningContainer>
 
-            <InputRow>
-              <InputLabel>{getInputLabel()}</InputLabel>
-              <InputGroup>
-                <Input
-                  type="text"
-                  value={inputValue}
-                  onChange={
-                    selectedCard === "상대방의 주소를 알아요"
-                      ? (e) => setInputValue(e.target.value)
-                      : handlePhoneNumberChange
-                  }
-                  placeholder={
-                    selectedCard === "상대방의 주소를 알아요"
-                      ? "주소 찾기를 통해 상대방의 주소를 입력하세요"
-                      : "상대방 전화번호를 입력하세요 (예: 010-1234-5678)"
-                  }
-                  readOnly={selectedCard === "상대방의 주소를 알아요"}
-                  $isInvalid={
-                    selectedCard === "상대방의 주소를 몰라요" &&
-                    !isPhoneNumberValid &&
-                    inputValue.length > 0
-                  }
-                />
-                {selectedCard === "상대방의 주소를 알아요" && (
-                  <AddressSearchButton onClick={handleAddressSearch}>
-                    주소 찾기
-                  </AddressSearchButton>
-                )}
-              </InputGroup>
-            </InputRow>
+            {/* 가해자 InputGroup */}
+            <PersonSection>
+              <PersonSectionTitle>가해자 정보</PersonSectionTitle>
 
-            {selectedCard === "상대방의 주소를 알아요" && (
-              <InputRow>
-                <InputLabel>{getAdditionalInputLabel()}</InputLabel>
-                <Input
-                  type="text"
-                  value={additionalInputValue}
-                  onChange={(e) => setAdditionalInputValue(e.target.value)}
-                  placeholder="상세 주소를 입력하세요 (동, 호수 등)"
+              <TextField
+                label="이름"
+                value={perpetratorName}
+                onChange={(e) => setPerpetratorName(e.target.value)}
+                placeholder="가해자 이름을 입력하세요"
+              />
+
+              {selectedCard === "상대방의 주소를 알아요" ? (
+                <>
+                  <AddressField
+                    value={perpetratorAddress}
+                    onChange={(e) => setPerpetratorAddress(e.target.value)}
+                    onSearch={() => handleAddressSearch("perpetrator")}
+                    placeholder="주소 찾기를 통해 가해자의 주소를 입력하세요"
+                  />
+
+                  <TextField
+                    label="상세 주소"
+                    value={perpetratorDetailAddress}
+                    onChange={(e) =>
+                      setPerpetratorDetailAddress(e.target.value)
+                    }
+                    placeholder="상세 주소를 입력하세요 (동, 호수 등)"
+                  />
+                </>
+              ) : (
+                <PhoneField
+                  value={perpetratorPhone}
+                  onChange={(e) => handlePhoneNumberChange(e, "perpetrator")}
+                  isInvalid={
+                    !isPerpetratorPhoneValid && perpetratorPhone.length > 0
+                  }
+                  placeholder="가해자 전화번호를 입력하세요 (예: 010-1234-5678)"
                 />
-              </InputRow>
-            )}
+              )}
+            </PersonSection>
+
+            {/* 피해자 InputGroup */}
+            <VictimSection>
+              <PersonSectionTitle>피해자 정보</PersonSectionTitle>
+
+              <TextField
+                label="이름"
+                value={victimName}
+                onChange={(e) => setVictimName(e.target.value)}
+                placeholder="피해자 이름을 입력하세요"
+              />
+
+              {selectedCard === "상대방의 주소를 알아요" ? (
+                <>
+                  <AddressField
+                    value={victimAddress}
+                    onChange={(e) => setVictimAddress(e.target.value)}
+                    onSearch={() => handleAddressSearch("victim")}
+                    placeholder="주소 찾기를 통해 피해자의 주소를 입력하세요"
+                  />
+
+                  <TextField
+                    label="상세 주소"
+                    value={victimDetailAddress}
+                    onChange={(e) => setVictimDetailAddress(e.target.value)}
+                    placeholder="상세 주소를 입력하세요 (동, 호수 등)"
+                  />
+                </>
+              ) : (
+                <PhoneField
+                  value={victimPhone}
+                  onChange={(e) => handlePhoneNumberChange(e, "victim")}
+                  isInvalid={!isVictimPhoneValid && victimPhone.length > 0}
+                  placeholder="피해자 전화번호를 입력하세요 (예: 010-1234-5678)"
+                />
+              )}
+            </VictimSection>
           </InputContainer>
         )}
 
-        {shouldShowRecordButton() && (
+        {isRecordButtonVisible && (
           <ButtonContainer>
             <MainButton onClick={handleRecordButtonClick}>
               내용 증명 받기
@@ -494,6 +710,14 @@ export default function GetContentProvePage({ recordName }) {
           </ButtonContainer>
         )}
       </ContentContainer>
+
+      <ConfirmModal
+        isOpen={isConfirmModalOpen}
+        onClose={handleConfirmModalClose}
+        onConfirm={handleConfirmModalConfirm}
+        title="내용증명을 추출할까요?"
+        subtitle=""
+      />
     </PageContainer>
   );
 }

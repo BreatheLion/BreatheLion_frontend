@@ -207,6 +207,7 @@ export default function MainPage({ onNavigateToChat }) {
         // API 응답에서 받은 answer를 사용
         const tempResponse = {
           chat_session_id: serverResponse.data.session_id,
+          record_id: serverResponse.data.record_id, // 새로운 record_id 필드 추가
           answer: serverResponse.data.answer, // API 응답의 answer 사용
           time: serverResponse.data.message_time,
           date: serverResponse.data.message_date,
@@ -230,6 +231,7 @@ export default function MainPage({ onNavigateToChat }) {
         message: "채팅성공",
         data: {
           session_id: 1,
+          record_id: 3, // 새로운 record_id 필드 추가
           answer:
             "안녕하세요. 오늘 있으셨던 사건에 대해 이야기해 주셔서 감사합니다. 어떤 일이 있었는지 조금 더 자세히 말씀해 주실 수 있을까요? 어떤 감정을 느끼셨는지도 함께 이야기해 주시면 도움이 될 것 같아요.",
           message_time: new Date().toLocaleTimeString("ko-KR", {
@@ -246,6 +248,7 @@ export default function MainPage({ onNavigateToChat }) {
       // 목업 응답에서 받은 answer를 사용
       const tempResponse = {
         chat_session_id: mockResponse.data.session_id,
+        record_id: mockResponse.data.record_id, // 새로운 record_id 필드 추가
         answer: mockResponse.data.answer,
         time: mockResponse.data.message_time,
         date: mockResponse.data.message_date,

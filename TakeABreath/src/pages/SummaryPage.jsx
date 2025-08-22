@@ -68,7 +68,7 @@ const LoadingText = styled.div`
 
 const SummaryContainer = styled.div`
   display: flex;
-  width: 55rem;
+  width: 100%;
   padding: 1.5625rem 1.875rem;
   flex-direction: column;
   align-items: flex-start;
@@ -76,14 +76,21 @@ const SummaryContainer = styled.div`
   border-radius: 1.25rem;
   background: #fbfbfb;
   margin-top: 2rem;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    margin-top: 1rem;
+  }
 `;
 
 const SummaryItem = styled.div`
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
   width: 100%;
+  flex-wrap: wrap;
 `;
 
 const SummaryLabel = styled.div`
@@ -106,6 +113,8 @@ const SummaryContent = styled.div`
   font-weight: 500;
   line-height: normal;
   flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 `;
 
 const AssailantTags = styled.div`
@@ -132,9 +141,16 @@ const TimelineSearchContainer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 55rem;
+  width: 100%;
   margin-top: 2rem;
   padding: 1rem 0;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
 `;
 
 const SortButton = styled.button`
@@ -391,7 +407,18 @@ export default function SummaryPage({ folderId, folderName }) {
         setSummaryData(null);
       }
     } catch (error) {
-      window.handleApiError(error, "요약 데이터 로딩에 실패했습니다.");
+      // 목업 데이터 사용 (추후 제거 예정)
+      console.log("API 호출 실패, 목업 데이터 사용:", error);
+
+      const mockData = {
+        drawer_name: "동방에서 벌어진 일",
+        assailant: ["김민재", "정다은"],
+        record_count: 5,
+        summary:
+          "교내에서 학생 간 심한 욕설과 폭력이 발생하였습니다. 가해자들이 피해자를 지속적으로 괴롭혔으며, 이는 학교 폭력에 해당하는 행위입니다.",
+      };
+
+      setSummaryData(mockData);
     } finally {
       setIsLoading(false);
     }
@@ -408,7 +435,55 @@ export default function SummaryPage({ folderId, folderName }) {
         console.log("타임라인 API 응답 데이터:", data);
         setTimelineData(data || []);
       } catch (error) {
-        window.handleApiError(error, "타임라인 데이터 로딩에 실패했습니다.");
+        // 목업 데이터 사용 (추후 제거 예정)
+        console.log("타임라인 API 호출 실패, 목업 데이터 사용:", error);
+
+        const mockTimelineData = [
+          {
+            record_id: 1,
+            title: "교내에서 발생한 첫 번째 사건",
+            location: "교실",
+            category: "언어폭력",
+            summary: "수업 중 가해자가 피해자에게 심한 욕설을 하였습니다.",
+            occurred_at: "2025-06-13",
+          },
+          {
+            record_id: 2,
+            title: "복도에서의 두 번째 사건",
+            location: "복도",
+            category: "폭력",
+            summary: "복도에서 가해자가 피해자를 밀치고 위협하였습니다.",
+            occurred_at: "2025-06-15",
+          },
+          {
+            record_id: 3,
+            title: "사내 메신저를 통한 괴롭힘",
+            location: "사내 메신저",
+            category: "언어폭력",
+            summary: "메시지에 인사 없이 지시만 하며 피해자를 무시하였습니다.",
+            occurred_at: "2025-06-18",
+          },
+          {
+            record_id: 4,
+            title: "급식실에서의 집단 괴롭힘",
+            location: "급식실",
+            category: "집단 괴롭힘",
+            summary: "여러 명이 함께 피해자를 따돌리고 음식을 뺏었습니다.",
+            occurred_at: "2025-06-20",
+          },
+          {
+            record_id: 5,
+            title: "최근 발생한 심각한 사건",
+            location: "운동장",
+            category: "폭력",
+            summary: "운동장에서 신체적 폭력이 발생하여 피해자가 다쳤습니다.",
+            occurred_at: "2025-06-25",
+          },
+        ];
+
+        // 목업 데이터는 키워드와 관계없이 전체 데이터 사용
+        // 실제 API에서는 서버에서 필터링된 결과가 옴
+        setTimelineData(mockTimelineData);
       }
     },
     [folderId]

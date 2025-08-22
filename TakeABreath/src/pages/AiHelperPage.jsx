@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
+import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
+import FailureNotificationModal from "../components/ui/FailureNotificationModal";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -58,7 +61,7 @@ const LoadingText = styled.div`
 
 const SummaryContainer = styled.div`
   display: flex;
-  width: 55rem;
+  width: 100%;
   padding: 1.5625rem 1.875rem;
   flex-direction: column;
   align-items: flex-start;
@@ -66,14 +69,21 @@ const SummaryContainer = styled.div`
   border-radius: 1.25rem;
   background: #fbfbfb;
   margin-top: 2rem;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    margin-top: 1rem;
+  }
 `;
 
 const SummaryItem = styled.div`
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
   width: 100%;
+  flex-wrap: wrap;
 `;
 
 const SummaryLabel = styled.div`
@@ -96,12 +106,15 @@ const SummaryContent = styled.div`
   font-weight: 500;
   line-height: normal;
   flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 `;
 
 const AssailantTags = styled.div`
   display: flex;
   gap: 0.5rem;
   flex: 1;
+  flex-wrap: wrap;
 `;
 
 const AssailantTag = styled.div`
@@ -326,10 +339,39 @@ const InfoLink = styled.a`
   }
 `;
 
+const CareGuideText = styled.div`
+  color: var(--80, #313131);
+  font-family: Pretendard;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.5rem;
+  white-space: pre-wrap;
+`;
+
+const ClickableText = styled.span`
+  color: var(--seconday, #688ae0);
+  font-family: Pretendard;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.5rem;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
 export default function AiHelperPage({ drawerId, drawerName }) {
+  const navigate = useNavigate();
   const [currentDrawerName, setCurrentDrawerName] = useState(drawerName || "");
   const [isLoading, setIsLoading] = useState(true);
   const [summaryData, setSummaryData] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showFailureModal, setShowFailureModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [failureMessage, setFailureMessage] = useState("");
 
   useEffect(() => {
     // props로 받은 drawerName이 있으면 사용, 없으면 기본값 설정
@@ -362,8 +404,60 @@ export default function AiHelperPage({ drawerId, drawerName }) {
         setSummaryData(null);
       }
     } catch (error) {
-      console.error("API 호출 에러:", error);
-      window.handleApiError(error, "AI 도우미 데이터 로딩에 실패했습니다.");
+      // 목업 데이터 사용 (추후 제거 예정)
+      console.log("API 호출 실패, 목업 데이터 사용:", error);
+
+      const mockData = {
+        drawer_name: "동방에서 벌어진 일",
+        assailant: ["김민재", "정다은"],
+        record_count: 5,
+        summary:
+          "교내에서 학생 간 심한 욕설과 폭력이 발생하였습니다. 가해자들이 피해자를 지속적으로 괴롭혔으며, 이는 학교 폭력에 해당하는 행위입니다.",
+        care_guide:
+          "이런 상황에서 가장 중요한 것은 안전입니다. 즉시 신고하고 증거를 수집하세요. 학교나 경찰에 도움을 요청하는 것이 필요합니다.",
+        related_laws: [
+          {
+            law_name: "학교폭력예방 및 대책에 관한 법률",
+            article: "제2조(정의)",
+            content:
+              "이 법에서 '학교폭력'이란 학교 내외에서 학생을 대상으로 발생한 상해, 폭행, 감금, 협박, 약취·유인, 명예훼손·모욕, 공갈, 강요 및 성폭력, 따돌림, 정보통신망을 이용한 음란·폭력정보 등에 의하여 신체·정신 또는 재산상의 피해를 수반하는 행위를 말한다.",
+          },
+          {
+            law_name: "형법",
+            article: "제260조(상해)",
+            content:
+              "사람의 신체를 상해한 자는 7년 이하의 징역, 10년 이하의 자격정지 또는 1천만원 이하의 벌금에 처한다.",
+          },
+          {
+            law_name: "형법",
+            article: "제307조(명예훼손)",
+            content:
+              "공연히 사실을 적시하여 사람의 명예를 훼손한 자는 2년 이하의 징역이나 금고 또는 500만원 이하의 벌금에 처한다.",
+          },
+        ],
+        organizations: [
+          {
+            name: "학교폭력신고센터",
+            description: "학교폭력 피해자 상담 및 신고",
+            phone: "117",
+            url: "https://www.schoolviolence.or.kr",
+          },
+          {
+            name: "청소년폭력예방재단",
+            description: "청소년 폭력 예방 및 상담",
+            phone: "1388",
+            url: "https://www.1388.or.kr",
+          },
+          {
+            name: "경찰청 사이버안전국",
+            description: "사이버 폭력 신고 및 상담",
+            phone: "182",
+            url: "https://www.police.go.kr/www/open/cyber",
+          },
+        ],
+      };
+
+      setSummaryData(mockData);
     } finally {
       setIsLoading(false);
     }
@@ -375,6 +469,86 @@ export default function AiHelperPage({ drawerId, drawerName }) {
 
   const getSubtitle = () => {
     return `${currentDrawerName}   >   AI 도우미`;
+  };
+
+  const handlePdfExtractClick = async () => {
+    try {
+      const targetDrawerId = drawerId || 1;
+      console.log("PDF 다운로드 시작, drawerId:", targetDrawerId);
+
+      // API 호출하여 PDF Blob 받기
+      const response = await fetch(`/api/drawers/${targetDrawerId}/pdf`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Blob 데이터 받기
+      const blob = await response.blob();
+
+      // 파일명 추출 (서버에서 고정으로 오는 경우)
+      const filename = "timeline.pdf";
+
+      // Blob URL 생성
+      const url = window.URL.createObjectURL(blob);
+
+      // 임시 링크 생성 및 클릭
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+
+      // 정리
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      // 성공 모달 표시
+      setSuccessMessage("PDF 파일이 다운로드되었습니다.");
+      setShowSuccessModal(true);
+
+      console.log("PDF 다운로드 완료");
+    } catch (error) {
+      console.error("PDF 다운로드 중 오류:", error);
+
+      // 실패 모달 표시
+      setFailureMessage("PDF 다운로드에 실패했습니다. 다시 시도해주세요.");
+      setShowFailureModal(true);
+    }
+  };
+
+  const handleConsultantClick = () => {
+    // ConsultantPage로 이동
+    navigate("/consultant");
+  };
+
+  const renderCareGuideText = () => {
+    const careGuide = summaryData?.care_guide || "";
+    const additionalText =
+      "\n당신의 선택은 과거의 아픔에 머무는 것이 아니라, 더 안전하고 밝은 내일을 향한 중요한 발걸음이에요.\n\n앞으로도 같은 상황을 피하기 어려워 반복된다면, 그때마다 용기 내어 기록해 주세요.\n\n이 기록들은 흩어지지 않고 당신을 지켜주는 든든한 증거가 될 거예요. \n\n숨쉬어 서비스는 타임라인 PDF 추출을 통해 상담 과정에서 내용을 한눈에 확인하실 수 있도록 정리해 드리고,\n또한 변호사·상담사 연계 기능으로 법적·심리적 도움을 함께 이어드리고 있어요.\n(서랍장에서는 사건별로 개별 내용증명과 상담 자료도 추출하실 수 있어요.)\n\n앞으로도 같은 상황을 피하기 어려워 반복된다면, 그때마다 용기 내어 기록해 주세요.\n이 기록들은 흩어지지 않고 당신을 지켜주는 든든한 증거가 될 거예요.";
+
+    const fullText = careGuide + additionalText;
+
+    // 텍스트를 분할하여 클릭 가능한 부분 처리
+    const parts = fullText.split(/(타임라인 PDF 추출|변호사·상담사 연계 기능)/);
+
+    return parts.map((part, index) => {
+      if (part === "타임라인 PDF 추출") {
+        return (
+          <ClickableText key={index} onClick={handlePdfExtractClick}>
+            {part}
+          </ClickableText>
+        );
+      } else if (part === "변호사·상담사 연계 기능") {
+        return (
+          <ClickableText key={index} onClick={handleConsultantClick}>
+            {part}
+          </ClickableText>
+        );
+      } else {
+        return part;
+      }
+    });
   };
 
   if (isLoading) {
@@ -424,17 +598,17 @@ export default function AiHelperPage({ drawerId, drawerName }) {
           <SectionContainer>
             <SectionTitleContainer>
               <SectionTitleLine />
-              <SectionTitle>첫 번째 섹션</SectionTitle>
+              <SectionTitle>케어 가이드</SectionTitle>
             </SectionTitleContainer>
             <SectionContentContainer>
-              <div>첫 번째 섹션의 내용이 들어갈 자리입니다.</div>
+              <CareGuideText>{renderCareGuideText()}</CareGuideText>
             </SectionContentContainer>
           </SectionContainer>
 
           <SectionContainer>
             <SectionTitleContainer>
               <SectionTitleLine />
-              <SectionTitle>두 번째 섹션</SectionTitle>
+              <SectionTitle>유사 법률 및 판례</SectionTitle>
             </SectionTitleContainer>
             <LawsContainer>
               {summaryData?.related_laws?.map((law, index) => (
@@ -452,7 +626,7 @@ export default function AiHelperPage({ drawerId, drawerName }) {
           <SectionContainer>
             <SectionTitleContainer>
               <SectionTitleLine />
-              <SectionTitle>세 번째 섹션</SectionTitle>
+              <SectionTitle>피해 상담 및 신고</SectionTitle>
             </SectionTitleContainer>
             <OrganizationsContainer>
               {summaryData?.organizations?.map((org, index) => (
@@ -487,6 +661,20 @@ export default function AiHelperPage({ drawerId, drawerName }) {
           <div style={{ height: "0rem" }}></div>
         </BottomContainer>
       </ContentContainer>
+
+      <SuccessNotificationModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="다운로드 완료"
+        message={successMessage}
+      />
+
+      <FailureNotificationModal
+        isOpen={showFailureModal}
+        onClose={() => setShowFailureModal(false)}
+        title="다운로드 실패"
+        message={failureMessage}
+      />
     </PageContainer>
   );
 }

@@ -118,6 +118,7 @@ export default function IncidentCard({
   isSelectionMode = false,
   isSelected = false,
   onSelect,
+  onPdfDownload,
 }) {
   const navigate = useNavigate();
 
@@ -134,8 +135,9 @@ export default function IncidentCard({
   };
 
   const handlePdfExtractClick = () => {
-    // 추후 다른 기능으로 변경 예정
-    console.log("PDF 추출 기능은 추후 구현 예정입니다.");
+    if (onPdfDownload) {
+      onPdfDownload(incident.drawer_id);
+    }
   };
 
   const handleAiHelperClick = () => {

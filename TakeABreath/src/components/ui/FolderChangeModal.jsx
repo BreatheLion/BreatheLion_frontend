@@ -1,6 +1,8 @@
 import styled from "styled-components";
 import { useState, useEffect } from "react";
 import { SmallButton } from "./Button";
+import SuccessNotificationModal from "./SuccessNotificationModal";
+import FailureNotificationModal from "./FailureNotificationModal";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -120,8 +122,13 @@ export default function FolderChangeModal({
   recordData,
 }) {
   const [selectedFolder, setSelectedFolder] = useState(currentFolder || "");
+  const [selectedFolderId, setSelectedFolderId] = useState(null);
   const [availableFolders, setAvailableFolders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showFailureModal, setShowFailureModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [failureMessage, setFailureMessage] = useState("");
 
   useEffect(() => {
     if (isOpen) {
@@ -139,29 +146,105 @@ export default function FolderChangeModal({
       // 실제 API 호출
       const response = await fetch("/api/drawers/list/");
       const data = await response.json();
-      const folders = Array.isArray(data) ? data : [];
-      console.log("API 응답 폴더:", folders);
-      setAvailableFolders(folders);
+
+      if (
+        data &&
+        data.data &&
+        data.data.drawers &&
+        Array.isArray(data.data.drawers)
+      ) {
+        console.log("API 응답 폴더:", data.data.drawers);
+        setAvailableFolders(data.data.drawers);
+      } else {
+        setAvailableFolders([]);
+      }
     } catch (error) {
-      console.error("폴더 목록 가져오기 실패:", error);
-      setAvailableFolders([]);
+      // 목업 데이터 사용 (추후 제거 예정)
+      console.log("API 호출 실패, 목업 데이터 사용:", error);
+      const mockData = {
+        isSuccess: true,
+        code: "200",
+        message: "서랍 목록 조회 성공",
+        data: {
+          drawers: [
+            {
+              drawer_id: 1,
+              name: "상도동 커피 폭언",
+              record_count: 3,
+              create_at: "2025.08.16",
+              update_at: "2025.08.20",
+            },
+            {
+              drawer_id: 2,
+              name: "회기동 함박",
+              record_count: 8,
+              create_at: "2025.08.06",
+              update_at: "2025.08.19",
+            },
+            {
+              drawer_id: 3,
+              name: "동방에서 벌어진 일",
+              record_count: 5,
+              create_at: "2025.08.10",
+              update_at: "2025.08.18",
+            },
+          ],
+        },
+      };
+      setAvailableFolders(mockData.data.drawers);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleFolderSelect = (folder) => {
-    setSelectedFolder(folder);
+    setSelectedFolder(folder.name);
+    setSelectedFolderId(folder.drawer_id);
   };
 
-  const handleConfirm = () => {
-    if (selectedFolder && selectedFolder !== currentFolder) {
-      console.log(
-        `레코드 ID ${recordId}의 폴더를 ${currentFolder}에서 ${selectedFolder}로 변경`
-      );
-      console.log(`전체 레코드 데이터:`, recordData);
-      onConfirm(selectedFolder);
-      onClose();
+  const handleConfirm = async () => {
+    if (
+      selectedFolder &&
+      selectedFolder !== currentFolder &&
+      selectedFolderId
+    ) {
+      try {
+        const response = await fetch(`/api/records/${recordId}/drawer/`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            drawer_id: selectedFolderId,
+          }),
+        });
+
+        const responseData = await response.json();
+
+        if (responseData.isSuccess) {
+          setSuccessMessage(`"${selectedFolder}" 폴더로 이동되었습니다.`);
+          setShowSuccessModal(true);
+          onConfirm(selectedFolder);
+          onClose();
+        } else {
+          throw new Error(responseData.message || "폴더 변경에 실패했습니다.");
+        }
+      } catch (error) {
+        console.error("폴더 변경 중 오류:", error);
+
+        // 에러 타입에 따른 메시지 설정
+        if (error.name === "TypeError" && error.message.includes("fetch")) {
+          setFailureMessage("네트워크 연결을 확인해주세요.");
+        } else if (error.message.includes("폴더 변경에 실패했습니다")) {
+          setFailureMessage(error.message);
+        } else {
+          setFailureMessage(
+            "폴더 변경 중 오류가 발생했습니다. 다시 시도해주세요."
+          );
+        }
+
+        setShowFailureModal(true);
+      }
     }
   };
 
@@ -191,7 +274,7 @@ export default function FolderChangeModal({
               <FolderTag
                 key={folder.drawer_id}
                 selected={selectedFolder === folder.name}
-                onClick={() => handleFolderSelect(folder.name)}
+                onClick={() => handleFolderSelect(folder)}
               >
                 {folder.name}
               </FolderTag>
@@ -214,6 +297,20 @@ export default function FolderChangeModal({
           </SmallButton>
         </ButtonSection>
       </ModalContainer>
+
+      <SuccessNotificationModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="폴더 변경 완료"
+        message={successMessage}
+      />
+
+      <FailureNotificationModal
+        isOpen={showFailureModal}
+        onClose={() => setShowFailureModal(false)}
+        title="폴더 변경 실패"
+        message={failureMessage}
+      />
     </ModalOverlay>
   );
 }

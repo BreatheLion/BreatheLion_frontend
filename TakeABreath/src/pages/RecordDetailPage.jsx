@@ -6,6 +6,8 @@ import TitleEditModal from "../components/ui/TitleEditModal";
 import DeleteConfirmModal from "../components/ui/DeleteConfirmModal";
 import FolderChangeModal from "../components/ui/FolderChangeModal";
 import FileShowModal from "../components/ui/FileShowModal";
+import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
+import FailureNotificationModal from "../components/ui/FailureNotificationModal";
 import titleEditInRecordIcon from "../assets/titleEditInRecordIcon.svg";
 
 const PageContainer = styled.div`
@@ -204,8 +206,9 @@ const SeverityContainer = styled.div`
 const SeverityButton = styled.div`
   padding: 0.5rem 1rem;
   border: 1px solid #e0e0e0;
-  border-radius: 1rem;
-  background: var(--70, #4a4a4a);
+  border-radius: ${(props) => (props.$isHighSeverity ? "1.875rem" : "1rem")};
+  background: ${(props) =>
+    props.$isHighSeverity ? "#FF6D6D" : "var(--70, #4a4a4a)"};
   color: white;
   font-family: "Pretendard", sans-serif;
   font-size: 0.875rem;
@@ -274,6 +277,10 @@ export default function RecordDetailPage({ previousPage, record_id }) {
   const [showFolderChangeModal, setShowFolderChangeModal] = useState(false);
   const [showFileModal, setShowFileModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showFailureModal, setShowFailureModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [failureMessage, setFailureMessage] = useState("");
 
   const getPageTitle = () => {
     switch (previousPage) {
@@ -319,15 +326,25 @@ export default function RecordDetailPage({ previousPage, record_id }) {
         body: JSON.stringify({ title: newTitle }),
       });
 
-      if (response.ok) {
+      const responseData = await response.json();
+
+      if (response.ok && responseData.success) {
         // 성공 시 현재 데이터 업데이트
         setRecordData((prev) => ({ ...prev, title: newTitle }));
         setShowTitleEditModal(false);
+
+        // 성공 모달 표시
+        setSuccessMessage("제목이 수정되었습니다.");
+        setShowSuccessModal(true);
       } else {
-        console.error("제목 수정 실패");
+        throw new Error(responseData.message || "제목 수정에 실패했습니다.");
       }
     } catch (error) {
       console.error("제목 수정 중 오류:", error);
+
+      // 실패 모달 표시
+      setFailureMessage("제목 수정 중 오류가 발생했습니다.");
+      setShowFailureModal(true);
     }
   };
 
@@ -346,16 +363,22 @@ export default function RecordDetailPage({ previousPage, record_id }) {
         method: "DELETE",
       });
 
-      if (response.ok) {
+      const responseData = await response.json();
+
+      if (response.ok && responseData.success) {
         // 성공 시 이전 페이지로 이동
         if (window.navigation.navigateToDrawer) {
           window.navigation.navigateToDrawer();
         }
       } else {
-        console.error("레코드 삭제 실패");
+        throw new Error(responseData.message || "레코드 삭제에 실패했습니다.");
       }
     } catch (error) {
       console.error("레코드 삭제 중 오류:", error);
+
+      // 실패 모달 표시
+      setFailureMessage("레코드 삭제 중 오류가 발생했습니다.");
+      setShowFailureModal(true);
     }
   };
 
@@ -381,22 +404,32 @@ export default function RecordDetailPage({ previousPage, record_id }) {
   const handleFolderChangeConfirm = async (newFolderName) => {
     try {
       console.log(`새로운 이름:`, newFolderName);
-      // API 호출: PATCH /api/records/{record_id}/update/
-      const response = await fetch(`/api/records/${record_id}/update/`, {
+      // API 호출: PATCH /api/records/{record_id}/drawer/
+      const response = await fetch(`/api/records/${record_id}/drawer/`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ drawer_id: newFolderName }),
       });
 
-      if (response.ok) {
+      const responseData = await response.json();
+
+      if (response.ok && responseData.isSuccess) {
         // 성공 시 현재 데이터 새로고침
         fetchRecordData();
         setShowFolderChangeModal(false);
+
+        // 성공 모달 표시
+        setSuccessMessage("폴더가 변경되었습니다.");
+        setShowSuccessModal(true);
       } else {
-        console.error("폴더 변경 실패");
+        throw new Error(responseData.message || "폴더 변경에 실패했습니다.");
       }
     } catch (error) {
       console.error("폴더 변경 중 오류:", error);
+
+      // 실패 모달 표시
+      setFailureMessage("폴더 변경 중 오류가 발생했습니다.");
+      setShowFailureModal(true);
     }
   };
 
@@ -426,7 +459,54 @@ export default function RecordDetailPage({ previousPage, record_id }) {
         throw new Error("기록 데이터를 찾을 수 없습니다.");
       }
     } catch (error) {
-      window.handleApiError(error, "기록 데이터 로딩에 실패했습니다.");
+      // 목업 데이터 사용 (추후 제거 예정)
+      console.log("API 호출 실패, 목업 데이터 사용:", error);
+
+      const mockData = {
+        record_id: 1,
+        drawer_id: 5,
+        title: "교내에서 열린 잔악무도한 일",
+        categories: ["언어폭력", "폭행"],
+        content: "교내에서 학생 간 심한 욕설이 발생하였습니다.",
+        severity: 2,
+        location: "서울시 A고등학교",
+        district: "동작구",
+        occurred_at: "2025-08-01T14:30:00",
+        created_at: "2025-08-02T09:00:00",
+        updated_at: "2025-08-02T09:10:00",
+        assailant: ["김민재"],
+        witness: ["정다은", "한유진"],
+        drawer_name: "동방에서 벌어진 일",
+        evidences: [
+          {
+            id: 101,
+            record_id: 1,
+            type: "AUDIO",
+            filename: "bullying_recording.m4a",
+            s3Url:
+              "https://s3.bucket.com/records/1/audio/bullying_recording.m4a",
+            uploaded_at: "2025-08-02T09:05:00",
+          },
+          {
+            id: 102,
+            record_id: 1,
+            type: "PHOTO",
+            filename: "chat_screenshot.png",
+            s3Url: "https://s3.bucket.com/records/1/photo/chat_screenshot.png",
+            uploaded_at: "2025-08-02T09:06:00",
+          },
+          {
+            id: 103,
+            record_id: 1,
+            type: "FILE",
+            filename: "진술서.pdf",
+            s3Url: "https://s3.bucket.com/records/1/file/진술서.pdf",
+            uploaded_at: "2025-08-02T09:07:00",
+          },
+        ],
+      };
+
+      setRecordData(mockData);
     } finally {
       setIsLoading(false);
     }
@@ -523,11 +603,11 @@ export default function RecordDetailPage({ previousPage, record_id }) {
             <FormRow>
               <FormField>
                 <Label>카테고리</Label>
-                <CategoryContainer>
-                  {recordData?.categories && (
-                    <CategoryButton>{recordData.categories}</CategoryButton>
-                  )}
-                </CategoryContainer>
+                <TagContainer>
+                  {recordData?.categories?.map((category, index) => (
+                    <Tag key={index}>{category}</Tag>
+                  ))}
+                </TagContainer>
               </FormField>
             </FormRow>
 
@@ -565,7 +645,11 @@ export default function RecordDetailPage({ previousPage, record_id }) {
                 <Label>심각도</Label>
                 <SeverityContainer>
                   {recordData?.severity && (
-                    <SeverityButton>
+                    <SeverityButton
+                      $isHighSeverity={
+                        recordData.severity === 1 || recordData.severity === 2
+                      }
+                    >
                       {severityMap[recordData.severity] || "심각도 정보 없음"}
                     </SeverityButton>
                   )}
@@ -620,6 +704,7 @@ export default function RecordDetailPage({ previousPage, record_id }) {
                       evidence.type === "PHOTO" || evidence.type === "IMAGE";
                     const isVideo = evidence.type === "VIDEO";
                     const isAudio = evidence.type === "AUDIO";
+                    const isFile = evidence.type === "FILE";
 
                     return (
                       <AttachmentPreview
@@ -658,6 +743,7 @@ export default function RecordDetailPage({ previousPage, record_id }) {
                           />
                         )}
                         {isAudio && <AudioIcon>🎵</AudioIcon>}
+                        {isFile && <AudioIcon>📄</AudioIcon>}
                       </AttachmentPreview>
                     );
                   })}
@@ -698,6 +784,20 @@ export default function RecordDetailPage({ previousPage, record_id }) {
         onClose={handleFileModalClose}
         file={selectedFile}
         fileUrl={selectedFile?.s3Url}
+      />
+
+      <SuccessNotificationModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="작업 완료"
+        message={successMessage}
+      />
+
+      <FailureNotificationModal
+        isOpen={showFailureModal}
+        onClose={() => setShowFailureModal(false)}
+        title="작업 실패"
+        message={failureMessage}
       />
     </PageContainer>
   );

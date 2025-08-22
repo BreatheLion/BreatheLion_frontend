@@ -12,10 +12,12 @@ const RowContainer = styled.div`
   width: 100%;
   max-width: 55rem;
   align-items: center;
-  background: #ffffff;
+  border-radius: 0.625rem;
+  border: 1px solid var(--main-stroke, #bec8e3);
+  background: var(--Main-bk, #f8faff);
   margin: 0 auto;
   margin-bottom: 0.5rem;
-  height: 3rem;
+  height: 3.75rem;
   position: relative;
   overflow: visible;
 `;
@@ -43,7 +45,7 @@ const OrderCell = styled.div`
 const TitleCell = styled.div`
   display: flex;
   width: 14.375rem;
-  height: 2.375rem;
+  height: 3.75rem;
   padding: 0.625rem 1.25rem 0.625rem 0;
   align-items: center;
   gap: 0.625rem;
@@ -53,6 +55,7 @@ const TitleCell = styled.div`
   font-style: normal;
   font-weight: 500;
   line-height: 1.25rem;
+  word-break: break-word;
 `;
 
 const DateCell = styled.div`
@@ -72,6 +75,7 @@ const DateCell = styled.div`
 const LocationCell = styled.div`
   display: flex;
   width: 11.25rem;
+  height: 3.75rem;
   padding: 0.625rem 1.25rem 0.625rem 0;
   justify-content: flex-start;
   align-items: center;
@@ -82,11 +86,13 @@ const LocationCell = styled.div`
   font-style: normal;
   font-weight: 500;
   line-height: 1.25rem;
+  word-break: break-word;
 `;
 
 const FolderCell = styled.div`
   display: flex;
   width: 7.5rem;
+  height: 3.75rem;
   padding: 0.625rem 1.25rem 0.625rem 0;
   justify-content: flex-start;
   align-items: center;
@@ -97,6 +103,16 @@ const FolderCell = styled.div`
   font-style: normal;
   font-weight: 500;
   line-height: 1.25rem;
+  word-break: break-word;
+`;
+
+// 줄수 제한을 위한 공용 텍스트 래퍼
+const ClampedText = styled.div`
+  width: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 `;
 
 const SettingButton = styled.button`
@@ -167,7 +183,13 @@ export default function TableRow({
   folder,
   recordData,
   onRowClick,
+  onTitleUpdate,
+  onFolderUpdate,
 }) {
+  const truncateByChars = (text, maxChars) => {
+    const safe = typeof text === "string" ? text : "";
+    return safe.length > maxChars ? safe.slice(0, maxChars) + "..." : safe;
+  };
   const [showModal, setShowModal] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [showTitleModal, setShowTitleModal] = useState(false);
@@ -224,31 +246,21 @@ export default function TableRow({
   const handleFolderChange = (newFolder) => {
     console.log(`폴더 변경: ${folder} → ${newFolder}`);
     console.log(`변경할 레코드 ID: ${id}`);
-    console.log(`전체 레코드 데이터:`, recordData);
-    console.log(`레코드 정보:`, {
-      id,
-      order,
-      title,
-      date,
-      location,
-      folder: newFolder,
-    });
-    // TODO: 실제 폴더 변경 API 호출
+
+    // RecentRecordsPage의 데이터 업데이트
+    if (onFolderUpdate) {
+      onFolderUpdate(id, newFolder);
+    }
   };
 
   const handleTitleChange = (newTitle) => {
     console.log(`제목 변경: ${title} → ${newTitle}`);
     console.log(`변경할 레코드 ID: ${id}`);
-    console.log(`전체 레코드 데이터:`, recordData);
-    console.log(`레코드 정보:`, {
-      id,
-      order,
-      title: newTitle,
-      date,
-      location,
-      folder,
-    });
-    // TODO: 실제 제목 변경 API 호출
+
+    // RecentRecordsPage의 데이터 업데이트
+    if (onTitleUpdate) {
+      onTitleUpdate(id, newTitle);
+    }
   };
 
   const handleRowClick = (e) => {
@@ -266,13 +278,19 @@ export default function TableRow({
       <Spacer $width="1.25rem" />
       <OrderCell>{order}</OrderCell>
       <Spacer $width="3.12rem" />
-      <TitleCell>{title}</TitleCell>
+      <TitleCell>
+        <ClampedText>{truncateByChars(title, 30)}</ClampedText>
+      </TitleCell>
       <Spacer $width="0.62rem" />
       <DateCell>{date}</DateCell>
       <Spacer $width="0.62rem" />
-      <LocationCell>{location}</LocationCell>
+      <LocationCell>
+        <ClampedText>{truncateByChars(location, 30)}</ClampedText>
+      </LocationCell>
       <Spacer $width="0.62rem" />
-      <FolderCell>{folder}</FolderCell>
+      <FolderCell>
+        <ClampedText>{truncateByChars(folder, 30)}</ClampedText>
+      </FolderCell>
       <Spacer $width="3.12rem" />
       <SettingButton ref={buttonRef} onClick={handleSettingClick}>
         <img

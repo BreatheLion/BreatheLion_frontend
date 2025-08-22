@@ -33,6 +33,9 @@ export const API_ENDPOINTS = {
 
   // Drawers (for IncidentRecordsPage)
   DRAWERS: () => `${getApiBase()}/drawers`,
+
+  // Content Prove
+  CONTENT_PROVE: () => `${getApiBase()}/content-prove`,
 };
 
 // TODO: 실제 API로 전환 시 주석 해제
@@ -129,22 +132,18 @@ export const realApiHelpers = {
   getTimelineByDrawerId: async (drawerId, keyword = "") => {
     const url = `${getApiBase()}/api/drawers/${drawerId}/timeline/`;
 
+    // GET 요청으로 파라미터 전달
+    const params = new URLSearchParams();
     if (keyword && keyword.trim()) {
-      // 키워드가 있으면 POST 요청으로 검색
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          keyword: keyword.trim(),
-        }),
-      });
-      return await response.json();
+      params.append("keyword", keyword.trim());
     } else {
-      // 키워드가 없으면 GET 요청으로 전체 데이터
-      const response = await fetch(url);
-      return await response.json();
+      params.append("keyword", "null");
     }
+
+    const response = await fetch(`${url}?${params.toString()}`);
+    const data = await response.json();
+
+    // data 안에 포함된 구조로 응답이 오므로 data.data 반환
+    return data.data || data;
   },
 };

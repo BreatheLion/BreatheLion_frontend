@@ -3,11 +3,10 @@ import { useState, useRef } from "react";
 import TimePicker from "react-time-picker";
 import "react-time-picker/dist/TimePicker.css";
 import "react-clock/dist/Clock.css";
-import AttachmentChip from "./AttachmentChip";
 import { MainButton } from "./Button";
 import ConfirmModal from "./ConfirmModal";
 import SavingModal from "./SavingModal";
-import { evidenceClient } from "../../utils/evidence";
+import FileShowModal from "./FileShowModal";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -213,31 +212,51 @@ const TimePickerBox = styled.div`
   }
 `;
 
-const AttachmentsBar = styled.div`
+// RecordDetailPage의 미리보기 레이아웃 복제
+const NewAttachmentsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
+  gap: 1rem;
+  align-items: flex-start;
+  width: 34.6875rem;
 `;
 
-const FileInput = styled.input`
-  display: none;
-`;
-
-const AttachButton = styled.button`
-  padding: 0.5rem 0.75rem;
+const AttachmentPreview = styled.div`
+  width: 16rem;
+  height: 12rem;
+  border-radius: 0.5rem;
+  background: #f5f5f5;
   border: 1px solid #e0e0e0;
-  border-radius: 1rem;
-  background: #ffffff;
-  color: #68b8ea;
-  font-family: "Pretendard", sans-serif;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 
-  &:hover {
-    border-color: #68b8ea;
+  @media (max-width: 768px) {
+    width: 100%;
   }
+`;
+
+const PreviewImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const AudioIcon = styled.div`
+  font-size: 3rem;
+  color: #4a4a4a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+`;
+
+const EmptyText = styled.div`
+  color: #acacac;
+  font-family: Pretendard;
+  font-size: 0.875rem;
 `;
 
 // (reverted) No fixed grid and wrappers; back to fluid flex layout
@@ -429,27 +448,30 @@ const toDateTimeLocal = (dateString) => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
-export default function DetailModifyModal({ data, attachments, onClose }) {
+export default function DetailModifyModal({ data, onClose }) {
   const MAX_ATTACHMENTS = 10; // 첨부 최대 개수
   const MAX_TOTAL_SIZE = 300 * 1024 * 1024; // 총합 300MB (바이트 단위)
-  const initialLocal = toDateTimeLocal(data.occurred_at);
+  const initialLocal = toDateTimeLocal(
+    data.record_detail?.occurred_at || data.occurred_at
+  );
   const initialDate = initialLocal ? initialLocal.split("T")[0] : "";
   const initialTime = initialLocal
     ? (initialLocal.split("T")[1] || "").slice(0, 5)
     : "";
 
   const [recordData, setRecordData] = useState({
-    title: data.title || "",
-    assailant: data.assailant || [],
-    severity: data.severity || 1,
+    title: data.record_detail?.title || data.title || "",
+    assailant: data.record_detail?.assailant || data.assailant || [],
+    severity: data.record_detail?.severity || data.severity || 1,
     occurred_at: initialLocal,
-    location: data.location || "",
-    content: data.content || "",
-    categories: data.categories || data.category || [],
+    location: data.record_detail?.location || data.location || "",
+    content: data.record_detail?.content || data.content || "",
+    categories:
+      data.record_detail?.categories || data.categories || data.category || [],
     drawers: [], // 빈 배열로 초기화하여 기본 선택 없음
-    evidences: data.evidence || data.evidences || [],
-    witness: data.witness || [],
-    created_at: data.created_at || "",
+    evidences: data.evidences || data.evidence || [],
+    witness: data.record_detail?.witness || data.witness || [],
+    created_at: data.record_detail?.created_at || data.created_at || "",
   });
 
   // Refs for required fields
@@ -464,13 +486,9 @@ export default function DetailModifyModal({ data, attachments, onClose }) {
 
   const [occurDate, setOccurDate] = useState(initialDate);
   const [occurTime, setOccurTime] = useState(initialTime);
-  // 채팅에서 이미 업로드된 첨부 중 유지할 s3Key 집합
-  const [keptS3Keys, setKeptS3Keys] = useState(
-    () => new Set((attachments || []).map((a) => a.s3Key).filter(Boolean))
-  );
-  // 모달에서 새로 업로드한 첨부 (즉시 업로드 결과)
-  const [modalNewEvidences, setModalNewEvidences] = useState([]);
-  const fileInputRef = useRef(null);
+  // 파일 미리보기 모달
+  const [showFileModal, setShowFileModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const [addingTag, setAddingTag] = useState({
     field: null,
@@ -616,23 +634,6 @@ export default function DetailModifyModal({ data, attachments, onClose }) {
         drawer: Array.isArray(recordData.drawers)
           ? recordData.drawers[0] || ""
           : "",
-        evidences: [
-          // 채팅에서 이미 올린 파일들 중 유지 선택된 것만
-          ...Array.from(keptS3Keys).map((s3Key) => {
-            const att = attachments.find((a) => a.s3Key === s3Key);
-            return {
-              type: att?.type || "FILE",
-              filename: att?.filename || "",
-              s3Key,
-            };
-          }),
-          // 모달에서 새로 업로드한 첨부들
-          ...modalNewEvidences.map((m) => ({
-            type: m.type,
-            filename: m.filename,
-            s3Key: m.s3Key,
-          })),
-        ],
       };
 
       const response = await fetch("/api/records/save/", {
@@ -698,117 +699,17 @@ export default function DetailModifyModal({ data, attachments, onClose }) {
     }));
   };
 
-  const handleFileSelect = () => {
-    if (fileInputRef.current) fileInputRef.current.click();
-  };
-
-  const handleFilesChosen = async (e) => {
-    const chosen = Array.from(e.target.files || []);
-    if (chosen.length === 0) return;
-
-    const allowTypes = /^(image|audio|video)\//;
-    const currentCount =
-      (attachments || []).filter((a) => keptS3Keys.has(a.s3Key)).length +
-      modalNewEvidences.length;
-    const room = Math.max(0, MAX_ATTACHMENTS - currentCount);
-    const accepted = chosen
-      .filter((f) => allowTypes.test(f.type))
-      .slice(0, room);
-
-    const currentTotalSize = modalNewEvidences.reduce(
-      (sum, ev) => sum + (ev.size || 0),
-      0
-    );
-    let newTotalSize = currentTotalSize;
-    const filesWithinLimit = [];
-    for (const file of accepted) {
-      if (newTotalSize + file.size <= MAX_TOTAL_SIZE) {
-        filesWithinLimit.push(file);
-        newTotalSize += file.size;
-      } else {
-        alert(
-          `파일 크기 제한을 초과했습니다. (최대 ${
-            MAX_TOTAL_SIZE / (1024 * 1024)
-          }MB)`
-        );
-        break;
-      }
-    }
-
-    const prefix = `records/${data.record_id || 0}/evidence`;
-    const uploaded = [];
-    for (const file of filesWithinLimit) {
-      try {
-        const info = await evidenceClient.uploadAndGetPreview({
-          prefix,
-          file,
-          readMinutes: 60,
-        });
-        uploaded.push({
-          id: `${Date.now()}_${file.name}`,
-          filename: info.filename,
-          type: info.type, // IMAGE | VIDEO | AUDIO
-          s3Key: info.s3Key,
-          previewUrl: info.previewUrl,
-          mimeType: info.mimeType,
-          size: info.size,
-        });
-      } catch (err) {
-        console.error("모달 첨부 업로드 실패", err);
-      }
-    }
-
-    if (uploaded.length > 0) {
-      setModalNewEvidences((prev) => [...prev, ...uploaded]);
-    }
-    e.target.value = "";
-  };
-
-  const removeLocalEvidence = (id) => {
-    setModalNewEvidences((prev) => prev.filter((p) => p.id !== id));
-  };
-
-  const extractS3KeyFromUrl = (url) => {
-    try {
-      const u = new URL(url);
-      // Try common param names first
-      const byParam = u.searchParams.get("s3Key") || u.searchParams.get("key");
-      if (byParam) return byParam;
-      // Try to infer from path if it contains the key
-      // e.g., https://s3.../records/3/evidence/uuid.ext?X-Amz-...
-      const pathname = decodeURIComponent(u.pathname || "");
-      const idx = pathname.indexOf("/records/");
-      if (idx !== -1) {
-        return pathname.slice(idx + 1); // remove leading '/'
-      }
-      return "";
-    } catch {
-      return "";
-    }
-  };
-
-  const handleRemoveServerEvidence = async (item) => {
-    try {
-      const key = item?.s3Key || extractS3KeyFromUrl(item?.url || "");
-      if (key) {
-        await evidenceClient.deleteByKey(key);
-      }
-    } catch (err) {
-      console.error("서버 증거 삭제 실패", err);
-    } finally {
-      setRecordData((prev) => ({
-        ...prev,
-        evidences: (prev.evidences || []).filter((ev) => ev !== item),
-      }));
-    }
-  };
-
-  const removeChatAttachmentByS3Key = (s3Key) => {
-    setKeptS3Keys((prev) => {
-      const next = new Set(prev);
-      next.delete(s3Key);
-      return next;
+  const handleFileClick = (evidence) => {
+    setSelectedFile({
+      filename: evidence.filename,
+      type: evidence.type,
     });
+    setShowFileModal(true);
+  };
+
+  const handleFileModalClose = () => {
+    setShowFileModal(false);
+    setSelectedFile(null);
   };
 
   // const clearAllLocalEvidences = () => {
@@ -1293,61 +1194,40 @@ export default function DetailModifyModal({ data, attachments, onClose }) {
             <FormRow>
               <FormField>
                 <Label $showMark={false}>자료</Label>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.5rem",
-                    flex: 1,
-                  }}
-                >
-                  <AttachmentsBar>
-                    {(recordData.evidences || [])
-                      .filter((ev) => !String(ev.url || "").startsWith("blob:"))
-                      .map((item, index) => (
-                        <AttachmentChip
-                          key={`remote_${index}`}
-                          name={item.filename}
-                          kind={item.type}
-                          previewUrl={item.url}
-                          onRemove={() => handleRemoveServerEvidence(item)}
-                        />
-                      ))}
-
-                    {(attachments || [])
-                      .filter((att) => keptS3Keys.has(att.s3Key))
-                      .map((att) => (
-                        <AttachmentChip
-                          key={`chat_${att.id}`}
-                          name={att.filename}
-                          kind={att.type}
-                          previewUrl={att.previewUrl}
-                          onRemove={() =>
-                            removeChatAttachmentByS3Key(att.s3Key)
-                          }
-                        />
-                      ))}
-
-                    {modalNewEvidences.map((att) => (
-                      <AttachmentChip
-                        key={`modal_${att.id}`}
-                        name={att.filename}
-                        kind={att.type}
-                        previewUrl={att.previewUrl}
-                        onRemove={() => removeLocalEvidence(att.id)}
-                      />
-                    ))}
-
-                    <AddButton onClick={handleFileSelect}>+</AddButton>
-                  </AttachmentsBar>
-                  <FileInput
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*,audio/*,video/*"
-                    multiple
-                    onChange={handleFilesChosen}
-                  />
-                </div>
+                <NewAttachmentsContainer>
+                  {(recordData?.evidences || []).length === 0 && (
+                    <EmptyText>첨부 파일 없음</EmptyText>
+                  )}
+                  {(recordData?.evidences || []).map((evidence, index) => {
+                    const t = String(evidence.type || "").toLowerCase();
+                    const isImage = t.includes("image") || t === "photo";
+                    const isVideo = t.includes("video");
+                    const isAudio = t.includes("audio");
+                    const src = evidence.url || evidence.s3Url || "";
+                    return (
+                      <AttachmentPreview
+                        key={index}
+                        onClick={() => handleFileClick(evidence)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {isImage && (
+                          <PreviewImage src={src} alt={evidence.filename} />
+                        )}
+                        {isVideo && (
+                          <video
+                            src={src}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        )}
+                        {isAudio && <AudioIcon>🎵</AudioIcon>}
+                      </AttachmentPreview>
+                    );
+                  })}
+                </NewAttachmentsContainer>
               </FormField>
             </FormRow>
           </FormGrid>
@@ -1372,6 +1252,20 @@ export default function DetailModifyModal({ data, attachments, onClose }) {
       />
 
       <SavingModal isOpen={showSavingModal} onDone={handleSavingComplete} />
+
+      <FileShowModal
+        isOpen={showFileModal}
+        onClose={handleFileModalClose}
+        file={selectedFile}
+        fileUrl={
+          (selectedFile && (selectedFile.url || selectedFile.s3Url)) ||
+          (selectedFile &&
+            recordData?.evidences?.find(
+              (e) => e.filename === selectedFile.filename
+            )?.url) ||
+          ""
+        }
+      />
     </ModalOverlay>
   );
 }

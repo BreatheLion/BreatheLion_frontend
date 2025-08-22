@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
+import FileShowModal from "../components/ui/FileShowModal";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -121,9 +122,54 @@ const LoadingText = styled.div`
   font-weight: 500;
 `;
 
+const NewAttachmentsContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+  width: 34.6875rem;
+  margin-bottom: 0.5rem;
+`;
+
+const AttachmentPreview = styled.div`
+  width: 16rem;
+  height: 12rem;
+  border-radius: 0.5rem;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+const PreviewImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const AudioIcon = styled.div`
+  font-size: 3rem;
+  color: #4a4a4a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+`;
+
 export default function ChatViewPage({ record_id, pageTitle, created_at }) {
   const [isLoading, setIsLoading] = useState(true);
   const [chatData, setChatData] = useState(null);
+  const [showFileModal, setShowFileModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const formatTitleDate = (dateString) => {
     const date = new Date(dateString);
@@ -145,12 +191,22 @@ export default function ChatViewPage({ record_id, pageTitle, created_at }) {
     }
   };
 
+  const handleFileClick = (evidence) => {
+    setSelectedFile(evidence);
+    setShowFileModal(true);
+  };
+
+  const handleFileModalClose = () => {
+    setShowFileModal(false);
+    setSelectedFile(null);
+  };
+
   const fetchChatData = async () => {
     try {
       setIsLoading(true);
 
       // 실제 API 호출
-      const response = await fetch(`/api/records/${record_id}/chat/`);
+      const response = await fetch(`/api/chats/${record_id}/list/`);
       const responseData = await response.json();
 
       console.log("API 응답 데이터:", responseData);
@@ -161,7 +217,55 @@ export default function ChatViewPage({ record_id, pageTitle, created_at }) {
         throw new Error("채팅 데이터를 찾을 수 없습니다.");
       }
     } catch (error) {
-      window.handleApiError(error, "채팅 데이터 로딩에 실패했습니다.");
+      // 목업 데이터 사용 (추후 제거 예정)
+      console.log("API 호출 실패, 목업 데이터 사용:", error);
+
+      const mockData = {
+        isSuccess: true,
+        code: "200",
+        message: "채팅 조회 성공!",
+        data: {
+          session_id: 5,
+          messages: [
+            {
+              content:
+                "그런 마음이 드는 게 정말 힘들겠어요. 따돌림을 당하는 것 같은 느낌도 참 고통스럽고요.",
+              role: "assistant",
+              message_time: "13:39",
+              message_date: "2025 - 08 - 11",
+              evidences: [
+                {
+                  fileName: "photo.jpg",
+                  contentType: "image/jpeg",
+                  viewUrl: "https://bucket.s3.amazonaws.com/presigned-url-123",
+                },
+                {
+                  fileName: "screenshot.png",
+                  contentType: "image/png",
+                  viewUrl: "https://bucket.s3.amazonaws.com/presigned-url-125",
+                },
+              ],
+            },
+            {
+              content: "네, 지난주에 친구들이 점심시간에 저를 빼놓고 모였어요.",
+              role: "user",
+              message_time: "13:40",
+              message_date: "2025 - 08 - 11",
+              evidences: null,
+            },
+            {
+              content:
+                "그때 어떤 기분이 들었는지, 그리고 이후에 어떤 일이 있었는지 이야기해 주실 수 있나요?",
+              role: "assistant",
+              message_time: "13:41",
+              message_date: "2025 - 08 - 11",
+              evidences: null,
+            },
+          ],
+        },
+      };
+
+      setChatData(mockData);
     } finally {
       setIsLoading(false);
     }
@@ -209,6 +313,59 @@ export default function ChatViewPage({ record_id, pageTitle, created_at }) {
                     {getSpeakerName(message.role)}
                   </SpeakerName>
                   <MessageContent isAssistant={message.role === "assistant"}>
+                    {message.evidences && message.evidences.length > 0 && (
+                      <NewAttachmentsContainer>
+                        {message.evidences.map((evidence, index) => {
+                          const isImage =
+                            evidence.contentType?.startsWith("image/");
+                          const isVideo =
+                            evidence.contentType?.startsWith("video/");
+                          const isAudio =
+                            evidence.contentType?.startsWith("audio/");
+                          const isFile = !isImage && !isVideo && !isAudio;
+
+                          return (
+                            <AttachmentPreview
+                              key={index}
+                              onClick={() => handleFileClick(evidence)}
+                            >
+                              {isImage && (
+                                <PreviewImage
+                                  src={evidence.viewUrl}
+                                  alt={evidence.fileName}
+                                  onError={(e) => {
+                                    console.error(
+                                      "Image failed to load:",
+                                      e.target.src
+                                    );
+                                    e.target.style.display = "none";
+                                  }}
+                                />
+                              )}
+                              {isVideo && (
+                                <video
+                                  src={evidence.viewUrl}
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                  }}
+                                  onError={(e) => {
+                                    console.error(
+                                      "Video failed to load:",
+                                      e.target.src
+                                    );
+                                    e.target.style.display = "none";
+                                  }}
+                                />
+                              )}
+                              {isAudio && <AudioIcon>🎵</AudioIcon>}
+                              {isFile && <AudioIcon>📄</AudioIcon>}
+                            </AttachmentPreview>
+                          );
+                        })}
+                      </NewAttachmentsContainer>
+                    )}
                     <div>{message.content}</div>
                     {message.role === "user" && (
                       <MessageTime>{message.message_time}</MessageTime>
@@ -220,6 +377,13 @@ export default function ChatViewPage({ record_id, pageTitle, created_at }) {
           })}
         </ChatContainer>
       </ContentContainer>
+
+      <FileShowModal
+        isOpen={showFileModal}
+        onClose={handleFileModalClose}
+        file={selectedFile}
+        fileUrl={selectedFile?.viewUrl}
+      />
     </PageContainer>
   );
 }
