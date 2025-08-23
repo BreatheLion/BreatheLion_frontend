@@ -206,7 +206,7 @@ export default function IncidentCard({
           >
             <ButtonContent>
               <img src={downloadIcon} alt="Download" />
-              <ButtonText $isPrimary={false}>PDF 추출</ButtonText>
+              <ButtonText $isPrimary={false}>타임라인 추출</ButtonText>
             </ButtonContent>
           </MainButton>
         </ButtonSection>

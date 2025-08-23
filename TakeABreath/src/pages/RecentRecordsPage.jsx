@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import styled from "styled-components";
 import TableHeader from "../components/ui/TableHeader";
 import TableRow from "../components/ui/TableRow";
+import { apiHelpers } from "../utils/api";
 
 const TableContainer = styled.div`
   flex: 1;
@@ -37,8 +38,7 @@ export default function RecentRecordsPage({ onNavigateToRecordDetail }) {
     setIsLoading(true);
     try {
       // 실제 API에서 최근 records 조회
-      const response = await fetch("/api/records/recent/");
-      const data = await response.json();
+      const data = await apiHelpers.getRecentRecords();
 
       console.log("API 응답 데이터:", data);
 
@@ -55,8 +55,10 @@ export default function RecentRecordsPage({ onNavigateToRecordDetail }) {
           {
             record_id: 1,
             drawer_id: 5,
-            title: "긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목",
-            location: "긴장소긴장소긴장소긴장소긴장소긴장소긴장소긴장소긴장소긴장소긴장소",
+            title:
+              "긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목",
+            location:
+              "긴장소긴장소긴장소긴장소긴장소긴장소긴장소긴장소긴장소긴장소긴장소",
             drawer: "동방에서 벌어진 일",
             assailant: ["조해원", "오영록"],
             created_at: "2025-08-05T10:00:00",
@@ -66,7 +68,8 @@ export default function RecentRecordsPage({ onNavigateToRecordDetail }) {
             drawer_id: 7,
             title: "물건을 던지는 신체적 위협",
             location: "교실",
-            drawer: "긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더ㄴ",
+            drawer:
+              "긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더ㄴ",
             assailant: ["김민재"],
             created_at: "2025-08-03T13:15:00",
           },

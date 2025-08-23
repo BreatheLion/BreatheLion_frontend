@@ -11,6 +11,7 @@ import FailureNotificationModal from "../components/ui/FailureNotificationModal"
 import settingButton from "../assets/settingButton.svg";
 import folderAddIcon from "../assets/folderAddIcon.svg";
 import deleteIcon from "../assets/deleteIcon.svg";
+import { apiHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
   background: #ffffff;
@@ -160,17 +161,7 @@ export default function DrawerPage({
 
   const handleFolderAdd = async (folderName) => {
     try {
-      const response = await fetch("/api/drawers/create/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          drawer_name: folderName,
-        }),
-      });
-
-      const responseData = await response.json();
+      const responseData = await apiHelpers.createDrawer(folderName);
 
       if (responseData.isSuccess) {
         setSuccessMessage(`"${folderName}" 폴더가 생성되었습니다.`);

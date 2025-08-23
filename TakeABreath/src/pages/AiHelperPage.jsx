@@ -4,6 +4,7 @@ import styled from "styled-components";
 import Header from "../components/layout/Header";
 import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
 import FailureNotificationModal from "../components/ui/FailureNotificationModal";
+import { apiHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -391,8 +392,7 @@ export default function AiHelperPage({ drawerId, drawerName }) {
       console.log("API 호출 시작, drawerId:", targetDrawerId);
 
       // 실제 API 호출
-      const response = await fetch(`/api/drawers/${targetDrawerId}/helpai/`);
-      const responseData = await response.json();
+      const responseData = await apiHelpers.getHelpai(targetDrawerId);
       console.log("API 응답:", responseData);
 
       if (responseData && responseData.isSuccess && responseData.data) {
@@ -477,7 +477,7 @@ export default function AiHelperPage({ drawerId, drawerName }) {
       console.log("PDF 다운로드 시작, drawerId:", targetDrawerId);
 
       // API 호출하여 PDF Blob 받기
-      const response = await fetch(`/api/drawers/${targetDrawerId}/pdf`);
+      const response = await apiHelpers.downloadPdf(targetDrawerId);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -525,15 +525,15 @@ export default function AiHelperPage({ drawerId, drawerName }) {
   const renderCareGuideText = () => {
     const careGuide = summaryData?.care_guide || "";
     const additionalText =
-      "\n당신의 선택은 과거의 아픔에 머무는 것이 아니라, 더 안전하고 밝은 내일을 향한 중요한 발걸음이에요.\n\n앞으로도 같은 상황을 피하기 어려워 반복된다면, 그때마다 용기 내어 기록해 주세요.\n\n이 기록들은 흩어지지 않고 당신을 지켜주는 든든한 증거가 될 거예요. \n\n숨쉬어 서비스는 타임라인 PDF 추출을 통해 상담 과정에서 내용을 한눈에 확인하실 수 있도록 정리해 드리고,\n또한 변호사·상담사 연계 기능으로 법적·심리적 도움을 함께 이어드리고 있어요.\n(서랍장에서는 사건별로 개별 내용증명과 상담 자료도 추출하실 수 있어요.)\n\n앞으로도 같은 상황을 피하기 어려워 반복된다면, 그때마다 용기 내어 기록해 주세요.\n이 기록들은 흩어지지 않고 당신을 지켜주는 든든한 증거가 될 거예요.";
+      "\n당신의 선택은 과거의 아픔에 머무는 것이 아니라, 더 안전하고 밝은 내일을 향한 중요한 발걸음이에요.\n\n앞으로도 같은 상황을 피하기 어려워 반복된다면, 그때마다 용기 내어 기록해 주세요.\n\n이 기록들은 흩어지지 않고 당신을 지켜주는 든든한 증거가 될 거예요. \n\n숨쉬어 서비스는 사건 타임라인을 통해 상담 과정에서 내용을 한눈에 확인하실 수 있도록 정리해 드리고,\n또한 변호사·상담사 연계 기능으로 법적·심리적 도움을 함께 이어드리고 있어요.\n(서랍장에서는 사건별로 개별 내용증명과 상담 자료도 추출하실 수 있어요.)\n\n앞으로도 같은 상황을 피하기 어려워 반복된다면, 그때마다 용기 내어 기록해 주세요.\n이 기록들은 흩어지지 않고 당신을 지켜주는 든든한 증거가 될 거예요.";
 
     const fullText = careGuide + additionalText;
 
     // 텍스트를 분할하여 클릭 가능한 부분 처리
-    const parts = fullText.split(/(타임라인 PDF 추출|변호사·상담사 연계 기능)/);
+    const parts = fullText.split(/(사건 타임라인|변호사·상담사 연계 기능)/);
 
     return parts.map((part, index) => {
-      if (part === "타임라인 PDF 추출") {
+      if (part === "사건 타임라인") {
         return (
           <ClickableText key={index} onClick={handlePdfExtractClick}>
             {part}
@@ -582,7 +582,7 @@ export default function AiHelperPage({ drawerId, drawerName }) {
           </SummaryItem>
 
           <SummaryItem>
-            <SummaryLabel>기록 갯수</SummaryLabel>
+            <SummaryLabel>기록 횟수</SummaryLabel>
             <SummaryContent>{summaryData?.record_count || 0}개</SummaryContent>
           </SummaryItem>
 

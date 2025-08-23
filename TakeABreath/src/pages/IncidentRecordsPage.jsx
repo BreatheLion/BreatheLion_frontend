@@ -6,6 +6,7 @@ import FolderDeleteSelectionUI from "../components/ui/FolderDeleteSelectionUI";
 import FolderDeleteConfirmModal from "../components/ui/DeleteConfirmModal";
 import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
 import FailureNotificationModal from "../components/ui/FailureNotificationModal";
+import { apiHelpers } from "../utils/api";
 
 const SettingButtonContainer = styled.div`
   position: absolute;
@@ -108,7 +109,7 @@ export default function IncidentRecordsPage({
   // PDF 다운로드 핸들러
   const handlePdfDownload = async (drawerId) => {
     try {
-      const response = await fetch(`/api/drawers/${drawerId}/pdf`);
+      const response = await apiHelpers.downloadPdf(drawerId);
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
       const blob = await response.blob();
@@ -133,8 +134,7 @@ export default function IncidentRecordsPage({
     setIsLoading(true);
     try {
       // 실제 API에서 모든 drawers 조회
-      const response = await fetch("/api/drawers/list/");
-      const data = await response.json();
+      const data = await apiHelpers.getDrawersList();
 
       console.log("API 응답 데이터:", data);
 
@@ -252,17 +252,7 @@ export default function IncidentRecordsPage({
   const handleDeleteConfirm = async () => {
     try {
       // 선택된 폴더들을 한 번의 요청으로 삭제
-      const response = await fetch("/api/drawers/delete/", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          drawer_id: selectedFolders,
-        }),
-      });
-
-      const responseData = await response.json();
+      const responseData = await apiHelpers.deleteDrawers(selectedFolders);
 
       if (responseData.isSuccess) {
         // 성공 시 선택된 폴더들을 로컬 상태에서 제거

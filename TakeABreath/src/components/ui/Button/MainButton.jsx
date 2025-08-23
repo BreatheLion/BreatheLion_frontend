@@ -6,7 +6,7 @@ const StyledMainButton = styled.button.withConfig({
   display: flex;
   width: 11.25rem;
   height: 2.75rem;
-  padding: 0.625rem 2.6875rem;
+  padding: 0.625rem 1.5rem;
   justify-content: center;
   align-items: center;
   border-radius: 0.5rem;

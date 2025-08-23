@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { SmallButton } from "./Button";
 import SuccessNotificationModal from "./SuccessNotificationModal";
 import FailureNotificationModal from "./FailureNotificationModal";
+import { apiHelpers } from "../../utils/api";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -144,8 +145,7 @@ export default function FolderChangeModal({
     setIsLoading(true);
     try {
       // 실제 API 호출
-      const response = await fetch("/api/drawers/list/");
-      const data = await response.json();
+      const data = await apiHelpers.getDrawersList();
 
       if (
         data &&
@@ -209,17 +209,10 @@ export default function FolderChangeModal({
       selectedFolderId
     ) {
       try {
-        const response = await fetch(`/api/records/${recordId}/drawer/`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            drawer_id: selectedFolderId,
-          }),
-        });
-
-        const responseData = await response.json();
+        const responseData = await apiHelpers.updateRecordDrawer(
+          recordId,
+          selectedFolderId
+        );
 
         if (responseData.isSuccess) {
           setSuccessMessage(`"${selectedFolder}" 폴더로 이동되었습니다.`);

@@ -3,6 +3,7 @@ import { useState } from "react";
 import Header from "../components/layout/Header";
 import Logo from "../components/common/Logo";
 import MainPageSendButton from "../assets/MainPageSendButton.svg";
+import { API_ENDPOINTS, apiCall } from "../utils/api";
 
 const MainContainer = styled.div`
   background: var(
@@ -186,18 +187,14 @@ export default function MainPage({ onNavigateToChat }) {
 
       // API 요청 데이터 콘솔 출력 (테스트용)
       console.log("API 요청 데이터:", requestData);
-      console.log("API 엔드포인트: /api/chats/start/");
+      console.log("API 엔드포인트:", API_ENDPOINTS.CHATS_START());
 
       // 실제 API 호출
-      const response = await fetch("/api/chats/start/", {
+      const responseData = await apiCall(API_ENDPOINTS.CHATS_START(), {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(requestData),
       });
 
-      const responseData = await response.json();
       console.log("API 응답 데이터:", responseData);
 
       // 실제 서버 응답 사용

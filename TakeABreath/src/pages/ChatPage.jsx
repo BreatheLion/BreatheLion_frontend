@@ -1,14 +1,15 @@
 import styled from "styled-components";
 import { useState, useEffect, useRef } from "react";
-import axios from "axios";
 import Header from "../components/layout/Header";
 import DetailModifyModal from "../components/ui/DetailModifyModal";
 import { evidenceClient } from "../utils/evidence";
 import FinishLoadingModal from "../components/ui/FinishLoadingModal";
 import AttachmentChip from "../components/ui/AttachmentChip";
+import LoadingDots from "../components/ui/LoadingDots";
 import iconSymbol from "../assets/iconSymbol.svg";
 import ChatPagePlusButton from "../assets/ChatPagePlusButton.svg";
 import ChatPageSendButton from "../assets/ChatPageSendButton.svg";
+import { apiHelpers } from "../utils/api";
 
 const ChatContainer = styled.div`
   background: #ffffff;
@@ -466,7 +467,7 @@ export default function ChatPage({ initialChatData }) {
   // 진행률 데모/플래그 제거
   // TODO: 백엔드 연동 후 false로 변경 필요
   // 임시 테스트: 3초 지연 후 응답으로 치환 (임시 로직)
-  const USE_FAKE_API = true; // 테스트가 끝나면 false로 변경하세요
+  const USE_FAKE_API = false; // 실제 API 호출을 위해 false로 변경
   const SIMULATE_LATENCY_MS = 3000;
   const fakeTimerRef = useRef(null);
   const MAX_ATTACHMENTS = 10; // 첨부 최대 개수
@@ -641,7 +642,7 @@ export default function ChatPage({ initialChatData }) {
         const info = await evidenceClient.uploadAndGetPreview({
           prefix,
           file,
-          readMinutes: 60,
+          readMinutes: 10,
         });
         uploaded.push({
           id: `${Date.now()}_${file.name}`,
@@ -651,6 +652,7 @@ export default function ChatPage({ initialChatData }) {
           previewUrl: info.previewUrl,
           mimeType: info.mimeType,
           size: info.size,
+          file: file, // 원본 파일 객체 추가
         });
       } catch (err) {
         console.error("첨부 업로드 실패", err);
@@ -679,18 +681,7 @@ export default function ChatPage({ initialChatData }) {
     setIsFinishing(true);
 
     try {
-      const response = await fetch("/api/chats/end/", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          chat_session_id: chatSessionId,
-          record_id: recordId,
-        }),
-      });
-
-      const responseData = await response.json();
+      const responseData = await apiHelpers.endChat(chatSessionId, recordId);
 
       if (responseData.isSuccess) {
         setFinishResponse(responseData.data);
@@ -796,69 +787,38 @@ export default function ChatPage({ initialChatData }) {
     // 전송 즉시 입력란 비우기
     setInputValue("");
 
-    // TODO: 백엔드 연동 후 실제 API 호출로 변경 필요
-    // 임시 테스트 모드: 3초 지연 후 응답으로 교체 (임시 로직)
-    if (USE_FAKE_API) {
-      fakeTimerRef.current = setTimeout(() => {
-        const mockResponse = {
-          answer: "어 고생했어",
-          time: new Date().toLocaleTimeString("ko-KR", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          }),
-          date: new Date().toISOString().split("T")[0],
-        };
-
-        setMessages((prev) => {
-          const updated = [...prev];
-          const idx = updated.findIndex(
-            (m) => m.type === "ai" && m.content === "응답 중입니다"
-          );
-          if (idx !== -1) {
-            updated[idx] = {
-              ...updated[idx],
-              content: mockResponse.answer,
-              time: mockResponse.time || "",
-            };
-          }
-          return updated;
-        });
-
-        setInputValue("");
-        clearAllAttachments();
-        setIsLoading(false);
-        fakeTimerRef.current = null;
-      }, SIMULATE_LATENCY_MS);
-      return;
-    }
+    // attachments를 evidences로 변환
+    const evidences =
+      attachments.length > 0
+        ? attachments.map((att) => ({
+            type: att.type, // "IMAGE" | "VIDEO" | "AUDIO"
+            filename: att.filename, // 원본 파일명
+            s3Key: att.s3Key, // S3 키
+          }))
+        : null;
 
     try {
-      // 실제 API 요청 데이터 준비
-      const requestData = {
-        chat_session_id: chatSessionId, // 숫자 타입
-        text: trimmed,
-        evidences:
-          attachments.length > 0
-            ? attachments.map((att) => ({
-                type: att.type, // "IMAGE" | "VIDEO" | "AUDIO"
-                filename: att.filename, // 원본 파일명
-                s3Key: att.s3Key, // S3 키
-              }))
-            : null, // 첨부 파일이 없을 때는 null
-      };
+      console.log("ChatPage API 호출 시작:", {
+        chatSessionId,
+        trimmed,
+        attachments: attachments.length,
+        evidences: evidences ? evidences.length : 0,
+      });
 
       const controller = new AbortController();
       uploadAbortRef.current = controller;
 
-      const response = await axios.post("/api/chats/attach/", requestData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        signal: controller.signal,
+      console.log("ChatPage API 호출 실행:", {
+        chatSessionId,
+        text: trimmed,
+        evidences: evidences,
       });
 
-      const serverResponse = response.data;
+      const serverResponse = await apiHelpers.sendMessage(
+        chatSessionId,
+        trimmed,
+        evidences
+      );
 
       if (serverResponse && serverResponse.isSuccess && serverResponse.data) {
         setMessages((prev) => {
@@ -870,9 +830,9 @@ export default function ChatPage({ initialChatData }) {
             updated[idx] = {
               ...updated[idx],
               content: serverResponse.data.answer,
-              time: serverResponse.data.time || "",
+              time: serverResponse.data.message_time || "",
               date:
-                serverResponse.data.date ||
+                serverResponse.data.message_date ||
                 new Date().toISOString().split("T")[0],
             };
           }
@@ -884,7 +844,14 @@ export default function ChatPage({ initialChatData }) {
 
       setInputValue("");
       clearAllAttachments();
-    } catch {
+    } catch (error) {
+      console.error("ChatPage API 호출 실패:", error);
+      console.log("API 호출 실패 상세:", {
+        chatSessionId,
+        trimmed,
+        evidences: evidences ? evidences.length : 0,
+      });
+
       // 목업 데이터 사용 (추후 제거 예정)
       const mockResponse = {
         isSuccess: true,
@@ -966,7 +933,11 @@ export default function ChatPage({ initialChatData }) {
                   <TimeStamp>{message.time}</TimeStamp>
                 )}
                 <MessageBubble className={message.type}>
-                  {message.content}
+                  {message.content === "응답 중입니다" ? (
+                    <LoadingDots />
+                  ) : (
+                    message.content
+                  )}
                   {message.type === "user" &&
                     message.attachments &&
                     message.attachments.length > 0 && (
@@ -1003,6 +974,8 @@ export default function ChatPage({ initialChatData }) {
                   key={att.id}
                   file={att.file}
                   previewUrl={att.previewUrl}
+                  mimeType={att.mimeType}
+                  name={att.filename}
                   onRemove={() => removeAttachment(att.id)}
                 />
               ))}

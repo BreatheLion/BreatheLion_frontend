@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { SmallButton } from "./Button";
 import SuccessNotificationModal from "./SuccessNotificationModal";
 import FailureNotificationModal from "./FailureNotificationModal";
+import { apiHelpers } from "../../utils/api";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -111,20 +112,10 @@ export default function TitleEditModal({
   const handleConfirm = async () => {
     if (newTitle.trim() && newTitle.trim() !== currentTitle) {
       try {
-        const response = await fetch(
-          `/api/records/${recordData.record_id}/title/`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              title: newTitle.trim(),
-            }),
-          }
+        const responseData = await apiHelpers.updateRecordTitle(
+          recordData.record_id,
+          newTitle.trim()
         );
-
-        const responseData = await response.json();
 
         if (responseData.isSuccess) {
           setSuccessMessage(`"${newTitle.trim()}"로 제목이 수정되었습니다.`);

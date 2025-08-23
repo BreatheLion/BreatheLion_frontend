@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
 import FileShowModal from "../components/ui/FileShowModal";
+import { apiHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -206,8 +207,7 @@ export default function ChatViewPage({ record_id, pageTitle, created_at }) {
       setIsLoading(true);
 
       // 실제 API 호출
-      const response = await fetch(`/api/chats/${record_id}/list/`);
-      const responseData = await response.json();
+      const responseData = await apiHelpers.getChatList(record_id);
 
       console.log("API 응답 데이터:", responseData);
 

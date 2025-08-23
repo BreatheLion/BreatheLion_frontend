@@ -85,8 +85,9 @@ export default function AttachmentChip({
   onRemove,
   name,
   kind,
+  mimeType, // 추가: mimeType prop
 }) {
-  const rawType = file?.type || kind || "";
+  const rawType = file?.type || mimeType || kind || "";
   const type = typeof rawType === "string" ? rawType : "";
   const displayName = name || file?.name;
 
@@ -97,6 +98,17 @@ export default function AttachmentChip({
     type.startsWith("image/") || type === "image" || type === "photo";
   const isVideo = type.startsWith("video/") || type === "video";
   const isAudio = type.startsWith("audio/") || type === "audio";
+
+  // 디버깅용 로그
+  console.log("AttachmentChip props:", {
+    file: file?.name,
+    previewUrl,
+    mimeType,
+    type,
+    isImage,
+    isVideo,
+    isAudio,
+  });
 
   return (
     <Chip>

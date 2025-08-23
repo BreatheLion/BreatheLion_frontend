@@ -9,66 +9,70 @@ export const getApiBase = () => {
   return API_BASE_URL;
 };
 
-// API 엔드포인트 매핑
+// FINAL_API_DOCUMENTATION 기반 API 엔드포인트 매핑
 export const API_ENDPOINTS = {
-  // Records
-  RECORDS_START: () => `${getApiBase()}/records/start`,
-  RECORDS_DETAIL: (recordId) => `${getApiBase()}/records/${recordId}`,
-  RECORDS_TITLE: (recordId) => `${getApiBase()}/records/${recordId}/title`,
-  RECORDS_DELETE: (recordId) => `${getApiBase()}/records/${recordId}/delete`,
-  RECORDS_UPDATE: (recordId) => `${getApiBase()}/records/${recordId}/update`,
+  // MainPage - 첫 메시지 전송
+  CHATS_START: () => `${getApiBase()}/api/chats/start/`,
 
-  // Chats
-  CHATS_ATTACH: () => `${getApiBase()}/chats/attach`,
-  CHATS_HISTORY: (recordId) => `${getApiBase()}/chats?record_id=${recordId}`,
+  // ChatPage - 메시지 전송
+  CHATS_ATTACH: () => `${getApiBase()}/api/chats/attach/`,
 
-  // Drawers
-  DRAWERS_LIST: () => `${getApiBase()}/drawers_list`,
-  DRAWERS_HELPAI: (drawerId) => `${getApiBase()}/helpai?drawer_id=${drawerId}`,
+  // ChatPage - 기록 마치기
+  CHATS_END: () => `${getApiBase()}/api/chats/end/`,
+
+  // ChatViewPage - 채팅 목록 조회
+  CHATS_LIST: (recordId) => `${getApiBase()}/api/chats/${recordId}/list/`,
+
+  // RecordDetailPage - 기록 상세 조회
+  RECORDS_DETAIL: (recordId) => `${getApiBase()}/api/records/${recordId}/`,
+
+  // RecordDetailPage - 기록 제목 수정
+  RECORDS_TITLE: (recordId) => `${getApiBase()}/api/records/${recordId}/title/`,
+
+  // RecordDetailPage - 기록 삭제
+  RECORDS_DELETE: (recordId) =>
+    `${getApiBase()}/api/records/${recordId}/delete/`,
+
+  // RecordDetailPage - 기록 폴더 변경
+  RECORDS_DRAWER: (recordId) =>
+    `${getApiBase()}/api/records/${recordId}/drawer/`,
+
+  // RecentRecordsPage - 최근 기록 목록 조회
+  RECORDS_RECENT: () => `${getApiBase()}/api/records/recent/`,
+
+  // DetailModifyModal - 기록 저장
+  RECORDS_SAVE: () => `${getApiBase()}/api/records/save/`,
+
+  // IncidentRecordsPage - 폴더 목록 조회
+  DRAWERS_LIST: () => `${getApiBase()}/api/drawers/list/`,
+
+  // DrawerPage - 폴더 생성
+  DRAWERS_CREATE: () => `${getApiBase()}/api/drawers/create/`,
+
+  // IncidentRecordsPage - 폴더 삭제
+  DRAWERS_DELETE: () => `${getApiBase()}/api/drawers/delete/`,
+
+  // AiHelperPage, SummaryPage - AI 도움말 조회
+  DRAWERS_HELPAI: (drawerId) =>
+    `${getApiBase()}/api/drawers/${drawerId}/helpai/`,
+
+  // SummaryPage - 타임라인 조회
   DRAWERS_TIMELINE: (drawerId) =>
-    `${getApiBase()}/timeline?drawer_id=${drawerId}`,
+    `${getApiBase()}/api/drawers/${drawerId}/timeline/`,
 
-  // Records List (for RecentRecordsPage)
-  RECORDS_LIST: () => `${getApiBase()}/records`,
+  // AiHelperPage, SummaryPage - PDF 다운로드
+  DRAWERS_PDF: (drawerId) => `${getApiBase()}/api/drawers/${drawerId}/pdf`,
 
-  // Drawers (for IncidentRecordsPage)
-  DRAWERS: () => `${getApiBase()}/drawers`,
-
-  // Content Prove
+  // GetContentProvePage - 내용증명 생성
   CONTENT_PROVE: () => `${getApiBase()}/content-prove`,
 };
-
-// TODO: 실제 API로 전환 시 주석 해제
-// 실제 API 엔드포인트 (백엔드에서 제공받을 예정)
-/*
-export const REAL_API_ENDPOINTS = {
-  // Records
-  RECORDS_START: () => `${getApiBase()}/api/records/start/`,
-  RECORDS_DETAIL: (recordId) => `${getApiBase()}/api/records/${recordId}/`,
-  RECORDS_TITLE: (recordId) => `${getApiBase()}/api/records/${recordId}/title`,
-  RECORDS_DELETE: (recordId) => `${getApiBase()}/api/records/${recordId}/delete/`,
-  RECORDS_UPDATE: (recordId) => `${getApiBase()}/api/records/${recordId}/update/`,
-
-  // Chats
-  CHATS_ATTACH: () => `${getApiBase()}/api/chats/attach/`,
-  CHATS_HISTORY: (recordId) => `${getApiBase()}/api/records/${recordId}/chat/`,
-
-  // Drawers
-  DRAWERS_LIST: () => `${getApiBase()}/api/drawers/list/`,
-  DRAWERS_HELPAI: (drawerId) => `${getApiBase()}/api/drawers/${drawerId}/helpai/`,
-  DRAWERS_TIMELINE: (drawerId) => `${getApiBase()}/api/drawers/${drawerId}/timeline/`,
-
-  // Records List (for RecentRecordsPage)
-  RECORDS_LIST: () => `${getApiBase()}/api/records/`,
-
-  // Drawers (for IncidentRecordsPage)
-  DRAWERS: () => `${getApiBase()}/api/drawers/`,
-};
-*/
 
 // API 호출 헬퍼 함수
 export const apiCall = async (endpoint, options = {}) => {
   const url = typeof endpoint === "function" ? endpoint() : endpoint;
+
+  console.log("🔍 API 호출 URL:", url);
+  console.log("🔍 API 호출 옵션:", options);
 
   try {
     const response = await fetch(url, {
@@ -90,7 +94,170 @@ export const apiCall = async (endpoint, options = {}) => {
   }
 };
 
-// JSON Server 전용 헬퍼 함수들
+// 특정 API 호출을 위한 전용 함수들
+export const apiHelpers = {
+  // MainPage - 첫 메시지 전송
+  startChat: async (message) => {
+    return await apiCall(API_ENDPOINTS.CHATS_START(), {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    });
+  },
+
+  // ChatPage - 메시지 전송
+  sendMessage: async (chatSessionId, text, evidences = null) => {
+    console.log("apiHelpers.sendMessage 호출:", {
+      chatSessionId,
+      text,
+      evidences,
+    });
+
+    const requestData = {
+      chat_session_id: chatSessionId,
+      text,
+      evidences,
+    };
+
+    console.log("apiHelpers.sendMessage 요청 데이터:", requestData);
+    console.log(
+      "apiHelpers.sendMessage 엔드포인트:",
+      API_ENDPOINTS.CHATS_ATTACH()
+    );
+
+    const response = await apiCall(API_ENDPOINTS.CHATS_ATTACH(), {
+      method: "POST",
+      body: JSON.stringify(requestData),
+    });
+
+    console.log("apiHelpers.sendMessage 응답:", response);
+    return response;
+  },
+
+  // ChatPage - 기록 마치기
+  endChat: async (chatSessionId, recordId) => {
+    return await apiCall(API_ENDPOINTS.CHATS_END(), {
+      method: "GET",
+      body: JSON.stringify({
+        chat_session_id: chatSessionId,
+        record_id: recordId,
+      }),
+    });
+  },
+
+  // ChatViewPage - 채팅 목록 조회
+  getChatList: async (recordId) => {
+    return await apiCall(API_ENDPOINTS.CHATS_LIST(recordId), {
+      method: "GET",
+    });
+  },
+
+  // RecordDetailPage - 기록 상세 조회
+  getRecordDetail: async (recordId) => {
+    return await apiCall(API_ENDPOINTS.RECORDS_DETAIL(recordId), {
+      method: "GET",
+    });
+  },
+
+  // RecordDetailPage - 기록 제목 수정
+  updateRecordTitle: async (recordId, title) => {
+    return await apiCall(API_ENDPOINTS.RECORDS_TITLE(recordId), {
+      method: "PATCH",
+      body: JSON.stringify({ title }),
+    });
+  },
+
+  // RecordDetailPage - 기록 삭제
+  deleteRecord: async (recordId) => {
+    return await apiCall(API_ENDPOINTS.RECORDS_DELETE(recordId), {
+      method: "DELETE",
+    });
+  },
+
+  // RecordDetailPage - 기록 폴더 변경
+  updateRecordDrawer: async (recordId, drawerId) => {
+    return await apiCall(API_ENDPOINTS.RECORDS_DRAWER(recordId), {
+      method: "PATCH",
+      body: JSON.stringify({ drawer_id: drawerId }),
+    });
+  },
+
+  // RecentRecordsPage - 최근 기록 목록 조회
+  getRecentRecords: async () => {
+    return await apiCall(API_ENDPOINTS.RECORDS_RECENT(), {
+      method: "GET",
+    });
+  },
+
+  // DetailModifyModal - 기록 저장
+  saveRecord: async (recordData) => {
+    return await apiCall(API_ENDPOINTS.RECORDS_SAVE(), {
+      method: "POST",
+      body: JSON.stringify(recordData),
+    });
+  },
+
+  // IncidentRecordsPage - 폴더 목록 조회
+  getDrawersList: async () => {
+    return await apiCall(API_ENDPOINTS.DRAWERS_LIST(), {
+      method: "GET",
+    });
+  },
+
+  // DrawerPage - 폴더 생성
+  createDrawer: async (drawerName) => {
+    return await apiCall(API_ENDPOINTS.DRAWERS_CREATE(), {
+      method: "POST",
+      body: JSON.stringify({ drawer_name: drawerName }),
+    });
+  },
+
+  // IncidentRecordsPage - 폴더 삭제
+  deleteDrawers: async (drawerIds) => {
+    return await apiCall(API_ENDPOINTS.DRAWERS_DELETE(), {
+      method: "DELETE",
+      body: JSON.stringify({ drawer_id: drawerIds }),
+    });
+  },
+
+  // AiHelperPage, SummaryPage - AI 도움말 조회
+  getHelpai: async (drawerId) => {
+    return await apiCall(API_ENDPOINTS.DRAWERS_HELPAI(drawerId), {
+      method: "GET",
+    });
+  },
+
+  // SummaryPage - 타임라인 조회 (키워드 검색 포함)
+  getTimeline: async (drawerId, keyword = "") => {
+    const url = API_ENDPOINTS.DRAWERS_TIMELINE(drawerId);
+    const params = new URLSearchParams();
+    if (keyword && keyword.trim()) {
+      params.append("keyword", keyword.trim());
+    } else {
+      params.append("keyword", "null");
+    }
+
+    return await apiCall(`${url}?${params.toString()}`, {
+      method: "GET",
+    });
+  },
+
+  // AiHelperPage, SummaryPage - PDF 다운로드
+  downloadPdf: async (drawerId) => {
+    return await apiCall(API_ENDPOINTS.DRAWERS_PDF(drawerId), {
+      method: "GET",
+    });
+  },
+
+  // GetContentProvePage - 내용증명 생성
+  createContentProve: async (contentProveData) => {
+    return await apiCall(API_ENDPOINTS.CONTENT_PROVE(), {
+      method: "POST",
+      body: JSON.stringify(contentProveData),
+    });
+  },
+};
+
+// JSON Server 전용 헬퍼 함수들 (기존 호환성 유지)
 export const jsonServerHelpers = {
   // 특정 record_id로 기록 데이터 조회
   getRecordByRecordId: async (recordId) => {
@@ -98,14 +265,14 @@ export const jsonServerHelpers = {
       `${API_BASE_URL}/record_details?record_id=${recordId}`
     );
     const data = await response.json();
-    return data[0] || null; // 첫 번째 매칭 결과 반환
+    return data[0] || null;
   },
 
   // 특정 record_id로 채팅 데이터 조회
   getChatByRecordId: async (recordId) => {
     const response = await fetch(`${API_BASE_URL}/chats?record_id=${recordId}`);
     const data = await response.json();
-    return data[0] || null; // 첫 번째 매칭 결과 반환
+    return data[0] || null;
   },
 
   // 특정 drawer_id로 helpai 데이터 조회
@@ -114,7 +281,7 @@ export const jsonServerHelpers = {
       `${API_BASE_URL}/helpai?drawer_id=${drawerId}`
     );
     const data = await response.json();
-    return data[0] || null; // 첫 번째 매칭 결과 반환
+    return data[0] || null;
   },
 
   // 특정 drawer_id로 timeline 데이터 조회
@@ -132,7 +299,6 @@ export const realApiHelpers = {
   getTimelineByDrawerId: async (drawerId, keyword = "") => {
     const url = `${getApiBase()}/api/drawers/${drawerId}/timeline/`;
 
-    // GET 요청으로 파라미터 전달
     const params = new URLSearchParams();
     if (keyword && keyword.trim()) {
       params.append("keyword", keyword.trim());
@@ -143,7 +309,6 @@ export const realApiHelpers = {
     const response = await fetch(`${url}?${params.toString()}`);
     const data = await response.json();
 
-    // data 안에 포함된 구조로 응답이 오므로 data.data 반환
     return data.data || data;
   },
 };

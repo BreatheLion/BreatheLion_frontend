@@ -7,6 +7,7 @@ import { MainButton } from "./Button";
 import ConfirmModal from "./ConfirmModal";
 import SavingModal from "./SavingModal";
 import FileShowModal from "./FileShowModal";
+import { apiHelpers } from "../../utils/api";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -296,7 +297,12 @@ const SeverityButton = styled.button`
   padding: 0.5rem 1rem;
   border: 1px solid #e0e0e0;
   border-radius: 1rem;
-  background: ${(props) => (props.selected ? "#4a4a4a" : "white")};
+  background: ${(props) => {
+    if (props.selected) {
+      return props.$isHighSeverity ? "#FF6D6D" : "#4a4a4a";
+    }
+    return "white";
+  }};
   color: ${(props) => (props.selected ? "white" : "#666")};
   font-family: "Pretendard", sans-serif;
   font-size: 0.875rem;
@@ -636,15 +642,7 @@ export default function DetailModifyModal({ data, onClose }) {
           : "",
       };
 
-      const response = await fetch("/api/records/save/", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestData),
-      });
-
-      const responseData = await response.json();
+      const responseData = await apiHelpers.saveRecord(requestData);
 
       if (responseData.isSuccess) {
         // 성공 시 메인페이지로 이동 (기존 로직 사용)
@@ -1057,6 +1055,7 @@ export default function DetailModifyModal({ data, onClose }) {
                     <SeverityButton
                       key={level}
                       selected={recordData.severity === level}
+                      $isHighSeverity={level === 1}
                       onClick={() => {
                         handleSeverityChange(level);
                         clearHighlight("severity");

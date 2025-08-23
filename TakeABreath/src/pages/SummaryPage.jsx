@@ -10,7 +10,7 @@ import Header from "../components/layout/Header";
 import ArrowIcon from "../assets/ArrowIcon.svg";
 import DownArrowIcon from "../assets/DownArrowIcon.svg";
 import SearchIcon from "../assets/SearchIcon.svg";
-import { realApiHelpers } from "../utils/api";
+import { apiHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -389,8 +389,7 @@ export default function SummaryPage({ folderId, folderName }) {
       setIsLoading(true);
 
       // 실제 API 호출
-      const response = await fetch(`/api/drawers/${folderId}/helpai/`);
-      const responseData = await response.json();
+      const responseData = await apiHelpers.getHelpai(folderId);
 
       console.log("API 응답 데이터:", responseData);
 
@@ -428,10 +427,7 @@ export default function SummaryPage({ folderId, folderName }) {
     async (keyword = "") => {
       try {
         // 실제 API 호출 (서버 사이드 검색)
-        const data = await realApiHelpers.getTimelineByDrawerId(
-          folderId,
-          keyword
-        );
+        const data = await apiHelpers.getTimeline(folderId, keyword);
         console.log("타임라인 API 응답 데이터:", data);
         setTimelineData(data || []);
       } catch (error) {
@@ -623,7 +619,11 @@ export default function SummaryPage({ folderId, folderName }) {
                 <MarkerCol>
                   <MarkerDot
                     ref={(el) => setDotRef(index, el)}
-                    $filled={index === sortedTimelineData.length - 1}
+                    $filled={
+                      sortOrder === "oldest"
+                        ? index === 0
+                        : index === sortedTimelineData.length - 1
+                    }
                   />
                 </MarkerCol>
                 <TimelineDate>{formatDate(record.occurred_at)}</TimelineDate>

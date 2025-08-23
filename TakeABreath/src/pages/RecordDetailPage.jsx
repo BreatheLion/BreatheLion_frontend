@@ -9,6 +9,7 @@ import FileShowModal from "../components/ui/FileShowModal";
 import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
 import FailureNotificationModal from "../components/ui/FailureNotificationModal";
 import titleEditInRecordIcon from "../assets/titleEditInRecordIcon.svg";
+import { apiHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -207,8 +208,7 @@ const SeverityButton = styled.div`
   padding: 0.5rem 1rem;
   border: 1px solid #e0e0e0;
   border-radius: ${(props) => (props.$isHighSeverity ? "1.875rem" : "1rem")};
-  background: ${(props) =>
-    props.$isHighSeverity ? "#FF6D6D" : "var(--70, #4a4a4a)"};
+  background: ${(props) => (props.$isHighSeverity ? "#FF6D6D" : "#4a4a4a")};
   color: white;
   font-family: "Pretendard", sans-serif;
   font-size: 0.875rem;
@@ -319,16 +319,13 @@ export default function RecordDetailPage({ previousPage, record_id }) {
 
   const handleTitleEditConfirm = async (newTitle) => {
     try {
-      // API 호출: PUT /api/records/{record_id}/title
-      const response = await fetch(`/api/records/${record_id}/title`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: newTitle }),
-      });
+      // API 호출: PATCH /api/records/{record_id}/title
+      const responseData = await apiHelpers.updateRecordTitle(
+        record_id,
+        newTitle
+      );
 
-      const responseData = await response.json();
-
-      if (response.ok && responseData.success) {
+      if (responseData.isSuccess) {
         // 성공 시 현재 데이터 업데이트
         setRecordData((prev) => ({ ...prev, title: newTitle }));
         setShowTitleEditModal(false);
@@ -359,13 +356,9 @@ export default function RecordDetailPage({ previousPage, record_id }) {
   const handleDeleteConfirm = async () => {
     try {
       // API 호출: DELETE /api/records/{record_id}/delete/
-      const response = await fetch(`/api/records/${record_id}/delete/`, {
-        method: "DELETE",
-      });
+      const responseData = await apiHelpers.deleteRecord(record_id);
 
-      const responseData = await response.json();
-
-      if (response.ok && responseData.success) {
+      if (responseData.isSuccess) {
         // 성공 시 이전 페이지로 이동
         if (window.navigation.navigateToDrawer) {
           window.navigation.navigateToDrawer();
@@ -393,6 +386,13 @@ export default function RecordDetailPage({ previousPage, record_id }) {
     }
   };
 
+  const handlePdfExtract = () => {
+    // ExtractPdfPage로 이동
+    if (window.navigation.navigateToExtractPdf) {
+      window.navigation.navigateToExtractPdf(recordData);
+    }
+  };
+
   const handleFolderEdit = () => {
     setShowFolderChangeModal(true);
   };
@@ -405,15 +405,12 @@ export default function RecordDetailPage({ previousPage, record_id }) {
     try {
       console.log(`새로운 이름:`, newFolderName);
       // API 호출: PATCH /api/records/{record_id}/drawer/
-      const response = await fetch(`/api/records/${record_id}/drawer/`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ drawer_id: newFolderName }),
-      });
+      const responseData = await apiHelpers.updateRecordDrawer(
+        record_id,
+        newFolderName
+      );
 
-      const responseData = await response.json();
-
-      if (response.ok && responseData.isSuccess) {
+      if (responseData.isSuccess) {
         // 성공 시 현재 데이터 새로고침
         fetchRecordData();
         setShowFolderChangeModal(false);
@@ -448,8 +445,7 @@ export default function RecordDetailPage({ previousPage, record_id }) {
       setIsLoading(true);
 
       // 실제 API 호출
-      const response = await fetch(`/api/records/${record_id}/`);
-      const responseData = await response.json();
+      const responseData = await apiHelpers.getRecordDetail(record_id);
 
       console.log("API 응답 데이터:", responseData);
 
@@ -583,6 +579,25 @@ export default function RecordDetailPage({ previousPage, record_id }) {
           >
             채팅 보기
           </SmallButton>
+          <SmallButton
+            variant="secondary"
+            style={{
+              borderRadius: "0.5rem",
+              border: "1px solid var(--BP-Gradation, #68B8EA)",
+              background: "#FFF",
+              color: "var(--seconday, #688AE0)",
+              textAlign: "center",
+              fontFamily: "Pretendard",
+              fontSize: "0.875rem",
+              fontStyle: "normal",
+              fontWeight: "500",
+              lineHeight: "1.25rem",
+              padding: "0.75rem 1.5rem",
+            }}
+            onClick={handlePdfExtract}
+          >
+            PDF 추출
+          </SmallButton>
         </DetailHeader>
         <DetailContainer>
           <FormGrid>
@@ -645,11 +660,7 @@ export default function RecordDetailPage({ previousPage, record_id }) {
                 <Label>심각도</Label>
                 <SeverityContainer>
                   {recordData?.severity && (
-                    <SeverityButton
-                      $isHighSeverity={
-                        recordData.severity === 1 || recordData.severity === 2
-                      }
-                    >
+                    <SeverityButton $isHighSeverity={recordData.severity === 1}>
                       {severityMap[recordData.severity] || "심각도 정보 없음"}
                     </SeverityButton>
                   )}

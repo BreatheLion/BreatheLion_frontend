@@ -19,17 +19,20 @@ const RowContainer = styled.div`
   margin-bottom: 0.5rem;
   height: 3.75rem;
   position: relative;
-  overflow: visible;
+  overflow: hidden;
+  box-sizing: border-box;
 `;
 
 const Spacer = styled.div`
   width: ${(props) => props.$width || "1.25rem"};
+  flex-shrink: 0;
+  box-sizing: border-box;
 `;
 
 const OrderCell = styled.div`
   display: flex;
   width: 2.1875rem;
-  padding: 0.625rem 0;
+  height: 3.75rem;
   justify-content: center;
   align-items: center;
   flex-shrink: 0;
@@ -40,79 +43,93 @@ const OrderCell = styled.div`
   font-style: normal;
   font-weight: 500;
   line-height: 1.25rem;
+  box-sizing: border-box;
 `;
 
 const TitleCell = styled.div`
   display: flex;
   width: 14.375rem;
   height: 3.75rem;
-  padding: 0.625rem 1.25rem 0.625rem 0;
+  padding: 0 1.25rem 0 0;
   align-items: center;
-  gap: 0.625rem;
+  flex-shrink: 0;
+  box-sizing: border-box;
+`;
+
+const TitleText = styled.div`
   color: #313131;
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
   font-weight: 500;
   line-height: 1.25rem;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 `;
 
 const DateCell = styled.div`
   display: flex;
   width: 7.5rem;
-  padding: 0.625rem 0;
+  height: 3.75rem;
   align-items: center;
-  gap: 0.625rem;
   color: #313131;
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
   font-weight: 500;
   line-height: 1.25rem;
+  flex-shrink: 0;
+  box-sizing: border-box;
 `;
 
 const LocationCell = styled.div`
   display: flex;
   width: 11.25rem;
   height: 3.75rem;
-  padding: 0.625rem 1.25rem 0.625rem 0;
+  padding: 0 1.25rem 0 0;
   justify-content: flex-start;
   align-items: center;
-  gap: 0.625rem;
+  flex-shrink: 0;
+  box-sizing: border-box;
+`;
+
+const LocationText = styled.div`
   color: #313131;
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
   font-weight: 500;
   line-height: 1.25rem;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 `;
 
 const FolderCell = styled.div`
   display: flex;
   width: 7.5rem;
   height: 3.75rem;
-  padding: 0.625rem 1.25rem 0.625rem 0;
+  padding: 0 1.25rem 0 0;
   justify-content: flex-start;
   align-items: center;
-  gap: 0.625rem;
+  flex-shrink: 0;
+  box-sizing: border-box;
+`;
+
+const FolderText = styled.div`
   color: #313131;
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
   font-weight: 500;
   line-height: 1.25rem;
-  word-break: break-word;
-`;
-
-// 줄수 제한을 위한 공용 텍스트 래퍼
-const ClampedText = styled.div`
-  width: 100%;
+  white-space: nowrap;
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+  flex: 1;
 `;
 
 const SettingButton = styled.button`
@@ -125,6 +142,10 @@ const SettingButton = styled.button`
   align-items: center;
   justify-content: center;
   position: relative;
+  flex-shrink: 0;
+  z-index: 10;
+  min-width: 1.5rem;
+  max-width: 1.5rem;
 `;
 
 const Modal = styled.div`
@@ -143,6 +164,7 @@ const Modal = styled.div`
   margin-top: 0.5rem;
   backdrop-filter: blur(0);
   isolation: isolate;
+  min-width: 9.0625rem;
 `;
 
 const ModalItem = styled.div`
@@ -186,10 +208,6 @@ export default function TableRow({
   onTitleUpdate,
   onFolderUpdate,
 }) {
-  const truncateByChars = (text, maxChars) => {
-    const safe = typeof text === "string" ? text : "";
-    return safe.length > maxChars ? safe.slice(0, maxChars) + "..." : safe;
-  };
   const [showModal, setShowModal] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [showTitleModal, setShowTitleModal] = useState(false);
@@ -279,17 +297,17 @@ export default function TableRow({
       <OrderCell>{order}</OrderCell>
       <Spacer $width="3.12rem" />
       <TitleCell>
-        <ClampedText>{truncateByChars(title, 30)}</ClampedText>
+        <TitleText>{title}</TitleText>
       </TitleCell>
       <Spacer $width="0.62rem" />
       <DateCell>{date}</DateCell>
       <Spacer $width="0.62rem" />
       <LocationCell>
-        <ClampedText>{truncateByChars(location, 30)}</ClampedText>
+        <LocationText>{location}</LocationText>
       </LocationCell>
       <Spacer $width="0.62rem" />
       <FolderCell>
-        <ClampedText>{truncateByChars(folder, 30)}</ClampedText>
+        <FolderText>{folder}</FolderText>
       </FolderCell>
       <Spacer $width="3.12rem" />
       <SettingButton ref={buttonRef} onClick={handleSettingClick}>
