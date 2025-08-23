@@ -6,6 +6,7 @@ import { evidenceClient } from "../utils/evidence";
 import FinishLoadingModal from "../components/ui/FinishLoadingModal";
 import AttachmentChip from "../components/ui/AttachmentChip";
 import LoadingDots from "../components/ui/LoadingDots";
+import LoadingModal from "../components/ui/LoadingModal";
 import iconSymbol from "../assets/iconSymbol.svg";
 import ChatPagePlusButton from "../assets/ChatPagePlusButton.svg";
 import ChatPageSendButton from "../assets/ChatPageSendButton.svg";
@@ -460,6 +461,7 @@ export default function ChatPage({ initialChatData }) {
   // attachments: 채팅에서 올린 파일을 즉시 S3 업로드하여 s3Key/previewUrl을 보관
   // { id, filename, type: "IMAGE"|"VIDEO"|"AUDIO", s3Key, previewUrl, mimeType, size }
   const [attachments, setAttachments] = useState([]);
+  const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const uploadAbortRef = useRef(null);
   const fileInputRef = useRef(null);
   const chatAreaRef = useRef(null);
@@ -633,6 +635,14 @@ export default function ChatPage({ initialChatData }) {
       }
     }
 
+    if (filesWithinLimit.length === 0) {
+      e.target.value = "";
+      return;
+    }
+
+    // 파일 업로드 시작 시 로딩 모달 표시
+    setShowFileUploadModal(true);
+
     // 즉시 S3 업로드 후 s3Key/previewUrl 보관
     const basePrefix = `records/${finishResponse?.record_id || recordId}`;
     const prefix = `${basePrefix}/evidence`;
@@ -662,6 +672,9 @@ export default function ChatPage({ initialChatData }) {
     if (uploaded.length > 0) {
       setAttachments((prev) => [...prev, ...uploaded]);
     }
+
+    // 파일 업로드 완료 시 로딩 모달 숨김
+    setShowFileUploadModal(false);
     e.target.value = "";
   };
 
@@ -697,10 +710,13 @@ export default function ChatPage({ initialChatData }) {
         message: "채팅 끝",
         data: {
           record_id: 3,
-          drawers: ["동방에서 일어난 거", "커피집 진상"],
+          drawers: [
+            { drawer_id: 1, name: "동방에서 일어난 거" },
+            { drawer_id: 2, name: "커피집 진상" },
+          ],
           record_detail: {
             title: "동방에서 일어난 무시무시한 사건",
-            categories: ["괴롭힘", "기타"],
+            category: "괴롭힘",
             content: "오늘 해승이가 해원이를 괴롭혔다",
             severity: 1,
             location: "동방",
@@ -711,12 +727,12 @@ export default function ChatPage({ initialChatData }) {
           evidences: [
             {
               filename: "해원이 욕설 파일",
-              type: "audio",
+              type: "AUDIO",
               url: "url~~",
             },
             {
               filename: "폭행 당시 사진",
-              type: "image",
+              type: "IMAGE",
               url: "url2~~",
             },
           ],
@@ -1019,6 +1035,17 @@ export default function ChatPage({ initialChatData }) {
         <FinishLoadingModal
           chatSessionId={chatSessionId}
           onDone={handleFinishDone}
+        />
+      )}
+
+      {/* 파일 업로드 로딩 모달 */}
+      {showFileUploadModal && (
+        <LoadingModal
+          titleText="데이터를 저장하고 있어요"
+          subText="잠시 한숨 돌리고 계세요!"
+          autoCloseMs={3000}
+          onDone={() => setShowFileUploadModal(false)}
+          showAutoClose={false}
         />
       )}
 

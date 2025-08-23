@@ -396,9 +396,17 @@ export default function AiHelperPage({ drawerId, drawerName }) {
       console.log("API 응답:", responseData);
 
       if (responseData && responseData.isSuccess && responseData.data) {
-        // API 응답의 data 객체를 그대로 사용
-        console.log("설정할 데이터:", responseData.data);
-        setSummaryData(responseData.data);
+        // API 응답 데이터 구조에 맞게 처리
+        const processedData = {
+          ...responseData.data,
+          // related_laws가 객체인 경우 laws 배열을 추출
+          related_laws:
+            responseData.data.related_laws?.laws ||
+            responseData.data.related_laws ||
+            [],
+        };
+        console.log("설정할 데이터:", processedData);
+        setSummaryData(processedData);
       } else {
         console.log("응답이 유효하지 않음:", responseData);
         setSummaryData(null);
@@ -629,33 +637,42 @@ export default function AiHelperPage({ drawerId, drawerName }) {
               <SectionTitle>피해 상담 및 신고</SectionTitle>
             </SectionTitleContainer>
             <OrganizationsContainer>
-              {summaryData?.organizations?.map((org, index) => (
-                <OrganizationContainer key={index}>
-                  <OrganizationName>{org.name}</OrganizationName>
-                  <OrganizationInfoContainer>
-                    <InfoRow>
-                      <InfoLabel>대표전화</InfoLabel>
-                      <InfoContent>{org.phone}</InfoContent>
-                    </InfoRow>
-                    <InfoRow>
-                      <InfoLabel>상담 · 신고</InfoLabel>
-                      <InfoContent>{org.description}</InfoContent>
-                    </InfoRow>
-                    <InfoRow>
-                      <InfoLabel>온라인</InfoLabel>
-                      <InfoContent>
-                        <InfoLink
-                          href={org.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {org.url}
-                        </InfoLink>
-                      </InfoContent>
-                    </InfoRow>
-                  </OrganizationInfoContainer>
+              {summaryData?.organizations &&
+              summaryData.organizations.length > 0 ? (
+                summaryData.organizations.map((org, index) => (
+                  <OrganizationContainer key={index}>
+                    <OrganizationName>{org.name}</OrganizationName>
+                    <OrganizationInfoContainer>
+                      <InfoRow>
+                        <InfoLabel>대표전화</InfoLabel>
+                        <InfoContent>{org.phone}</InfoContent>
+                      </InfoRow>
+                      <InfoRow>
+                        <InfoLabel>상담 · 신고</InfoLabel>
+                        <InfoContent>{org.description}</InfoContent>
+                      </InfoRow>
+                      <InfoRow>
+                        <InfoLabel>온라인</InfoLabel>
+                        <InfoContent>
+                          <InfoLink
+                            href={org.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {org.url}
+                          </InfoLink>
+                        </InfoContent>
+                      </InfoRow>
+                    </OrganizationInfoContainer>
+                  </OrganizationContainer>
+                ))
+              ) : (
+                <OrganizationContainer>
+                  <OrganizationName>
+                    상담 기관 정보가 없습니다.
+                  </OrganizationName>
                 </OrganizationContainer>
-              ))}
+              )}
             </OrganizationsContainer>
           </SectionContainer>
           <div style={{ height: "0rem" }}></div>

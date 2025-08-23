@@ -18,11 +18,8 @@ yarn install
 # API Base URL (실제 서버 URL)
 VITE_API_BASE_URL=https://api.takeabreath.com
 
-# JSON Server URL (개발용)
-VITE_JSON_SERVER_URL=http://localhost:3001
-
-# 현재 사용할 API 타입 (json-server | real-api)
-VITE_API_TYPE=json-server
+# 실제 API 사용 고정
+VITE_USE_REAL_API=true
 ```
 
 ### 3. 개발 서버 실행

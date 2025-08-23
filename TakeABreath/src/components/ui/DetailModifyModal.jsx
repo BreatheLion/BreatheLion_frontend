@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import TimePicker from "react-time-picker";
 import "react-time-picker/dist/TimePicker.css";
 import "react-clock/dist/Clock.css";
@@ -7,6 +7,7 @@ import { MainButton } from "./Button";
 import ConfirmModal from "./ConfirmModal";
 import SavingModal from "./SavingModal";
 import FileShowModal from "./FileShowModal";
+import FailureNotificationModal from "./FailureNotificationModal";
 import { apiHelpers } from "../../utils/api";
 
 const ModalOverlay = styled.div`
@@ -395,17 +396,41 @@ const AddInput = styled.input`
   }
 `;
 
+const WarningText = styled.div`
+  color: #a9a9a9;
+  text-align: center;
+  font-family: Pretendard;
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 2.5rem;
+  margin: 2rem 0 0rem 0;
+`;
+
 const ButtonContainer = styled.div`
   display: flex;
   gap: 1rem;
   justify-content: center;
-  margin-top: 2rem;
+  margin-top: 0.7rem;
 `;
 
 const severityMap = {
-  1: "높음",
-  2: "보통",
-  3: "낮음",
+  0: "낮음",
+  1: "보통",
+  2: "높음",
+};
+
+// 카테고리 매핑 (영어 -> 한국어)
+const categoryMap = {
+  VERBAL_ABUSE: "언어폭력",
+  PHYSICAL_ABUSE: "신체폭력",
+  SEXUAL_HARASSMENT: "성희롱",
+  SEXUAL_VIOLENCE: "성폭력",
+  DISCRIMINATION: "차별행위",
+  OSTRACISM: "따돌림",
+  BULLYING: "괴롭힘",
+  STALKING: "스토킹",
+  ETC: "기타",
 };
 
 const CategoryContainer = styled.div`
@@ -430,6 +455,7 @@ const CategoryButton = styled.button`
   }
 `;
 
+// 카테고리는 단일 선택만 가능 (API에서 category: string 형태로 처리)
 const PREDEFINED_CATEGORIES = [
   "언어폭력",
   "신체폭력",
@@ -441,6 +467,14 @@ const PREDEFINED_CATEGORIES = [
   "스토킹",
   "기타",
 ];
+
+// 카테고리 매핑 함수 (영어 -> 한국어)
+const mapCategoryToKorean = (englishCategory) => {
+  return categoryMap[englishCategory] || englishCategory;
+};
+
+// 폴더 목록 옵션을 불러와 선택할 수 있도록 유지
+// 서버 응답은 { drawer_id, name } 형태라고 가정
 
 const toDateTimeLocal = (dateString) => {
   if (!dateString) return "";
@@ -468,13 +502,14 @@ export default function DetailModifyModal({ data, onClose }) {
   const [recordData, setRecordData] = useState({
     title: data.record_detail?.title || data.title || "",
     assailant: data.record_detail?.assailant || data.assailant || [],
-    severity: data.record_detail?.severity || data.severity || 1,
+    severity: data.record_detail?.severity || data.severity || null,
     occurred_at: initialLocal,
     location: data.record_detail?.location || data.location || "",
     content: data.record_detail?.content || data.content || "",
-    categories:
-      data.record_detail?.categories || data.categories || data.category || [],
-    drawers: [], // 빈 배열로 초기화하여 기본 선택 없음
+    category: mapCategoryToKorean(
+      data.record_detail?.category || data.category || ""
+    ),
+    drawer_id: data.record_detail?.drawer_id || data.drawer_id || null,
     evidences: data.evidences || data.evidence || [],
     witness: data.record_detail?.witness || data.witness || [],
     created_at: data.record_detail?.created_at || data.created_at || "",
@@ -482,7 +517,7 @@ export default function DetailModifyModal({ data, onClose }) {
 
   // Refs for required fields
   const titleRef = useRef(null);
-  const categoriesRef = useRef(null);
+  const categoryRef = useRef(null);
   const assailantRef = useRef(null);
   const severityRef = useRef(null);
   const occurredAtRef = useRef(null);
@@ -506,6 +541,51 @@ export default function DetailModifyModal({ data, onClose }) {
   const [highlightedFields, setHighlightedFields] = useState(new Set());
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSavingModal, setShowSavingModal] = useState(false);
+  const [showFailureModal, setShowFailureModal] = useState(false);
+  const [failureMessage, setFailureMessage] = useState("");
+
+  // 폴더 옵션 로드 (data.drawers가 객체 배열이면 그대로 사용, 아니면 목록 API 호출)
+  const [drawerOptions, setDrawerOptions] = useState([]);
+
+  useEffect(() => {
+    const normalizeFromData = () => {
+      const raw = data.drawers || [];
+      if (Array.isArray(raw) && raw.length > 0) {
+        // 객체 배열 형태: { drawer_id, name }
+        if (typeof raw[0] === "object") {
+          const mapped = raw
+            .filter((d) => d && (d.drawer_id || d.id))
+            .map((d) => ({
+              drawer_id: d.drawer_id ?? d.id,
+              name: d.name ?? d.drawer ?? "",
+            }));
+          return mapped;
+        }
+      }
+      return null;
+    };
+
+    const init = async () => {
+      const fromData = normalizeFromData();
+      if (fromData) {
+        setDrawerOptions(fromData);
+        return;
+      }
+      try {
+        const resp = await apiHelpers.getDrawersList();
+        const list = resp?.data?.drawers || [];
+        const mapped = (list || []).map((d) => ({
+          drawer_id: d.drawer_id,
+          name: d.name,
+        }));
+        setDrawerOptions(mapped);
+      } catch {
+        setDrawerOptions([]);
+      }
+    };
+
+    init();
+  }, [data]);
 
   const handleSeverityChange = (severity) => {
     setRecordData((prev) => ({ ...prev, severity }));
@@ -515,13 +595,41 @@ export default function DetailModifyModal({ data, onClose }) {
     setAddingTag({ field, value: "" });
   };
 
-  const handleTagInputKeyPress = (e) => {
+  const handleTagInputKeyPress = async (e) => {
     if (e.key === "Enter" && addingTag.value.trim()) {
-      setRecordData((prev) => ({
-        ...prev,
-        [addingTag.field]: [...prev[addingTag.field], addingTag.value.trim()],
-      }));
-      setAddingTag({ field: null, value: "" });
+      if (addingTag.field === "drawer") {
+        // 새로운 폴더 생성
+        try {
+          const response = await apiHelpers.createDrawer(
+            addingTag.value.trim()
+          );
+          if (response.isSuccess) {
+            // 새로 생성된 폴더를 옵션에 추가하고 선택
+            const newDrawer = {
+              drawer_id: response.data.drawer_id,
+              name: response.data.name,
+            };
+            setDrawerOptions((prev) => [...prev, newDrawer]);
+            setRecordData((prev) => ({
+              ...prev,
+              drawer_id: newDrawer.drawer_id,
+            }));
+            setAddingTag({ field: null, value: "" });
+          } else {
+            throw new Error(response.message || "폴더 생성에 실패했습니다.");
+          }
+        } catch (error) {
+          console.error("폴더 생성 중 오류:", error);
+          window.handleApiError(error, "새 폴더 생성에 실패했습니다.");
+        }
+      } else {
+        // 기존 배열 필드 처리 (assailant, witness)
+        setRecordData((prev) => ({
+          ...prev,
+          [addingTag.field]: [...prev[addingTag.field], addingTag.value.trim()],
+        }));
+        setAddingTag({ field: null, value: "" });
+      }
     }
   };
 
@@ -536,13 +644,14 @@ export default function DetailModifyModal({ data, onClose }) {
     const requiredFields = new Set();
 
     if (!recordData.title?.trim()) requiredFields.add("title");
-    if (!recordData.categories?.length) requiredFields.add("categories");
+    if (!recordData.category?.trim()) requiredFields.add("category");
     if (!recordData.assailant?.length) requiredFields.add("assailant");
-    if (!recordData.severity) requiredFields.add("severity");
+    if (recordData.severity === null || recordData.severity === undefined)
+      requiredFields.add("severity");
     if (!recordData.occurred_at) requiredFields.add("occurred_at");
     if (!recordData.location?.trim()) requiredFields.add("location");
     if (!recordData.content?.trim()) requiredFields.add("content");
-    if (!recordData.drawers?.length) requiredFields.add("drawers");
+    if (!recordData.drawer_id) requiredFields.add("drawer");
 
     return requiredFields;
   };
@@ -558,26 +667,26 @@ export default function DetailModifyModal({ data, onClose }) {
   const scrollToFirstMissingField = (missingFields) => {
     const fieldOrder = [
       "title",
-      "categories",
+      "category",
       "assailant",
       "severity",
       "occurred_at",
       "location",
       "content",
-      "drawers",
+      "drawer",
     ];
 
     for (const field of fieldOrder) {
       if (missingFields.has(field)) {
         const refMap = {
           title: titleRef,
-          categories: categoriesRef,
+          category: categoryRef,
           assailant: assailantRef,
           severity: severityRef,
           occurred_at: occurredAtRef,
           location: locationRef,
           content: contentRef,
-          drawers: drawersRef,
+          drawer: drawersRef,
         };
 
         const targetRef = refMap[field];
@@ -617,17 +726,23 @@ export default function DetailModifyModal({ data, onClose }) {
     setShowConfirmModal(true);
   };
 
-  const handleConfirmSubmit = () => {
+  const handleConfirmSubmit = async () => {
     setShowConfirmModal(false);
     setShowSavingModal(true);
-  };
 
-  const handleSavingComplete = async () => {
     try {
+      // drawer_id를 drawer_name으로 변환
+      const selectedDrawer = drawerOptions.find(
+        (drawer) => drawer.drawer_id === recordData.drawer_id
+      );
+      const drawerName = selectedDrawer
+        ? selectedDrawer.name
+        : recordData.drawer_id;
+
       const requestData = {
         record_id: data.record_id,
         title: recordData.title,
-        categories: recordData.categories || [],
+        category: recordData.category || "",
         content: recordData.content,
         severity: recordData.severity,
         location: recordData.location,
@@ -637,34 +752,34 @@ export default function DetailModifyModal({ data, onClose }) {
           : "",
         assailant: recordData.assailant || [],
         witness: recordData.witness || [],
-        drawer: Array.isArray(recordData.drawers)
-          ? recordData.drawers[0] || ""
-          : "",
+        drawer: drawerName || null,
       };
 
-      const responseData = await apiHelpers.saveRecord(requestData);
+      // 20초 타임아웃 설정
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(
+          () => reject(new Error("요청 시간이 초과되었습니다.")),
+          20000
+        );
+      });
+
+      const apiPromise = apiHelpers.saveRecord(requestData);
+
+      const responseData = await Promise.race([apiPromise, timeoutPromise]);
 
       if (responseData.isSuccess) {
-        // 성공 시 메인페이지로 이동 (기존 로직 사용)
+        // 성공 시 메인페이지로 이동
         if (window.navigation && window.navigation.navigateToMain) {
           window.navigation.navigateToMain();
         }
       } else {
         throw new Error(responseData.message || "저장 실패");
       }
-    } catch {
-      // 목업 데이터 사용 (추후 제거 예정)
-      const mockResponse = {
-        isSuccess: true,
-        code: "200",
-        message: "채팅성공",
-      };
-
-      // 목업 데이터로 성공 처리
-      console.log("목업 데이터 사용:", mockResponse);
-      if (window.navigation && window.navigation.navigateToMain) {
-        window.navigation.navigateToMain();
-      }
+    } catch (error) {
+      // 실패 시 에러 메시지 설정
+      const errorMessage = error.message || "저장 중 오류가 발생했습니다.";
+      setFailureMessage(errorMessage);
+      setShowFailureModal(true);
     } finally {
       setShowSavingModal(false);
     }
@@ -763,49 +878,35 @@ export default function DetailModifyModal({ data, onClose }) {
               </FormField>
 
               <FormField>
-                <Label
-                  $showMark={
-                    !recordData.categories || recordData.categories.length === 0
-                  }
-                >
-                  카테고리
-                </Label>
+                <Label $showMark={!recordData.category}>카테고리</Label>
                 <CategoryContainer
-                  ref={categoriesRef}
+                  ref={categoryRef}
                   style={{
-                    border: highlightedFields.has("categories")
+                    border: highlightedFields.has("category")
                       ? "1px solid #68b8ea"
                       : "none",
-                    borderRadius: highlightedFields.has("categories")
+                    borderRadius: highlightedFields.has("category")
                       ? "0.625rem"
                       : "0",
-                    background: highlightedFields.has("categories")
+                    background: highlightedFields.has("category")
                       ? "#e6f6ff"
                       : "transparent",
-                    padding: highlightedFields.has("categories")
-                      ? "0.5rem"
-                      : "0",
+                    padding: highlightedFields.has("category") ? "0.5rem" : "0",
                   }}
                 >
                   {PREDEFINED_CATEGORIES.map((cat) => {
-                    const selected = (recordData.categories || []).includes(
-                      cat
-                    );
+                    const selected = (recordData.category || "") === cat;
                     return (
                       <CategoryButton
                         key={cat}
                         selected={selected}
                         onClick={() => {
-                          setRecordData((prev) => {
-                            const current = new Set(prev.categories || []);
-                            if (current.has(cat)) {
-                              current.delete(cat);
-                            } else {
-                              current.add(cat);
-                            }
-                            return { ...prev, categories: Array.from(current) };
-                          });
-                          clearHighlight("categories");
+                          // 카테고리는 단일 선택: 이미 선택된 카테고리를 클릭하면 해제, 다른 카테고리를 클릭하면 선택
+                          setRecordData((prev) => ({
+                            ...prev,
+                            category: selected ? "" : cat,
+                          }));
+                          clearHighlight("category");
                         }}
                       >
                         {cat}
@@ -892,54 +993,44 @@ export default function DetailModifyModal({ data, onClose }) {
               </FormField>
 
               <FormField>
-                <Label
-                  $showMark={
-                    !recordData.drawers || recordData.drawers.length === 0
-                  }
-                >
-                  저장 폴더
-                </Label>
+                <Label $showMark={!recordData.drawer_id}>저장 폴더</Label>
                 <TagContainer
                   ref={drawersRef}
                   style={{
-                    border: highlightedFields.has("drawers")
+                    border: highlightedFields.has("drawer")
                       ? "1px solid #68b8ea"
                       : "none",
-                    borderRadius: highlightedFields.has("drawers")
+                    borderRadius: highlightedFields.has("drawer")
                       ? "0.625rem"
                       : "0",
-                    background: highlightedFields.has("drawers")
+                    background: highlightedFields.has("drawer")
                       ? "#e6f6ff"
                       : "transparent",
-                    padding: highlightedFields.has("drawers") ? "0.5rem" : "0",
+                    padding: highlightedFields.has("drawer") ? "0.5rem" : "0",
                   }}
                 >
-                  {(data.drawers || []).map((folder) => {
-                    const selected = (recordData.drawers || []).includes(
-                      folder
-                    );
-                    return (
-                      <SeverityButton
-                        key={folder}
-                        selected={selected}
-                        onClick={() => {
-                          setRecordData((prev) => {
-                            const current = new Set(prev.drawers || []);
-                            if (current.has(folder)) {
-                              current.delete(folder);
-                            } else {
-                              current.clear(); // 기존 선택 모두 제거
-                              current.add(folder); // 새로운 폴더만 선택
-                            }
-                            return { ...prev, drawers: Array.from(current) };
-                          });
-                          clearHighlight("drawers");
-                        }}
-                      >
-                        {folder}
-                      </SeverityButton>
-                    );
-                  })}
+                  {/* 기존 서랍들이 있는 경우에만 표시 */}
+                  {(drawerOptions || []).length > 0 &&
+                    (drawerOptions || []).map((drawer) => {
+                      const selected =
+                        recordData.drawer_id === drawer.drawer_id;
+                      return (
+                        <SeverityButton
+                          key={drawer.drawer_id}
+                          selected={selected}
+                          onClick={() => {
+                            setRecordData((prev) => ({
+                              ...prev,
+                              drawer_id: selected ? null : drawer.drawer_id,
+                            }));
+                            clearHighlight("drawer");
+                          }}
+                        >
+                          {drawer.name}
+                        </SeverityButton>
+                      );
+                    })}
+
                   {/* 새로운 폴더 입력 태그 */}
                   {editingNewFolder ? (
                     <AddInput
@@ -952,46 +1043,37 @@ export default function DetailModifyModal({ data, onClose }) {
                       onKeyPress={(e) => {
                         if (e.key === "Enter" && newFolderText.trim()) {
                           setEditingNewFolder(false);
-                          setRecordData((prev) => {
-                            const current = new Set(prev.drawers || []);
-                            current.clear();
-                            current.add(newFolderText.trim());
-                            return { ...prev, drawers: Array.from(current) };
-                          });
-                          clearHighlight("drawers");
+                          setRecordData((prev) => ({
+                            ...prev,
+                            drawer_id: newFolderText.trim(),
+                          }));
+                          clearHighlight("drawer");
                         }
                       }}
                       onBlur={() => {
                         setEditingNewFolder(false);
                         if (newFolderText.trim()) {
-                          setRecordData((prev) => {
-                            const current = new Set(prev.drawers || []);
-                            current.clear();
-                            current.add(newFolderText.trim());
-                            return { ...prev, drawers: Array.from(current) };
-                          });
-                          clearHighlight("drawers");
+                          setRecordData((prev) => ({
+                            ...prev,
+                            drawer_id: newFolderText.trim(),
+                          }));
+                          clearHighlight("drawer");
                         }
                       }}
                       autoFocus
                     />
                   ) : (
                     <SeverityButton
-                      selected={(recordData.drawers || []).includes(
-                        newFolderText
-                      )}
+                      selected={recordData.drawer_id === newFolderText}
                       onClick={() => {
-                        setRecordData((prev) => {
-                          const current = new Set(prev.drawers || []);
-                          if (current.has(newFolderText)) {
-                            current.delete(newFolderText);
-                          } else {
-                            current.clear();
-                            current.add(newFolderText);
-                          }
-                          return { ...prev, drawers: Array.from(current) };
-                        });
-                        clearHighlight("drawers");
+                        setRecordData((prev) => ({
+                          ...prev,
+                          drawer_id:
+                            recordData.drawer_id === newFolderText
+                              ? null
+                              : newFolderText,
+                        }));
+                        clearHighlight("drawer");
                       }}
                       onDoubleClick={() => setEditingNewFolder(true)}
                       style={{ position: "relative" }}
@@ -1035,7 +1117,14 @@ export default function DetailModifyModal({ data, onClose }) {
 
             <FormRow>
               <FormField>
-                <Label $showMark={!recordData.severity}>심각도</Label>
+                <Label
+                  $showMark={
+                    recordData.severity === null ||
+                    recordData.severity === undefined
+                  }
+                >
+                  심각도
+                </Label>
                 <SeverityContainer
                   ref={severityRef}
                   style={{
@@ -1051,11 +1140,11 @@ export default function DetailModifyModal({ data, onClose }) {
                     padding: highlightedFields.has("severity") ? "0.5rem" : "0",
                   }}
                 >
-                  {[1, 2, 3].map((level) => (
+                  {[0, 1, 2].map((level) => (
                     <SeverityButton
                       key={level}
                       selected={recordData.severity === level}
-                      $isHighSeverity={level === 1}
+                      $isHighSeverity={level === 2}
                       onClick={() => {
                         handleSeverityChange(level);
                         clearHighlight("severity");
@@ -1064,6 +1153,19 @@ export default function DetailModifyModal({ data, onClose }) {
                       {severityMap[level]}
                     </SeverityButton>
                   ))}
+                  {(recordData.severity === null ||
+                    recordData.severity === undefined) && (
+                    <div
+                      style={{
+                        color: "#acacac",
+                        fontSize: "0.875rem",
+                        fontFamily: "Pretendard",
+                        marginLeft: "0.5rem",
+                      }}
+                    >
+                      심각도를 선택해주세요
+                    </div>
+                  )}
                 </SeverityContainer>
               </FormField>
             </FormRow>
@@ -1231,6 +1333,11 @@ export default function DetailModifyModal({ data, onClose }) {
             </FormRow>
           </FormGrid>
 
+          <WarningText>
+            공정한 절차를 위해 기록은 사실에 기반해야 하며, 허위 기록은 신뢰와
+            법적 보호를 어렵게 할 수 있습니다.
+          </WarningText>
+
           <ButtonContainer>
             <MainButton variant="secondary" onClick={onClose}>
               대화로 돌아가기
@@ -1250,7 +1357,13 @@ export default function DetailModifyModal({ data, onClose }) {
         subtitle="서랍에 들어가면 수정이 불가능해요"
       />
 
-      <SavingModal isOpen={showSavingModal} onDone={handleSavingComplete} />
+      <SavingModal isOpen={showSavingModal} />
+
+      <FailureNotificationModal
+        isOpen={showFailureModal}
+        onClose={() => setShowFailureModal(false)}
+        message={failureMessage}
+      />
 
       <FileShowModal
         isOpen={showFileModal}

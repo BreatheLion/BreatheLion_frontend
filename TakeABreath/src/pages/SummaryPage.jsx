@@ -330,8 +330,9 @@ const CategoryTag = styled.div`
   align-items: center;
   border-radius: 1.875rem;
   border: 1px solid var(--5, #e9e9e9);
-  background: #fff;
-  color: var(--50, #7a7a7a);
+  background: ${(props) => (props.$isHighSeverity ? "#EB7070" : "#fff")};
+  color: ${(props) =>
+    props.$isHighSeverity ? "var(--1, #F2F2F2)" : "var(--50, #7a7a7a)"};
   font-family: Pretendard;
   font-size: 0.875rem;
   font-weight: 500;
@@ -427,9 +428,14 @@ export default function SummaryPage({ folderId, folderName }) {
     async (keyword = "") => {
       try {
         // 실제 API 호출 (서버 사이드 검색)
-        const data = await apiHelpers.getTimeline(folderId, keyword);
-        console.log("타임라인 API 응답 데이터:", data);
-        setTimelineData(data || []);
+        const responseData = await apiHelpers.getTimeline(folderId, keyword);
+        console.log("타임라인 API 응답 데이터:", responseData);
+
+        if (responseData && responseData.isSuccess && responseData.data) {
+          setTimelineData(responseData.data || []);
+        } else {
+          setTimelineData([]);
+        }
       } catch (error) {
         // 목업 데이터 사용 (추후 제거 예정)
         console.log("타임라인 API 호출 실패, 목업 데이터 사용:", error);
@@ -442,6 +448,7 @@ export default function SummaryPage({ folderId, folderName }) {
             category: "언어폭력",
             summary: "수업 중 가해자가 피해자에게 심한 욕설을 하였습니다.",
             occurred_at: "2025-06-13",
+            severity: 1,
           },
           {
             record_id: 2,
@@ -450,6 +457,7 @@ export default function SummaryPage({ folderId, folderName }) {
             category: "폭력",
             summary: "복도에서 가해자가 피해자를 밀치고 위협하였습니다.",
             occurred_at: "2025-06-15",
+            severity: 2,
           },
           {
             record_id: 3,
@@ -458,6 +466,7 @@ export default function SummaryPage({ folderId, folderName }) {
             category: "언어폭력",
             summary: "메시지에 인사 없이 지시만 하며 피해자를 무시하였습니다.",
             occurred_at: "2025-06-18",
+            severity: 0,
           },
           {
             record_id: 4,
@@ -466,6 +475,7 @@ export default function SummaryPage({ folderId, folderName }) {
             category: "집단 괴롭힘",
             summary: "여러 명이 함께 피해자를 따돌리고 음식을 뺏었습니다.",
             occurred_at: "2025-06-20",
+            severity: 2,
           },
           {
             record_id: 5,
@@ -474,6 +484,7 @@ export default function SummaryPage({ folderId, folderName }) {
             category: "폭력",
             summary: "운동장에서 신체적 폭력이 발생하여 피해자가 다쳤습니다.",
             occurred_at: "2025-06-25",
+            severity: 2,
           },
         ];
 
@@ -639,7 +650,9 @@ export default function SummaryPage({ folderId, folderName }) {
                 >
                   <CardContent>
                     <CardHeader>
-                      <CategoryTag>{record.category}</CategoryTag>
+                      <CategoryTag $isHighSeverity={record.severity === 2}>
+                        {record.category}
+                      </CategoryTag>
                       <CardTitle>{record.title}</CardTitle>
                     </CardHeader>
                     <CardSummary>{record.summary}</CardSummary>

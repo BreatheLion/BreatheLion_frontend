@@ -23,14 +23,30 @@ export default function RecentRecordsPage({ onNavigateToRecordDetail }) {
   };
 
   // 폴더 업데이트 함수
-  const updateRecordFolder = (recordId, newFolder) => {
-    setRecentRecords((prev) =>
-      prev.map((record) =>
-        record.record_id === recordId
-          ? { ...record, drawer: newFolder }
-          : record
-      )
-    );
+  const updateRecordFolder = async (recordId, newFolder, newFolderId) => {
+    try {
+      // API 호출: PATCH /api/records/{record_id}/drawer/new/{new_drawer_id}/
+      const responseData = await apiHelpers.updateRecordDrawer(
+        recordId,
+        newFolderId
+      );
+
+      if (responseData.isSuccess) {
+        // 성공 시 UI 업데이트
+        setRecentRecords((prev) =>
+          prev.map((record) =>
+            record.record_id === recordId
+              ? { ...record, drawer: newFolder }
+              : record
+          )
+        );
+        console.log(`폴더 변경 성공: ${newFolder}`);
+      } else {
+        console.error("폴더 변경 실패:", responseData.message);
+      }
+    } catch (error) {
+      console.error("폴더 변경 중 오류:", error);
+    }
   };
 
   // 실제 API 호출 함수
@@ -42,9 +58,23 @@ export default function RecentRecordsPage({ onNavigateToRecordDetail }) {
 
       console.log("API 응답 데이터:", data);
 
-      if (data && data.records && Array.isArray(data.records)) {
-        setRecentRecords(data.records);
+      // API 응답 구조: { isSuccess, code, message, data: { records: [...] } }
+      if (
+        data &&
+        data.data &&
+        data.data.records &&
+        Array.isArray(data.data.records)
+      ) {
+        // API 응답 데이터를 UI에서 사용하는 구조로 매핑
+        const mappedRecords = data.data.records.map((record) => ({
+          ...record,
+          title: record.record_title, // record_title → title
+          drawer: record.drawer_title, // drawer_title → drawer
+        }));
+        console.log("매핑된 데이터:", mappedRecords);
+        setRecentRecords(mappedRecords);
       } else {
+        console.log("데이터 구조가 올바르지 않음:", data);
         setRecentRecords([]);
       }
     } catch (error) {

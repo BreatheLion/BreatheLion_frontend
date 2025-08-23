@@ -263,10 +263,30 @@ const AudioIcon = styled.div`
   height: 100%;
 `;
 
+const FileIcon = styled.div`
+  font-size: 2rem;
+  color: #4a4a4a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  gap: 0.5rem;
+`;
+
+const FileName = styled.div`
+  font-size: 0.75rem;
+  color: #4a4a4a;
+  text-align: center;
+  max-width: 90%;
+  word-break: break-word;
+`;
+
 const severityMap = {
-  1: "높음",
-  2: "보통",
-  3: "낮음",
+  0: "낮음",
+  1: "보통",
+  2: "높음",
 };
 
 export default function RecordDetailPage({ previousPage, record_id }) {
@@ -401,13 +421,14 @@ export default function RecordDetailPage({ previousPage, record_id }) {
     setShowFolderChangeModal(false);
   };
 
-  const handleFolderChangeConfirm = async (newFolderName) => {
+  const handleFolderChangeConfirm = async (newFolderName, newFolderId) => {
     try {
-      console.log(`새로운 이름:`, newFolderName);
-      // API 호출: PATCH /api/records/{record_id}/drawer/
+      console.log(`새로운 폴더 이름:`, newFolderName);
+      console.log(`새로운 폴더 ID:`, newFolderId);
+      // API 호출: PATCH /api/records/{record_id}/drawer/new/{new_drawer_id}/
       const responseData = await apiHelpers.updateRecordDrawer(
         record_id,
-        newFolderName
+        newFolderId
       );
 
       if (responseData.isSuccess) {
@@ -449,8 +470,16 @@ export default function RecordDetailPage({ previousPage, record_id }) {
 
       console.log("API 응답 데이터:", responseData);
 
-      if (responseData) {
-        setRecordData(responseData);
+      if (responseData && responseData.isSuccess && responseData.data) {
+        // API 응답에서 data 필드를 추출하고 필드명 매핑
+        const apiData = responseData.data;
+        const mappedData = {
+          ...apiData,
+          drawer_name: apiData.drawer, // drawer를 drawer_name으로 매핑
+        };
+
+        console.log("매핑된 데이터:", mappedData);
+        setRecordData(mappedData);
       } else {
         throw new Error("기록 데이터를 찾을 수 없습니다.");
       }
@@ -462,7 +491,7 @@ export default function RecordDetailPage({ previousPage, record_id }) {
         record_id: 1,
         drawer_id: 5,
         title: "교내에서 열린 잔악무도한 일",
-        categories: ["언어폭력", "폭행"],
+        category: "언어폭력",
         content: "교내에서 학생 간 심한 욕설이 발생하였습니다.",
         severity: 2,
         location: "서울시 A고등학교",
@@ -479,7 +508,7 @@ export default function RecordDetailPage({ previousPage, record_id }) {
             record_id: 1,
             type: "AUDIO",
             filename: "bullying_recording.m4a",
-            s3Url:
+            s3_url:
               "https://s3.bucket.com/records/1/audio/bullying_recording.m4a",
             uploaded_at: "2025-08-02T09:05:00",
           },
@@ -488,7 +517,7 @@ export default function RecordDetailPage({ previousPage, record_id }) {
             record_id: 1,
             type: "PHOTO",
             filename: "chat_screenshot.png",
-            s3Url: "https://s3.bucket.com/records/1/photo/chat_screenshot.png",
+            s3_url: "https://s3.bucket.com/records/1/photo/chat_screenshot.png",
             uploaded_at: "2025-08-02T09:06:00",
           },
           {
@@ -496,7 +525,7 @@ export default function RecordDetailPage({ previousPage, record_id }) {
             record_id: 1,
             type: "FILE",
             filename: "진술서.pdf",
-            s3Url: "https://s3.bucket.com/records/1/file/진술서.pdf",
+            s3_url: "https://s3.bucket.com/records/1/file/진술서.pdf",
             uploaded_at: "2025-08-02T09:07:00",
           },
         ],
@@ -619,9 +648,7 @@ export default function RecordDetailPage({ previousPage, record_id }) {
               <FormField>
                 <Label>카테고리</Label>
                 <TagContainer>
-                  {recordData?.categories?.map((category, index) => (
-                    <Tag key={index}>{category}</Tag>
-                  ))}
+                  {recordData?.category && <Tag>{recordData.category}</Tag>}
                 </TagContainer>
               </FormField>
             </FormRow>
@@ -659,9 +686,11 @@ export default function RecordDetailPage({ previousPage, record_id }) {
               <FormField>
                 <Label>심각도</Label>
                 <SeverityContainer>
-                  {recordData?.severity && (
-                    <SeverityButton $isHighSeverity={recordData.severity === 1}>
-                      {severityMap[recordData.severity] || "심각도 정보 없음"}
+                  {recordData?.severity !== undefined && (
+                    <SeverityButton $isHighSeverity={recordData.severity >= 2}>
+                      {recordData.severity !== null
+                        ? severityMap[recordData.severity]
+                        : "심각도 정보 없음"}
                     </SeverityButton>
                   )}
                 </SeverityContainer>
@@ -711,11 +740,66 @@ export default function RecordDetailPage({ previousPage, record_id }) {
                 <Label>자료</Label>
                 <NewAttachmentsContainer>
                   {recordData?.evidences?.map((evidence, index) => {
+                    // 파일 확장자를 기반으로 한 타입 감지 추가
+                    const getFileTypeFromExtension = (filename) => {
+                      const extension = filename
+                        .split(".")
+                        .pop()
+                        ?.toLowerCase();
+                      const imageExtensions = [
+                        "jpg",
+                        "jpeg",
+                        "png",
+                        "gif",
+                        "bmp",
+                        "webp",
+                      ];
+                      const videoExtensions = [
+                        "mp4",
+                        "avi",
+                        "mov",
+                        "wmv",
+                        "flv",
+                        "webm",
+                      ];
+                      const audioExtensions = [
+                        "mp3",
+                        "wav",
+                        "m4a",
+                        "aac",
+                        "ogg",
+                      ];
+
+                      if (imageExtensions.includes(extension)) return "IMAGE";
+                      if (videoExtensions.includes(extension)) return "VIDEO";
+                      if (audioExtensions.includes(extension)) return "AUDIO";
+                      return "FILE";
+                    };
+
+                    // API에서 받은 타입과 파일 확장자를 모두 고려
+                    const apiType = evidence.type;
+                    const extensionType = getFileTypeFromExtension(
+                      evidence.filename
+                    );
+                    const finalType = apiType || extensionType;
+
                     const isImage =
-                      evidence.type === "PHOTO" || evidence.type === "IMAGE";
-                    const isVideo = evidence.type === "VIDEO";
-                    const isAudio = evidence.type === "AUDIO";
-                    const isFile = evidence.type === "FILE";
+                      finalType === "PHOTO" || finalType === "IMAGE";
+                    const isVideo = finalType === "VIDEO";
+                    const isAudio = finalType === "AUDIO";
+                    const isFile = finalType === "FILE";
+
+                    console.log(`Evidence ${index}:`, {
+                      apiType,
+                      extensionType,
+                      finalType,
+                      filename: evidence.filename,
+                      s3_url: evidence.s3_url,
+                      isImage,
+                      isVideo,
+                      isAudio,
+                      isFile,
+                    });
 
                     return (
                       <AttachmentPreview
@@ -725,7 +809,7 @@ export default function RecordDetailPage({ previousPage, record_id }) {
                       >
                         {isImage && (
                           <PreviewImage
-                            src={evidence.s3Url}
+                            src={evidence.view_url || evidence.s3_url}
                             alt={evidence.filename}
                             onError={(e) => {
                               console.error(
@@ -734,11 +818,17 @@ export default function RecordDetailPage({ previousPage, record_id }) {
                               );
                               e.target.style.display = "none";
                             }}
+                            onLoad={() => {
+                              console.log(
+                                "Image loaded successfully:",
+                                evidence.view_url || evidence.s3_url
+                              );
+                            }}
                           />
                         )}
                         {isVideo && (
                           <video
-                            src={evidence.s3Url}
+                            src={evidence.view_url || evidence.s3_url}
                             style={{
                               width: "100%",
                               height: "100%",
@@ -751,10 +841,26 @@ export default function RecordDetailPage({ previousPage, record_id }) {
                               );
                               e.target.style.display = "none";
                             }}
+                            onLoad={() => {
+                              console.log(
+                                "Video loaded successfully:",
+                                evidence.view_url || evidence.s3_url
+                              );
+                            }}
                           />
                         )}
-                        {isAudio && <AudioIcon>🎵</AudioIcon>}
-                        {isFile && <AudioIcon>📄</AudioIcon>}
+                        {isAudio && (
+                          <AudioIcon>
+                            🎵
+                            <FileName>{evidence.filename}</FileName>
+                          </AudioIcon>
+                        )}
+                        {isFile && (
+                          <FileIcon>
+                            📄
+                            <FileName>{evidence.filename}</FileName>
+                          </FileIcon>
+                        )}
                       </AttachmentPreview>
                     );
                   })}
@@ -794,7 +900,7 @@ export default function RecordDetailPage({ previousPage, record_id }) {
         isOpen={showFileModal}
         onClose={handleFileModalClose}
         file={selectedFile}
-        fileUrl={selectedFile?.s3Url}
+        fileUrl={selectedFile?.view_url || selectedFile?.s3_url}
       />
 
       <SuccessNotificationModal

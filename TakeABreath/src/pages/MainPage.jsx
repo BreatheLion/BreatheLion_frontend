@@ -4,6 +4,7 @@ import Header from "../components/layout/Header";
 import Logo from "../components/common/Logo";
 import MainPageSendButton from "../assets/MainPageSendButton.svg";
 import { API_ENDPOINTS, apiCall } from "../utils/api";
+import LoadingModal from "../components/ui/LoadingModal";
 
 const MainContainer = styled.div`
   background: var(
@@ -156,6 +157,7 @@ const TitleText = styled.div`
 export default function MainPage({ onNavigateToChat }) {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showLoadingModal, setShowLoadingModal] = useState(false);
 
   const handleSubmit = async () => {
     const trimmed = inputValue.trim();
@@ -175,6 +177,7 @@ export default function MainPage({ onNavigateToChat }) {
 
     clearPreviousChatSessions();
     setIsLoading(true);
+    setShowLoadingModal(true);
 
     setInputValue("");
 
@@ -258,6 +261,7 @@ export default function MainPage({ onNavigateToChat }) {
       });
     } finally {
       setIsLoading(false);
+      setShowLoadingModal(false);
     }
   };
 
@@ -289,6 +293,16 @@ export default function MainPage({ onNavigateToChat }) {
           </ArrowButton>
         </InputContainer>
       </ContentWrapper>
+
+      {showLoadingModal && (
+        <LoadingModal
+          titleText="AI가 당신의 이야기를 듣고 있어요"
+          subText="잠시 후 채팅 화면으로 이동해요"
+          autoCloseMs={3000}
+          onDone={() => setShowLoadingModal(false)}
+          showAutoClose={false}
+        />
+      )}
     </MainContainer>
   );
 }

@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import settingButton from "../../assets/settingButton.svg";
 import downloadIcon from "../../assets/downloadIcon.svg";
 import editIcon from "../../assets/editIcon.svg";
@@ -19,8 +20,9 @@ const RowContainer = styled.div`
   margin-bottom: 0.5rem;
   height: 3.75rem;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
+  z-index: 1;
 `;
 
 const Spacer = styled.div`
@@ -143,15 +145,15 @@ const SettingButton = styled.button`
   justify-content: center;
   position: relative;
   flex-shrink: 0;
-  z-index: 10;
+  z-index: 1;
   min-width: 1.5rem;
   max-width: 1.5rem;
 `;
 
 const Modal = styled.div`
-  position: absolute;
-  top: 100%;
-  right: 0;
+  position: fixed;
+  top: ${(props) => props.$top}px;
+  right: ${(props) => props.$right}px;
   display: inline-flex;
   padding: 1.25rem;
   flex-direction: column;
@@ -160,8 +162,7 @@ const Modal = styled.div`
   border-radius: 0.625rem;
   background: #ffffff;
   box-shadow: 0 1px 7px 0 rgba(0, 0, 0, 0.19);
-  z-index: 9999;
-  margin-top: 0.5rem;
+  z-index: 99999;
   backdrop-filter: blur(0);
   isolation: isolate;
   min-width: 9.0625rem;
@@ -211,6 +212,7 @@ export default function TableRow({
   const [showModal, setShowModal] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [showTitleModal, setShowTitleModal] = useState(false);
+  const [modalPosition, setModalPosition] = useState({ top: 0, right: 0 });
   const modalRef = useRef(null);
   const buttonRef = useRef(null);
 
@@ -225,16 +227,61 @@ export default function TableRow({
       }
     };
 
+    const handleScroll = () => {
+      if (showModal && buttonRef.current) {
+        const buttonRect = buttonRef.current.getBoundingClientRect();
+        const modalWidth = 145;
+        const modalHeight = 120;
+
+        let top = buttonRect.bottom + window.scrollY + 8;
+        let right = window.innerWidth - buttonRect.right;
+
+        if (buttonRect.bottom + modalHeight > window.innerHeight) {
+          top = buttonRect.top + window.scrollY - modalHeight - 8;
+        }
+
+        if (buttonRect.right - modalWidth < 0) {
+          right = window.innerWidth - buttonRect.left;
+        }
+
+        setModalPosition({ top, right });
+      }
+    };
+
     if (showModal) {
       document.addEventListener("mousedown", handleClickOutside);
+      window.addEventListener("scroll", handleScroll);
+      window.addEventListener("resize", handleScroll);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
     };
   }, [showModal]);
 
   const handleSettingClick = () => {
+    if (!showModal && buttonRef.current) {
+      const buttonRect = buttonRef.current.getBoundingClientRect();
+      const modalWidth = 145; // 모달의 대략적인 너비 (9.0625rem)
+      const modalHeight = 120; // 모달의 대략적인 높이
+
+      let top = buttonRect.bottom + window.scrollY + 8; // 8px 여백
+      let right = window.innerWidth - buttonRect.right;
+
+      // 화면 하단 경계 체크
+      if (buttonRect.bottom + modalHeight > window.innerHeight) {
+        top = buttonRect.top + window.scrollY - modalHeight - 8;
+      }
+
+      // 화면 우측 경계 체크
+      if (buttonRect.right - modalWidth < 0) {
+        right = window.innerWidth - buttonRect.left;
+      }
+
+      setModalPosition({ top, right });
+    }
     setShowModal(!showModal);
   };
 
@@ -261,13 +308,14 @@ export default function TableRow({
     }
   }, [showFolderModal, showTitleModal]);
 
-  const handleFolderChange = (newFolder) => {
+  const handleFolderChange = (newFolder, newFolderId) => {
     console.log(`폴더 변경: ${folder} → ${newFolder}`);
     console.log(`변경할 레코드 ID: ${id}`);
+    console.log(`새로운 폴더 ID: ${newFolderId}`);
 
     // RecentRecordsPage의 데이터 업데이트
     if (onFolderUpdate) {
-      onFolderUpdate(id, newFolder);
+      onFolderUpdate(id, newFolder, newFolderId);
     }
   };
 
@@ -292,7 +340,13 @@ export default function TableRow({
   };
 
   return (
-    <RowContainer onClick={handleRowClick} style={{ cursor: "pointer" }}>
+    <RowContainer
+      onClick={handleRowClick}
+      style={{
+        cursor: "pointer",
+        zIndex: showModal ? 50 : 1,
+      }}
+    >
       <Spacer $width="1.25rem" />
       <OrderCell>{order}</OrderCell>
       <Spacer $width="3.12rem" />
@@ -310,14 +364,22 @@ export default function TableRow({
         <FolderText>{folder}</FolderText>
       </FolderCell>
       <Spacer $width="3.12rem" />
-      <SettingButton ref={buttonRef} onClick={handleSettingClick}>
+      <SettingButton
+        ref={buttonRef}
+        onClick={handleSettingClick}
+        style={{ zIndex: showModal ? 51 : 1 }}
+      >
         <img
           src={settingButton}
           alt="설정"
           style={{ width: "1.5rem", height: "1.5rem" }}
         />
         {showModal && (
-          <Modal ref={modalRef}>
+          <Modal
+            ref={modalRef}
+            $top={modalPosition.top}
+            $right={modalPosition.right}
+          >
             <ModalItem onClick={() => handleModalItemClick("다운로드")}>
               <ModalIcon src={downloadIcon} alt="다운로드" />
               <ModalText>다운로드</ModalText>
@@ -335,22 +397,30 @@ export default function TableRow({
       </SettingButton>
       <Spacer $width="1.25rem" />
 
-      <FolderChangeModal
-        isOpen={showFolderModal}
-        onClose={() => setShowFolderModal(false)}
-        onConfirm={handleFolderChange}
-        currentFolder={folder}
-        recordId={id}
-        recordData={recordData}
-      />
+      {showFolderModal &&
+        createPortal(
+          <FolderChangeModal
+            isOpen={showFolderModal}
+            onClose={() => setShowFolderModal(false)}
+            onConfirm={handleFolderChange}
+            currentFolder={folder}
+            recordId={id}
+            recordData={recordData}
+          />,
+          document.body
+        )}
 
-      <TitleEditModal
-        isOpen={showTitleModal}
-        onClose={() => setShowTitleModal(false)}
-        onConfirm={handleTitleChange}
-        currentTitle={title}
-        recordData={recordData}
-      />
+      {showTitleModal &&
+        createPortal(
+          <TitleEditModal
+            isOpen={showTitleModal}
+            onClose={() => setShowTitleModal(false)}
+            onConfirm={handleTitleChange}
+            currentTitle={title}
+            recordData={recordData}
+          />,
+          document.body
+        )}
     </RowContainer>
   );
 }

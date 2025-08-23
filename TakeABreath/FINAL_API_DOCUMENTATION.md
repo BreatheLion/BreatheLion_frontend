@@ -150,6 +150,11 @@ onNavigateToChat({
 - 첨부 파일이 없을 때는 `evidences: null` 전송
 - 에러 시 목업 데이터 사용 (추후 제거 예정)
 
+### 카테고리 스키마 변경
+
+- 기존 `categories: string[]` 사용을 폐지하고 `category: string` 단일 문자열로 통일합니다.
+- UI 라벨(예: "언어폭력", "신체폭력", "괴롭힘") 값을 그대로 전송합니다.
+
 ### record_id 처리
 
 ```javascript
@@ -177,7 +182,7 @@ const prefix = `${basePrefix}/evidence`;
 
 ### API 요청 방식
 
-- **HTTP Method**: `GET`
+- **HTTP Method**: `PUT`
 - **Endpoint**: `/api/chats/end/`
 - **Content-Type**: `application/json`
 
@@ -199,10 +204,13 @@ const prefix = `${basePrefix}/evidence`;
   "message": "채팅 끝",
   "data": {
     "record_id": 3,
-    "drawers": ["동방에서 일어난 거", "커피집 진상"],
+    "drawers": [
+      { "drawer_id": 1, "name": "동방에서 일어난 거" },
+      { "drawer_id": 2, "name": "커피집 진상" }
+    ],
     "record_detail": {
       "title": "동방에서 일어난 무시무시한 사건",
-      "categories": ["괴롭힘", "폭력"],
+      "category": "괴롭힘",
       "content": "오늘 해승이가 해원이를 괴롭혔다",
       "severity": 1,
       "location": "동방",
@@ -213,12 +221,12 @@ const prefix = `${basePrefix}/evidence`;
     "evidences": [
       {
         "filename": "해원이 욕설 파일",
-        "type": "audio",
+        "type": "AUDIO",
         "url": "url~~"
       },
       {
         "filename": "폭행 당시 사진",
-        "type": "image",
+        "type": "IMAGE",
         "url": "url2~~"
       }
     ]
@@ -232,10 +240,10 @@ const prefix = `${basePrefix}/evidence`;
 // DetailModifyModal로 전달되는 데이터
 {
   record_id: 3,
-  drawers: ["동방에서 일어난 거", "커피집 진상"],
+  drawers: [ { drawer_id: 1, name: "동방에서 일어난 거" } , ... ],
   record_detail: {
     title: "동방에서 일어난 무시무시한 사건",
-    categories: ["괴롭힘", "폭력"],
+    category: "괴롭힘",
     content: "오늘 해승이가 해원이를 괴롭혔다",
     severity: 1,
     location: "동방",
@@ -249,10 +257,10 @@ const prefix = `${basePrefix}/evidence`;
 
 ### 주요 로직
 
-- "기록 마치기" 버튼 클릭 시 GET 요청 (body에 JSON 포함)
+- "기록 마치기" 버튼 클릭 시 PUT 요청 (body에 JSON 포함)
 - 응답의 `data` 객체를 DetailModifyModal에 전달
 - `record_detail` 안에 상세 정보가 중첩된 구조
-- `drawers`는 폴더 선택 옵션으로 사용
+- `drawers`는 `{ drawer_id, name }` 배열로 폴더 선택 옵션 제공
 - `evidences`는 첨부 파일 미리보기로 표시
 - 에러 시 목업 데이터 사용 (추후 제거 예정)
 - `FinishLoadingModal`로 로딩 상태 표시

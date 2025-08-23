@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import ContentProveIcon from "../assets/ContentProveIcon.svg";
 import ConsultantIcon from "../assets/ConsultantIcon.svg";
+import ArrowIcon from "../assets/ArrowIcon.svg";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -12,7 +13,7 @@ const PageContainer = styled.div`
 `;
 
 const ContentContainer = styled.div`
-  width: 55rem;
+  width: 57.125rem;
   margin: 0 auto;
   height: calc(100vh - 4rem);
   display: flex;
@@ -49,23 +50,27 @@ const Title = styled.div`
 
 const CardsContainer = styled.div`
   display: flex;
-  gap: 2rem;
+  flex-direction: column;
+  gap: 0.625rem;
   align-items: center;
   justify-content: center;
   margin-top: 2rem;
 `;
 
 const Card = styled.div`
-  width: 18.5625rem;
-  flex-shrink: 0;
+  display: flex;
+  width: 100%;
+  padding: 1.875rem;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.625rem;
+  background: #fff;
   border-radius: 1.25rem;
   border: 1px solid var(--main-stroke, #bec8e3);
-  background: var(--Main-bk, #f8faff);
   box-shadow: 1px 1px 5px 0 rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   transition: all 0.2s ease;
+  cursor: pointer;
+  box-sizing: border-box;
 
   &:hover {
     transform: translateY(-2px);
@@ -74,34 +79,32 @@ const Card = styled.div`
 `;
 
 const CardImageIcon = styled.img`
-  width: 7.9375rem;
-  height: 7.9375rem;
-  margin-top: 3.69rem;
-  margin-bottom: 2.81rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
 `;
 
 const CardTitle = styled.div`
   color: var(--80, #313131);
-  text-align: center;
   font-family: Pretendard;
   font-size: 1.25rem;
   font-style: normal;
   font-weight: 700;
   line-height: 1.5rem;
-  margin-bottom: 0.62rem;
 `;
 
 const CardDescription = styled.div`
-  color: var(--70, #4a4a4a);
-  text-align: center;
+  color: var(--50, #7a7a7a);
   font-family: Pretendard;
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-style: normal;
   font-weight: 500;
-  line-height: 1.5rem;
-  padding: 0 1rem;
+  line-height: 1.375rem;
   white-space: pre-line;
-  margin-bottom: 3.56rem;
+`;
+
+const HighlightedText = styled.span`
+  color: var(--seconday, #688ae0);
 `;
 
 export default function ExtractPdfPage({ recordId, recordName }) {
@@ -131,19 +134,48 @@ export default function ExtractPdfPage({ recordId, recordName }) {
 
         <CardsContainer>
           <Card onClick={() => handleCardClick("내용 증명 받기")}>
-            <CardImageIcon src={ContentProveIcon} alt="내용 증명" />
-            <CardTitle>내용 증명 받기</CardTitle>
-            <CardDescription>
-              내 권리를 지키고,{"\n"}필요한 법적 도움을 받을 수 있어요
-            </CardDescription>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.62rem",
+                flex: 1,
+              }}
+            >
+              <CardTitle>내용 증명 받기</CardTitle>
+              <CardDescription>
+                내용증명은{" "}
+                <HighlightedText>
+                  내가 상대방에게 보낸 말을 공식적으로 증명해 주는 제도
+                </HighlightedText>
+                입니다.
+                {"\n"}작성자는 같은 문서를 3부 준비해 발신인/ 수신인/ 우체국이
+                각각 보관합니다.
+                {"\n"}이 기록은 '내가 이런 요구/주장을 했다'는 강력한 증거가
+                되며,
+                {"\n"}법원이나 경찰에 제출하면 신빙성을 높여주는 자료로
+                활용됩니다.
+              </CardDescription>
+            </div>
+            <CardImageIcon src={ArrowIcon} alt="화살표" />
           </Card>
 
           <Card onClick={() => handleCardClick("상담 자료 받기")}>
-            <CardImageIcon src={ConsultantIcon} alt="상담 자료" />
-            <CardTitle>상담 자료 받기</CardTitle>
-            <CardDescription>
-              심리적·신체적 회복을 돕는{"\n"}상담과 의료 지원을 받을 수 있어요
-            </CardDescription>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.62rem",
+                flex: 1,
+              }}
+            >
+              <CardTitle>상담 자료 받기</CardTitle>
+              <CardDescription>
+                기록한 자료를 바탕으로 상담을 진행할 수 있도록 PDF 형식으로
+                자료를 만들어 드립니다.
+              </CardDescription>
+            </div>
+            <CardImageIcon src={ArrowIcon} alt="화살표" />
           </Card>
         </CardsContainer>
       </ContentContainer>

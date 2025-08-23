@@ -34,8 +34,8 @@ export const API_ENDPOINTS = {
     `${getApiBase()}/api/records/${recordId}/delete/`,
 
   // RecordDetailPage - 기록 폴더 변경
-  RECORDS_DRAWER: (recordId) =>
-    `${getApiBase()}/api/records/${recordId}/drawer/`,
+  RECORDS_DRAWER: (recordId, newDrawerId) =>
+    `${getApiBase()}/api/records/${recordId}/new/${newDrawerId}/`,
 
   // RecentRecordsPage - 최근 기록 목록 조회
   RECORDS_RECENT: () => `${getApiBase()}/api/records/recent/`,
@@ -58,13 +58,20 @@ export const API_ENDPOINTS = {
 
   // SummaryPage - 타임라인 조회
   DRAWERS_TIMELINE: (drawerId) =>
-    `${getApiBase()}/api/drawers/${drawerId}/timeline/`,
+    `${getApiBase()}/api/drawers/${drawerId}/timeline`,
 
-  // AiHelperPage, SummaryPage - PDF 다운로드
-  DRAWERS_PDF: (drawerId) => `${getApiBase()}/api/drawers/${drawerId}/pdf`,
+  // PDF 추출 관련 엔드포인트
+  // 1. 내용증명 PDF 생성 (GetContentProvePage)
+  RECORDS_CONTENT_PROVE_PDF: (recordId) =>
+    `${getApiBase()}/api/records/${recordId}/pdf?type=notice`,
 
-  // GetContentProvePage - 내용증명 생성
-  CONTENT_PROVE: () => `${getApiBase()}/content-prove`,
+  // 2. 폴더별 PDF 다운로드 (AiHelperPage, SummaryPage)
+  DRAWERS_PDF_DOWNLOAD: (drawerId) =>
+    `${getApiBase()}/api/drawers/${drawerId}/pdf/`,
+
+  // 3. 상담 자료 PDF 생성 (향후 구현 예정)
+  RECORDS_CONSULTATION_PDF: (recordId) =>
+    `${getApiBase()}/api/records/${recordId}/pdf?type=consultation`,
 };
 
 // API 호출 헬퍼 함수
@@ -85,6 +92,12 @@ export const apiCall = async (endpoint, options = {}) => {
 
     if (!response.ok) {
       throw new Error(`API 호출 실패: ${response.status}`);
+    }
+
+    // PDF 응답인지 확인 (Content-Type이 application/pdf인 경우)
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/pdf")) {
+      return await response.blob();
     }
 
     return await response.json();
@@ -136,7 +149,7 @@ export const apiHelpers = {
   // ChatPage - 기록 마치기
   endChat: async (chatSessionId, recordId) => {
     return await apiCall(API_ENDPOINTS.CHATS_END(), {
-      method: "GET",
+      method: "PUT",
       body: JSON.stringify({
         chat_session_id: chatSessionId,
         record_id: recordId,
@@ -175,9 +188,9 @@ export const apiHelpers = {
 
   // RecordDetailPage - 기록 폴더 변경
   updateRecordDrawer: async (recordId, drawerId) => {
-    return await apiCall(API_ENDPOINTS.RECORDS_DRAWER(recordId), {
+    return await apiCall(API_ENDPOINTS.RECORDS_DRAWER(recordId, drawerId), {
       method: "PATCH",
-      body: JSON.stringify({ drawer_id: drawerId }),
+      // request body 제거됨 - URL에 drawerId가 포함됨
     });
   },
 
@@ -191,7 +204,7 @@ export const apiHelpers = {
   // DetailModifyModal - 기록 저장
   saveRecord: async (recordData) => {
     return await apiCall(API_ENDPOINTS.RECORDS_SAVE(), {
-      method: "POST",
+      method: "PATCH",
       body: JSON.stringify(recordData),
     });
   },
@@ -214,8 +227,8 @@ export const apiHelpers = {
   // IncidentRecordsPage - 폴더 삭제
   deleteDrawers: async (drawerIds) => {
     return await apiCall(API_ENDPOINTS.DRAWERS_DELETE(), {
-      method: "DELETE",
-      body: JSON.stringify({ drawer_id: drawerIds }),
+      method: "PATCH",
+      body: JSON.stringify({ delete_list: drawerIds }),
     });
   },
 
@@ -229,30 +242,37 @@ export const apiHelpers = {
   // SummaryPage - 타임라인 조회 (키워드 검색 포함)
   getTimeline: async (drawerId, keyword = "") => {
     const url = API_ENDPOINTS.DRAWERS_TIMELINE(drawerId);
-    const params = new URLSearchParams();
+
+    let finalUrl = url;
     if (keyword && keyword.trim()) {
-      params.append("keyword", keyword.trim());
-    } else {
-      params.append("keyword", "null");
+      finalUrl = `${url}?keyword=${encodeURIComponent(keyword.trim())}`;
     }
 
-    return await apiCall(`${url}?${params.toString()}`, {
+    return await apiCall(finalUrl, {
       method: "GET",
     });
   },
 
-  // AiHelperPage, SummaryPage - PDF 다운로드
-  downloadPdf: async (drawerId) => {
-    return await apiCall(API_ENDPOINTS.DRAWERS_PDF(drawerId), {
-      method: "GET",
-    });
-  },
-
-  // GetContentProvePage - 내용증명 생성
-  createContentProve: async (contentProveData) => {
-    return await apiCall(API_ENDPOINTS.CONTENT_PROVE(), {
+  // PDF 추출 관련 헬퍼 함수
+  // 1. 내용증명 PDF 생성
+  createContentProvePdf: async (recordId, contentProveData) => {
+    return await apiCall(API_ENDPOINTS.RECORDS_CONTENT_PROVE_PDF(recordId), {
       method: "POST",
       body: JSON.stringify(contentProveData),
+    });
+  },
+
+  // 2. 폴더별 PDF 다운로드
+  downloadPdf: async (drawerId) => {
+    return await apiCall(API_ENDPOINTS.DRAWERS_PDF_DOWNLOAD(drawerId), {
+      method: "GET",
+    });
+  },
+
+  // 3. 상담 자료 PDF 생성 (향후 구현 예정)
+  createConsultationPdf: async (recordId) => {
+    return await apiCall(API_ENDPOINTS.RECORDS_CONSULTATION_PDF(recordId), {
+      method: "POST",
     });
   },
 };

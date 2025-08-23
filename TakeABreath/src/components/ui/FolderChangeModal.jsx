@@ -217,7 +217,7 @@ export default function FolderChangeModal({
         if (responseData.isSuccess) {
           setSuccessMessage(`"${selectedFolder}" 폴더로 이동되었습니다.`);
           setShowSuccessModal(true);
-          onConfirm(selectedFolder);
+          onConfirm(selectedFolder, selectedFolderId);
           onClose();
         } else {
           throw new Error(responseData.message || "폴더 변경에 실패했습니다.");

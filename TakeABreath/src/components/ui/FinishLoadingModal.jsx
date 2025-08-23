@@ -14,7 +14,7 @@ export default function FinishLoadingModal({
   const fallbackData = {
     record_id: 3,
     title: "동방에서 일어난 무시무시한 사건",
-    categories: ["괴롭힘"],
+    category: "괴롭힘",
     content: "오늘 해승이가 해원이를 괴롭혔다",
     severity: 1,
     location: "동방",
@@ -26,12 +26,12 @@ export default function FinishLoadingModal({
     evidences: [
       {
         filename: "해원이 욕설 파일",
-        type: "audio",
+        type: "AUDIO",
         url: "url~~",
       },
       {
         filename: "폭행 당시 사진",
-        type: "image",
+        type: "IMAGE",
         url: "url2~~",
       },
     ],

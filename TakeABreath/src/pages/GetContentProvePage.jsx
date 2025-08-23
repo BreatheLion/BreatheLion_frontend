@@ -4,7 +4,7 @@ import Header from "../components/layout/Header";
 import MainButton from "../components/ui/Button/MainButton";
 import ConfirmModal from "../components/ui/ConfirmModal";
 import WarningIcon from "../assets/warningIcon.svg";
-import { API_ENDPOINTS, apiCall } from "../utils/api";
+import { apiHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -36,6 +36,7 @@ const TitleContainer = styled.div`
   flex-direction: column;
   gap: 0.62rem;
   margin-top: 6.44rem;
+  margin-bottom: 2rem;
 `;
 
 const Subtitle = styled.div`
@@ -343,7 +344,7 @@ const PhoneField = ({ value, onChange, isInvalid, placeholder }) => (
   </LabeledInputRow>
 );
 
-export default function GetContentProvePage({ recordName }) {
+export default function GetContentProvePage({ recordId, recordName }) {
   const [selectedCard, setSelectedCard] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const contentContainerRef = React.useRef(null);
@@ -478,6 +479,7 @@ export default function GetContentProvePage({ recordName }) {
               sender_address: perpetratorAddress,
               reciever_phone: null,
               sender_phone: null,
+              receiverAddressKnown: true,
             }
           : {
               reciever_name: victimName,
@@ -486,20 +488,33 @@ export default function GetContentProvePage({ recordName }) {
               sender_address: null,
               reciever_phone: victimPhone,
               sender_phone: perpetratorPhone,
+              receiverAddressKnown: false,
             };
 
       console.log("API 요청 데이터:", requestData);
-      console.log("API 엔드포인트:", API_ENDPOINTS.CONTENT_PROVE());
 
-      const response = await apiCall(API_ENDPOINTS.CONTENT_PROVE(), {
-        method: "POST",
-        body: JSON.stringify(requestData),
-      });
+      const response = await apiHelpers.createContentProvePdf(
+        recordId,
+        requestData
+      );
 
       console.log("API 응답 데이터:", response);
 
-      // 성공 시 처리 (예: 성공 메시지 표시, 다른 페이지로 이동 등)
-      alert("내용증명이 성공적으로 생성되었습니다.");
+      // PDF Blob 데이터를 파일로 다운로드
+      if (response instanceof Blob) {
+        const url = window.URL.createObjectURL(response);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "notice.pdf";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        alert("내용증명 PDF가 성공적으로 다운로드되었습니다.");
+      } else {
+        alert("내용증명이 성공적으로 생성되었습니다.");
+      }
     } catch (error) {
       console.error("내용증명 생성 중 오류:", error);
       alert("내용증명 생성에 실패했습니다. 다시 시도해주세요.");
@@ -561,17 +576,6 @@ export default function GetContentProvePage({ recordName }) {
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>
           <Title>내용 증명 받기</Title>
-          <DescriptionText>
-            내용증명은{" "}
-            <HighlightedText>
-              내가 상대방에게 보낸 말을 공식적으로 증명해 주는 제도
-            </HighlightedText>
-            입니다.
-            {"\n"}작성자는 같은 문서를 3부 준비해 발신인/ 수신인/ 우체국이 각각
-            보관합니다.
-            {"\n"}이 기록은 '내가 이런 요구/주장을 했다'는 강력한 증거가 되며,
-            {"\n"}법원이나 경찰에 제출하면 신빙성을 높여주는 자료로 활용됩니다.
-          </DescriptionText>
         </TitleContainer>
 
         <MainContent>
