@@ -461,6 +461,8 @@ export default function ChatPage({ initialChatData }) {
   // attachments: 채팅에서 올린 파일을 즉시 S3 업로드하여 s3Key/previewUrl을 보관
   // { id, filename, type: "IMAGE"|"VIDEO"|"AUDIO", s3Key, previewUrl, mimeType, size }
   const [attachments, setAttachments] = useState([]);
+  // messageAttachments: 메시지에서 전송된 모든 첨부파일의 previewUrl들을 수집
+  const [messageAttachments, setMessageAttachments] = useState([]);
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const uploadAbortRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -567,6 +569,26 @@ export default function ChatPage({ initialChatData }) {
     } catch (error) {
       console.error("localStorage에 메시지 저장 실패:", error);
     }
+
+    // 메시지에서 첨부파일들을 수집하여 messageAttachments 업데이트
+    const allMessageAttachments = [];
+    messages.forEach((message) => {
+      if (
+        message.type === "user" &&
+        message.attachments &&
+        message.attachments.length > 0
+      ) {
+        message.attachments.forEach((att) => {
+          allMessageAttachments.push({
+            id: att.id,
+            name: att.name,
+            type: att.type,
+            previewUrl: att.previewUrl,
+          });
+        });
+      }
+    });
+    setMessageAttachments(allMessageAttachments);
 
     // 하단으로 스크롤
     if (chatAreaRef.current) {
@@ -800,6 +822,19 @@ export default function ChatPage({ initialChatData }) {
       time: "",
     };
     setMessages((prev) => [...prev, userMessage, loadingMessage]);
+
+    // 메시지 첨부파일들의 previewUrl들을 수집
+    if (attachments.length > 0) {
+      const newMessageAttachments = attachments.map((att) => ({
+        id: att.id,
+        name: att.filename,
+        type: att.mimeType,
+        previewUrl: att.previewUrl,
+        s3Key: att.s3Key,
+        size: att.size,
+      }));
+      setMessageAttachments((prev) => [...prev, ...newMessageAttachments]);
+    }
     // 전송 즉시 입력란 비우기
     setInputValue("");
 
@@ -1057,11 +1092,14 @@ export default function ChatPage({ initialChatData }) {
             finishResponse,
             attachments,
             attachmentsLength: attachments.length,
+            messageAttachments,
+            messageAttachmentsLength: messageAttachments.length,
           });
           return (
             <DetailModifyModal
               data={finishResponse}
               attachments={attachments} // 미리보기 URL 포함된 첨부파일 데이터 전달
+              messageAttachments={messageAttachments} // 메시지에서 전송된 모든 첨부파일 데이터 전달
               onClose={handleDetailClose}
             />
           );

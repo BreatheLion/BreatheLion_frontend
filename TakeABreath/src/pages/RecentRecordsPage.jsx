@@ -9,6 +9,18 @@ const TableContainer = styled.div`
   overflow-y: auto;
 `;
 
+const EmptyMessage = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: var(--50, #7a7a7a);
+  font-family: Pretendard;
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: center;
+`;
+
 export default function RecentRecordsPage({ onNavigateToRecordDetail }) {
   const [recentRecords, setRecentRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -130,6 +142,8 @@ export default function RecentRecordsPage({ onNavigateToRecordDetail }) {
         <div style={{ textAlign: "center", padding: "2rem" }}>
           응답 중입니다...
         </div>
+      ) : recentRecords.length === 0 ? (
+        <EmptyMessage>기록이 없습니다</EmptyMessage>
       ) : (
         <>
           <TableHeader />

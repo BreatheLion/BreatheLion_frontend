@@ -452,7 +452,13 @@ export default function RecordDetailPage({ previousPage, record_id }) {
   };
 
   const handleFileClick = (evidence) => {
-    setSelectedFile(evidence);
+    console.log("RecordDetailPage - handleFileClick 호출:", evidence);
+    setSelectedFile({
+      filename: evidence.filename,
+      type: evidence.type,
+      url: evidence.view_url || evidence.s3_url, // URL 정보 추가
+      mimeType: evidence.mimeType, // mimeType 추가
+    });
     setShowFileModal(true);
   };
 
@@ -900,7 +906,12 @@ export default function RecordDetailPage({ previousPage, record_id }) {
         isOpen={showFileModal}
         onClose={handleFileModalClose}
         file={selectedFile}
-        fileUrl={selectedFile?.view_url || selectedFile?.s3_url}
+        fileUrl={
+          selectedFile?.view_url ||
+          selectedFile?.s3_url ||
+          selectedFile?.url ||
+          ""
+        }
       />
 
       <SuccessNotificationModal

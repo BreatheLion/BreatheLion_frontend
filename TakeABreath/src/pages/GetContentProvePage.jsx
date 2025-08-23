@@ -473,18 +473,20 @@ export default function GetContentProvePage({ recordId, recordName }) {
       const requestData =
         selectedCard === "상대방의 주소를 알아요"
           ? {
-              reciever_name: victimName,
-              sender_name: perpetratorName,
-              reciever_address: victimAddress,
-              sender_address: perpetratorAddress,
-              receiverAddressKnown: true,
+              sender_name: victimName, // 발신인(피해자) 이름
+              sender_address: victimAddress, // 발신인(피해자) 주소
+              sender_phone: null, // 주소를 아는 경우 전화번호는 null
+              receiver_name: perpetratorName, // 수신인(가해자) 이름
+              receiver_address: perpetratorAddress, // 수신인(가해자) 주소
+              receiver_phone: null, // 주소를 아는 경우 전화번호는 null
             }
           : {
-              reciever_name: victimName,
-              sender_name: perpetratorName,
-              reciever_phone: victimPhone,
-              sender_phone: perpetratorPhone,
-              receiverAddressKnown: false,
+              sender_name: victimName, // 발신인(피해자) 이름
+              sender_address: null, // 전화번호를 사용하는 경우 주소는 null
+              sender_phone: victimPhone, // 발신인(피해자) 전화번호
+              receiver_name: perpetratorName, // 수신인(가해자) 이름
+              receiver_address: null, // 전화번호를 사용하는 경우 주소는 null
+              receiver_phone: perpetratorPhone, // 수신인(가해자) 전화번호
             };
 
       console.log("API 요청 데이터:", requestData);

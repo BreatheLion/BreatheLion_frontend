@@ -90,6 +90,18 @@ const CardsContainer = styled.div`
   padding-bottom: 2rem;
 `;
 
+const EmptyMessage = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: var(--50, #7a7a7a);
+  font-family: Pretendard;
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: center;
+`;
+
 export default function IncidentRecordsPage({
   triggerFolderDelete,
   onFolderDeleteTriggered,
@@ -304,6 +316,8 @@ export default function IncidentRecordsPage({
           <div style={{ textAlign: "center", padding: "2rem" }}>
             응답 중입니다...
           </div>
+        ) : incidentData.length === 0 ? (
+          <EmptyMessage>서랍이 없습니다</EmptyMessage>
         ) : (
           <>
             {isDeleteSelectionMode && (

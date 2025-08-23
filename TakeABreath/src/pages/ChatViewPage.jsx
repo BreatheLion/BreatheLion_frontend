@@ -166,6 +166,16 @@ const AudioIcon = styled.div`
   height: 100%;
 `;
 
+const FileIcon = styled.div`
+  font-size: 2rem;
+  color: #4a4a4a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+`;
+
 export default function ChatViewPage({ record_id, pageTitle, created_at }) {
   const [isLoading, setIsLoading] = useState(true);
   const [chatData, setChatData] = useState(null);
@@ -193,7 +203,11 @@ export default function ChatViewPage({ record_id, pageTitle, created_at }) {
   };
 
   const handleFileClick = (evidence) => {
-    setSelectedFile(evidence);
+    setSelectedFile({
+      filename: evidence.filename,
+      type: evidence.type,
+      url: evidence.url,
+    });
     setShowFileModal(true);
   };
 
@@ -316,13 +330,84 @@ export default function ChatViewPage({ record_id, pageTitle, created_at }) {
                     {message.evidences && message.evidences.length > 0 && (
                       <NewAttachmentsContainer>
                         {message.evidences.map((evidence, index) => {
+                          // 파일 확장자를 기반으로 한 타입 감지 추가
+                          const getFileTypeFromExtension = (filename) => {
+                            const extension = filename
+                              .split(".")
+                              .pop()
+                              ?.toLowerCase();
+                            const imageExtensions = [
+                              "jpg",
+                              "jpeg",
+                              "png",
+                              "gif",
+                              "bmp",
+                              "webp",
+                            ];
+                            const videoExtensions = [
+                              "mp4",
+                              "avi",
+                              "mov",
+                              "wmv",
+                              "flv",
+                              "webm",
+                            ];
+                            const audioExtensions = [
+                              "mp3",
+                              "wav",
+                              "m4a",
+                              "aac",
+                              "ogg",
+                            ];
+
+                            if (imageExtensions.includes(extension))
+                              return "IMAGE";
+                            if (videoExtensions.includes(extension))
+                              return "VIDEO";
+                            if (audioExtensions.includes(extension))
+                              return "AUDIO";
+                            return "FILE";
+                          };
+
+                          // API에서 받은 타입과 파일 확장자를 모두 고려
+                          const apiType = evidence.type;
+                          const contentType = evidence.contentType;
+                          const extensionType = getFileTypeFromExtension(
+                            evidence.filename
+                          );
+
+                          // contentType 기반 타입 감지
+                          const contentTypeType = contentType?.startsWith(
+                            "image/"
+                          )
+                            ? "IMAGE"
+                            : contentType?.startsWith("video/")
+                            ? "VIDEO"
+                            : contentType?.startsWith("audio/")
+                            ? "AUDIO"
+                            : "FILE";
+
+                          const finalType =
+                            apiType || contentTypeType || extensionType;
+
                           const isImage =
-                            evidence.contentType?.startsWith("image/");
-                          const isVideo =
-                            evidence.contentType?.startsWith("video/");
-                          const isAudio =
-                            evidence.contentType?.startsWith("audio/");
-                          const isFile = !isImage && !isVideo && !isAudio;
+                            finalType === "PHOTO" || finalType === "IMAGE";
+                          const isVideo = finalType === "VIDEO";
+                          const isAudio = finalType === "AUDIO";
+                          const isFile = finalType === "FILE";
+
+                          console.log(`Evidence ${index}:`, {
+                            apiType,
+                            contentType,
+                            extensionType,
+                            finalType,
+                            filename: evidence.filename,
+                            url: evidence.url,
+                            isImage,
+                            isVideo,
+                            isAudio,
+                            isFile,
+                          });
 
                           return (
                             <AttachmentPreview
@@ -331,8 +416,8 @@ export default function ChatViewPage({ record_id, pageTitle, created_at }) {
                             >
                               {isImage && (
                                 <PreviewImage
-                                  src={evidence.viewUrl}
-                                  alt={evidence.fileName}
+                                  src={evidence.url}
+                                  alt={evidence.filename}
                                   onError={(e) => {
                                     console.error(
                                       "Image failed to load:",
@@ -340,11 +425,17 @@ export default function ChatViewPage({ record_id, pageTitle, created_at }) {
                                     );
                                     e.target.style.display = "none";
                                   }}
+                                  onLoad={() => {
+                                    console.log(
+                                      "Image loaded successfully:",
+                                      evidence.url
+                                    );
+                                  }}
                                 />
                               )}
                               {isVideo && (
                                 <video
-                                  src={evidence.viewUrl}
+                                  src={evidence.url}
                                   style={{
                                     width: "100%",
                                     height: "100%",
@@ -357,10 +448,16 @@ export default function ChatViewPage({ record_id, pageTitle, created_at }) {
                                     );
                                     e.target.style.display = "none";
                                   }}
+                                  onLoad={() => {
+                                    console.log(
+                                      "Video loaded successfully:",
+                                      evidence.url
+                                    );
+                                  }}
                                 />
                               )}
                               {isAudio && <AudioIcon>🎵</AudioIcon>}
-                              {isFile && <AudioIcon>📄</AudioIcon>}
+                              {isFile && <FileIcon>📄</FileIcon>}
                             </AttachmentPreview>
                           );
                         })}
@@ -382,7 +479,7 @@ export default function ChatViewPage({ record_id, pageTitle, created_at }) {
         isOpen={showFileModal}
         onClose={handleFileModalClose}
         file={selectedFile}
-        fileUrl={selectedFile?.viewUrl}
+        fileUrl={selectedFile?.url}
       />
     </PageContainer>
   );

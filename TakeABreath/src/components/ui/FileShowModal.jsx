@@ -58,19 +58,22 @@ const VideoContent = styled.video`
 
 const AudioContent = styled.audio`
   width: 100%;
-  max-width: 300px;
-  height: auto;
-  margin-top: 1rem;
+  max-width: 400px;
+  height: 50px;
+  margin: 1rem 0;
+  display: block;
 `;
 
 const AudioContainer = styled.div`
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
   background: #f5f5f5;
   border-radius: 0.5rem;
+  padding: 2rem;
 `;
 
 const AudioIcon = styled.div`
@@ -121,71 +124,54 @@ export default function FileShowModal({ isOpen, onClose, file, fileUrl }) {
       setHasError(false);
       console.log("FileShowModal opened with:", { file, fileUrl });
 
-      // 3초 후 자동으로 로딩 상태 해제 (fallback)
+      // 5초 후 자동으로 로딩 상태 해제 (fallback)
       const timer = setTimeout(() => {
         console.log("Auto-loading timeout reached");
         setIsLoading(false);
-      }, 3000);
+      }, 5000);
 
       return () => clearTimeout(timer);
     }
   }, [isOpen, file, fileUrl]);
 
-  // 미디어 파일을 Blob으로 변환하여 CORS 문제 해결
+  // Blob 변환(fetch)을 사용하지 않고, 태그에서 직접 URL을 로드해 CORS 이슈를 회피
   useEffect(() => {
-    if (isOpen && fileUrl) {
-      const getFileType = () => {
-        const apiType = file?.type || "";
-        const filename = file?.filename || "";
-        const extension = filename.split(".").pop()?.toLowerCase();
-        const videoExtensions = ["mp4", "avi", "mov", "wmv", "flv", "webm"];
-        const audioExtensions = ["mp3", "wav", "m4a", "aac", "ogg"];
+    if (!isOpen || !fileUrl) return;
 
-        if (apiType === "VIDEO" || videoExtensions.includes(extension))
-          return "VIDEO";
-        if (apiType === "AUDIO" || audioExtensions.includes(extension))
-          return "AUDIO";
-        return null;
-      };
+    const getFileType = () => {
+      const apiType = file?.type || "";
+      const filename = file?.filename || "";
+      const extension = filename.split(".").pop()?.toLowerCase();
+      const videoExtensions = ["mp4", "avi", "mov", "wmv", "flv", "webm"];
+      const audioExtensions = ["mp3", "wav", "m4a", "aac", "ogg"];
 
-      const fileType = getFileType();
+      if (apiType === "VIDEO" || videoExtensions.includes(extension))
+        return "VIDEO";
+      if (apiType === "AUDIO" || audioExtensions.includes(extension))
+        return "AUDIO";
+      return "IMAGE"; // 기본은 이미지로 가정
+    };
 
-      // 비디오나 오디오 파일인 경우 Blob으로 변환 시도
-      if (fileType === "VIDEO" || fileType === "AUDIO") {
-        console.log("미디어 파일 Blob 변환 시도:", fileUrl);
+    const fileType = getFileType();
 
-        fetch(fileUrl, {
-          mode: "cors",
-          credentials: "omit",
-        })
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.blob();
-          })
-          .then((blob) => {
-            const url = window.URL.createObjectURL(blob);
-            console.log("미디어 Blob URL 생성됨:", url);
-            setMediaBlobUrl(url);
-          })
-          .catch((error) => {
-            console.error("미디어 Blob 변환 실패:", error);
-            // Blob 변환 실패 시 원본 URL 사용
-            setMediaBlobUrl(fileUrl);
-          });
-      } else {
-        setMediaBlobUrl(null);
-      }
+    // 기존 Blob URL 정리
+    if (mediaBlobUrl && mediaBlobUrl.startsWith("blob:")) {
+      window.URL.revokeObjectURL(mediaBlobUrl);
+    }
+    setMediaBlobUrl(null);
+
+    // 이미지: 즉시 로딩 종료, 비디오/오디오: 태그 이벤트에서 로딩 종료
+    if (fileType === "IMAGE") {
+      setIsLoading(false);
     }
 
     return () => {
-      // 컴포넌트 언마운트 시 Blob URL 정리
       if (mediaBlobUrl && mediaBlobUrl.startsWith("blob:")) {
+        console.log("Blob URL 정리:", mediaBlobUrl);
         window.URL.revokeObjectURL(mediaBlobUrl);
       }
     };
-  }, [isOpen, fileUrl, file]);
+  }, [isOpen, fileUrl, file, mediaBlobUrl]);
 
   if (!isOpen) return null;
 
@@ -211,6 +197,15 @@ export default function FileShowModal({ isOpen, onClose, file, fileUrl }) {
         readyState: error.target.readyState,
         error: error.target.error,
       });
+    }
+
+    // Blob URL 에러인 경우 원본 URL로 fallback
+    if (mediaBlobUrl && mediaBlobUrl.startsWith("blob:")) {
+      console.log("Blob URL 에러 발생, 원본 URL로 fallback");
+      setMediaBlobUrl(null);
+      setIsLoading(false);
+      setHasError(false);
+      return;
     }
 
     setIsLoading(false);
@@ -290,7 +285,26 @@ export default function FileShowModal({ isOpen, onClose, file, fileUrl }) {
     // 파일 타입 결정 로직 개선
     const getFileType = () => {
       const apiType = file?.type || "";
+      const mimeType = file?.mimeType || "";
       const filename = file?.filename || "";
+
+      // API 타입을 정규화 (대문자로 변환)
+      const normalizeApiType = (type) => {
+        if (!type) return null;
+        const normalized = type.toUpperCase();
+        if (["IMAGE", "VIDEO", "AUDIO"].includes(normalized)) {
+          return normalized;
+        }
+        return null;
+      };
+
+      // MIME 타입을 기반으로 한 타입 감지
+      const getFileTypeFromMimeType = (mimeType) => {
+        if (mimeType.startsWith("image/")) return "IMAGE";
+        if (mimeType.startsWith("video/")) return "VIDEO";
+        if (mimeType.startsWith("audio/")) return "AUDIO";
+        return null;
+      };
 
       // 파일 확장자를 기반으로 한 타입 감지
       const getFileTypeFromExtension = (filename) => {
@@ -302,14 +316,20 @@ export default function FileShowModal({ isOpen, onClose, file, fileUrl }) {
         if (imageExtensions.includes(extension)) return "IMAGE";
         if (videoExtensions.includes(extension)) return "VIDEO";
         if (audioExtensions.includes(extension)) return "AUDIO";
-        return "FILE";
+        return null;
       };
 
+      // 우선순위: apiType > mimeType > extension
+      const normalizedApiType = normalizeApiType(apiType);
+      const mimeTypeResult = getFileTypeFromMimeType(mimeType);
       const extensionType = getFileTypeFromExtension(filename);
-      const finalType = apiType || extensionType;
+      const finalType = normalizedApiType || mimeTypeResult || extensionType;
 
       console.log("File type detection:", {
         apiType,
+        normalizedApiType,
+        mimeType,
+        mimeTypeResult,
         extensionType,
         finalType,
         filename,
@@ -320,9 +340,20 @@ export default function FileShowModal({ isOpen, onClose, file, fileUrl }) {
 
     const fileType = getFileType();
     console.log("Final file type:", fileType);
+    console.log("File object for debugging:", {
+      file,
+      fileUrl,
+      mediaBlobUrl,
+      mediaUrl: file?.presigned_url || mediaBlobUrl || fileUrl,
+    });
 
-    // 사전서명 URL 우선 사용, 없으면 원본 URL 사용
-    const mediaUrl = file?.presigned_url || mediaBlobUrl || fileUrl;
+    // URL 우선순위: presigned_url > mediaBlobUrl > fileUrl
+    const mediaUrl =
+      file?.presigned_url ||
+      (mediaBlobUrl && mediaBlobUrl.startsWith("blob:")
+        ? mediaBlobUrl
+        : null) ||
+      fileUrl;
 
     if (fileType === "IMAGE" || fileType === "PHOTO") {
       console.log("Rendering image with URL:", mediaUrl);
@@ -332,7 +363,6 @@ export default function FileShowModal({ isOpen, onClose, file, fileUrl }) {
           alt={file?.filename || "이미지"}
           onLoad={handleLoad}
           onError={handleError}
-          crossOrigin="anonymous"
         />
       );
     }
@@ -347,7 +377,7 @@ export default function FileShowModal({ isOpen, onClose, file, fileUrl }) {
           onError={handleError}
           onLoadStart={() => {
             console.log("Video load started");
-            setIsLoading(true);
+            // 로딩 시작 시에는 로딩 상태를 true로 설정하지 않음 (이미 true)
           }}
           onCanPlay={() => {
             console.log("Video can play");
@@ -357,44 +387,73 @@ export default function FileShowModal({ isOpen, onClose, file, fileUrl }) {
             console.log("Video can play through");
             setIsLoading(false);
           }}
-          crossOrigin="anonymous"
+          onLoadedMetadata={() => {
+            console.log("Video metadata loaded");
+            setIsLoading(false);
+          }}
         />
       );
     }
 
     if (fileType === "AUDIO") {
       console.log("Rendering audio with URL:", mediaUrl);
+      console.log("Audio rendering details:", {
+        file,
+        fileUrl,
+        mediaBlobUrl,
+        mediaUrl,
+        isLoading,
+        hasError,
+      });
       return (
         <AudioContainer>
-          <div style={{ textAlign: "center" }}>
-            <AudioIcon>🎵</AudioIcon>
-            <AudioContent
-              src={mediaUrl}
-              controls
-              onLoadedData={handleLoad}
-              onError={handleError}
-              onLoadStart={() => {
-                console.log("Audio load started");
-                setIsLoading(true);
-              }}
-              onCanPlay={() => {
-                console.log("Audio can play");
-                setIsLoading(false);
-              }}
-              onCanPlayThrough={() => {
-                console.log("Audio can play through");
-                setIsLoading(false);
-              }}
-            />
-          </div>
+          <AudioContent
+            src={mediaUrl}
+            controls
+            preload="metadata"
+            onLoadedData={handleLoad}
+            onError={handleError}
+            onLoadStart={() => {
+              console.log("Audio load started");
+              // 로딩 시작 시에는 로딩 상태를 true로 설정하지 않음 (이미 true)
+            }}
+            onCanPlay={() => {
+              console.log("Audio can play");
+              setIsLoading(false);
+            }}
+            onCanPlayThrough={() => {
+              console.log("Audio can play through");
+              setIsLoading(false);
+            }}
+            onLoadedMetadata={() => {
+              console.log("Audio metadata loaded");
+              setIsLoading(false);
+            }}
+            onLoad={() => {
+              console.log("Audio load event");
+              setIsLoading(false);
+            }}
+            onProgress={() => {
+              console.log("Audio progress event");
+            }}
+          />
         </AudioContainer>
       );
     }
 
+    // 파일 타입이 감지되지 않은 경우 fallback 처리
+    console.warn("파일 타입을 감지할 수 없음, fallback으로 이미지로 처리:", {
+      file,
+      fileType,
+    });
+
     return (
-      <ErrorMessage>
-        지원하지 않는 파일 형식입니다. (타입: {fileType})
-      </ErrorMessage>
+      <ImageContent
+        src={mediaUrl}
+        alt={file?.filename || "파일"}
+        onLoad={handleLoad}
+        onError={handleError}
+      />
     );
   };
 

@@ -63,7 +63,7 @@ export const API_ENDPOINTS = {
   // PDF 추출 관련 엔드포인트
   // 1. 내용증명 PDF 생성 (GetContentProvePage)
   RECORDS_CONTENT_PROVE_PDF: (recordId) =>
-    `${getApiBase()}/api/records/${recordId}/pdf?type=notice`,
+    `${getApiBase()}/api/records/${recordId}/noticepdf`,
 
   // 2. 폴더별 PDF 다운로드 (AiHelperPage, SummaryPage)
   DRAWERS_PDF_DOWNLOAD: (drawerId) =>

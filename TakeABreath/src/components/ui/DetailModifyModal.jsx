@@ -488,7 +488,12 @@ const toDateTimeLocal = (dateString) => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
-export default function DetailModifyModal({ data, attachments, onClose }) {
+export default function DetailModifyModal({
+  data,
+  attachments,
+  messageAttachments,
+  onClose,
+}) {
   const MAX_ATTACHMENTS = 10; // 첨부 최대 개수
   const MAX_TOTAL_SIZE = 300 * 1024 * 1024; // 총합 300MB (바이트 단위)
   const initialLocal = toDateTimeLocal(
@@ -499,19 +504,30 @@ export default function DetailModifyModal({ data, attachments, onClose }) {
     ? (initialLocal.split("T")[1] || "").slice(0, 5)
     : "";
 
-  // attachments를 evidences 형태로 변환
-  const convertAttachmentsToEvidences = (attachments) => {
-    console.log(
-      "DetailModifyModal - convertAttachmentsToEvidences 호출:",
-      attachments
-    );
-    if (!attachments || attachments.length === 0) {
-      console.log("DetailModifyModal - attachments가 없음");
+  // attachments와 messageAttachments를 evidences 형태로 변환
+  const convertAttachmentsToEvidences = (
+    attachments,
+    messageAttachments = []
+  ) => {
+    console.log("DetailModifyModal - convertAttachmentsToEvidences 호출:", {
+      attachments,
+      messageAttachments,
+    });
+
+    const allAttachments = [
+      ...(attachments || []),
+      ...(messageAttachments || []),
+    ];
+
+    if (allAttachments.length === 0) {
+      console.log(
+        "DetailModifyModal - attachments와 messageAttachments가 없음"
+      );
       return [];
     }
 
-    const converted = attachments.map((att) => ({
-      filename: att.filename,
+    const converted = allAttachments.map((att) => ({
+      filename: att.filename || att.name,
       type: att.type, // "IMAGE" | "VIDEO" | "AUDIO"
       url: att.previewUrl, // S3 presigned URL
       s3Key: att.s3Key,
@@ -526,12 +542,16 @@ export default function DetailModifyModal({ data, attachments, onClose }) {
   const initialEvidences =
     data.evidences ||
     data.evidence ||
-    convertAttachmentsToEvidences(attachments);
+    convertAttachmentsToEvidences(attachments, messageAttachments);
   console.log("DetailModifyModal - 초기 evidences 설정:", {
     dataEvidences: data.evidences,
     dataEvidence: data.evidence,
-    convertedAttachments: convertAttachmentsToEvidences(attachments),
+    convertedAttachments: convertAttachmentsToEvidences(
+      attachments,
+      messageAttachments
+    ),
     finalEvidences: initialEvidences,
+    messageAttachmentsCount: messageAttachments?.length || 0,
   });
 
   const [recordData, setRecordData] = useState({
@@ -848,9 +868,12 @@ export default function DetailModifyModal({ data, attachments, onClose }) {
   };
 
   const handleFileClick = (evidence) => {
+    console.log("DetailModifyModal - handleFileClick 호출:", evidence);
     setSelectedFile({
       filename: evidence.filename,
       type: evidence.type,
+      url: evidence.url, // previewUrl 추가
+      mimeType: evidence.mimeType, // mimeType 추가
     });
     setShowFileModal(true);
   };
@@ -1427,7 +1450,7 @@ export default function DetailModifyModal({ data, attachments, onClose }) {
         onClose={handleFileModalClose}
         file={selectedFile}
         fileUrl={
-          (selectedFile && (selectedFile.url || selectedFile.s3Url)) ||
+          selectedFile?.url ||
           (selectedFile &&
             recordData?.evidences?.find(
               (e) => e.filename === selectedFile.filename
