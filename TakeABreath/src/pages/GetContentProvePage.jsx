@@ -477,15 +477,11 @@ export default function GetContentProvePage({ recordId, recordName }) {
               sender_name: perpetratorName,
               reciever_address: victimAddress,
               sender_address: perpetratorAddress,
-              reciever_phone: null,
-              sender_phone: null,
               receiverAddressKnown: true,
             }
           : {
               reciever_name: victimName,
               sender_name: perpetratorName,
-              reciever_address: null,
-              sender_address: null,
               reciever_phone: victimPhone,
               sender_phone: perpetratorPhone,
               receiverAddressKnown: false,

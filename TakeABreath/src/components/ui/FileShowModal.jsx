@@ -197,6 +197,22 @@ export default function FileShowModal({ isOpen, onClose, file, fileUrl }) {
 
   const handleError = (error) => {
     console.error("handleError called - file failed to load:", error);
+    console.error("File details:", {
+      file,
+      fileUrl,
+      mediaBlobUrl,
+      error: error.target?.error || error,
+    });
+
+    // 네트워크 요청 상태 확인
+    if (error.target) {
+      console.error("Media element error details:", {
+        networkState: error.target.networkState,
+        readyState: error.target.readyState,
+        error: error.target.error,
+      });
+    }
+
     setIsLoading(false);
     setHasError(true);
   };

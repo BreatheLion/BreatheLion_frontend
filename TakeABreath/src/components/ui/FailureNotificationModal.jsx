@@ -31,7 +31,7 @@ const ModalOverlay = styled.div`
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 2000;
+  z-index: 20000;
   display: flex;
   justify-content: center;
   align-items: flex-start;

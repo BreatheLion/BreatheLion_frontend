@@ -1050,13 +1050,22 @@ export default function ChatPage({ initialChatData }) {
       )}
 
       {/* DetailModifyModal 모달 */}
-      {showDetailModal && finishResponse && (
-        <DetailModifyModal
-          data={finishResponse}
-          attachments={attachments} // 미리보기 URL 포함된 첨부파일 데이터 전달
-          onClose={handleDetailClose}
-        />
-      )}
+      {showDetailModal &&
+        finishResponse &&
+        (() => {
+          console.log("ChatPage - DetailModifyModal 호출:", {
+            finishResponse,
+            attachments,
+            attachmentsLength: attachments.length,
+          });
+          return (
+            <DetailModifyModal
+              data={finishResponse}
+              attachments={attachments} // 미리보기 URL 포함된 첨부파일 데이터 전달
+              onClose={handleDetailClose}
+            />
+          );
+        })()}
     </ChatContainer>
   );
 }

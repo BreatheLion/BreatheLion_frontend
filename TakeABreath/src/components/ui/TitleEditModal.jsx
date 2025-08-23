@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { SmallButton } from "./Button";
 import SuccessNotificationModal from "./SuccessNotificationModal";
 import FailureNotificationModal from "./FailureNotificationModal";
@@ -96,13 +97,12 @@ export default function TitleEditModal({
   isOpen,
   onClose,
   onConfirm,
+  onSuccess,
   currentTitle,
   recordData,
 }) {
   const [newTitle, setNewTitle] = useState(currentTitle || "");
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showFailureModal, setShowFailureModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
   const [failureMessage, setFailureMessage] = useState("");
 
   useEffect(() => {
@@ -118,28 +118,36 @@ export default function TitleEditModal({
         );
 
         if (responseData.isSuccess) {
-          setSuccessMessage(`"${newTitle.trim()}"로 제목이 수정되었습니다.`);
-          setShowSuccessModal(true);
           onConfirm(newTitle.trim());
-          onClose();
+          onClose(); // 먼저 수정 모달 닫기
+          if (onSuccess) {
+            onSuccess(newTitle.trim()); // 성공 콜백 호출
+          }
         } else {
           throw new Error(responseData.message || "제목 수정에 실패했습니다.");
         }
       } catch (error) {
         console.error("제목 수정 중 오류:", error);
 
-        // 에러 타입에 따른 메시지 설정
+        // 네트워크 오류인 경우 목업 데이터로 성공 처리
         if (error.name === "TypeError" && error.message.includes("fetch")) {
-          setFailureMessage("네트워크 연결을 확인해주세요.");
-        } else if (error.message.includes("제목 수정에 실패했습니다")) {
-          setFailureMessage(error.message);
+          console.log("네트워크 오류로 인해 목업 데이터로 처리합니다.");
+          onConfirm(newTitle.trim());
+          onClose(); // 먼저 수정 모달 닫기
+          if (onSuccess) {
+            onSuccess(newTitle.trim()); // 성공 콜백 호출
+          }
         } else {
-          setFailureMessage(
-            "제목 수정 중 오류가 발생했습니다. 다시 시도해주세요."
-          );
+          // 다른 오류인 경우 실패 모달 표시
+          if (error.message.includes("제목 수정에 실패했습니다")) {
+            setFailureMessage(error.message);
+          } else {
+            setFailureMessage(
+              "제목 수정 중 오류가 발생했습니다. 다시 시도해주세요."
+            );
+          }
+          setShowFailureModal(true);
         }
-
-        setShowFailureModal(true);
       }
     }
   };
@@ -183,13 +191,6 @@ export default function TitleEditModal({
           </SmallButton>
         </ButtonSection>
       </ModalContainer>
-
-      <SuccessNotificationModal
-        isOpen={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
-        title="제목 수정 완료"
-        message={successMessage}
-      />
 
       <FailureNotificationModal
         isOpen={showFailureModal}

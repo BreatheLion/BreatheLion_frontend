@@ -77,65 +77,7 @@ const LawyerConsultButton = styled.button`
   }
 `;
 
-// 테스트용 스타일 컴포넌트들
-const TestContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-left: auto;
-  padding: 0.5rem;
-  background: #f8f9fa;
-  border-radius: 0.5rem;
-  border: 1px solid #e9ecef;
-`;
-
-const TestInput = styled.input`
-  width: 80px;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
-  font-size: 0.875rem;
-  font-family: "Pretendard", sans-serif;
-
-  &:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-  }
-`;
-
-const TestButton = styled.button`
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 0.25rem 0.75rem;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  font-family: "Pretendard", sans-serif;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-
-  &:hover {
-    background: #0056b3;
-  }
-
-  &:disabled {
-    background: #6c757d;
-    cursor: not-allowed;
-  }
-`;
-
-const TestLabel = styled.span`
-  font-size: 0.75rem;
-  font-family: "Pretendard", sans-serif;
-  color: #6c757d;
-  font-weight: 500;
-`;
-
 export default function Header({ currentPage }) {
-  const [testRecordId, setTestRecordId] = useState("");
-
   const handleLogoClick = () => {
     if (window.navigation.navigateToMain) {
       window.navigation.navigateToMain();
@@ -157,21 +99,6 @@ export default function Header({ currentPage }) {
   const handleLawyerConsultClick = () => {
     if (window.navigation.navigateToConsultant) {
       window.navigation.navigateToConsultant();
-    }
-  };
-
-  const handleTestRecordDetail = () => {
-    if (testRecordId.trim()) {
-      const recordId = parseInt(testRecordId);
-      if (!isNaN(recordId) && recordId > 0) {
-        if (window.navigation.navigateToRecordDetail) {
-          window.navigation.navigateToRecordDetail("test", recordId);
-        }
-      } else {
-        alert("유효한 record_id를 입력해주세요 (양의 정수)");
-      }
-    } else {
-      alert("record_id를 입력해주세요");
     }
   };
 
@@ -197,24 +124,6 @@ export default function Header({ currentPage }) {
           상담
         </NavButton>
       </NavButtons>
-
-      {/* 테스트용 UI */}
-      <TestContainer>
-        <TestLabel>테스트:</TestLabel>
-        <TestInput
-          type="number"
-          placeholder="record_id"
-          value={testRecordId}
-          onChange={(e) => setTestRecordId(e.target.value)}
-          min="1"
-        />
-        <TestButton
-          onClick={handleTestRecordDetail}
-          disabled={!testRecordId.trim()}
-        >
-          상세보기
-        </TestButton>
-      </TestContainer>
     </HeaderContainer>
   );
 }

@@ -488,7 +488,7 @@ const toDateTimeLocal = (dateString) => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
-export default function DetailModifyModal({ data, onClose }) {
+export default function DetailModifyModal({ data, attachments, onClose }) {
   const MAX_ATTACHMENTS = 10; // 첨부 최대 개수
   const MAX_TOTAL_SIZE = 300 * 1024 * 1024; // 총합 300MB (바이트 단위)
   const initialLocal = toDateTimeLocal(
@@ -498,6 +498,41 @@ export default function DetailModifyModal({ data, onClose }) {
   const initialTime = initialLocal
     ? (initialLocal.split("T")[1] || "").slice(0, 5)
     : "";
+
+  // attachments를 evidences 형태로 변환
+  const convertAttachmentsToEvidences = (attachments) => {
+    console.log(
+      "DetailModifyModal - convertAttachmentsToEvidences 호출:",
+      attachments
+    );
+    if (!attachments || attachments.length === 0) {
+      console.log("DetailModifyModal - attachments가 없음");
+      return [];
+    }
+
+    const converted = attachments.map((att) => ({
+      filename: att.filename,
+      type: att.type, // "IMAGE" | "VIDEO" | "AUDIO"
+      url: att.previewUrl, // S3 presigned URL
+      s3Key: att.s3Key,
+      mimeType: att.mimeType,
+      size: att.size,
+    }));
+
+    console.log("DetailModifyModal - 변환된 evidences:", converted);
+    return converted;
+  };
+
+  const initialEvidences =
+    data.evidences ||
+    data.evidence ||
+    convertAttachmentsToEvidences(attachments);
+  console.log("DetailModifyModal - 초기 evidences 설정:", {
+    dataEvidences: data.evidences,
+    dataEvidence: data.evidence,
+    convertedAttachments: convertAttachmentsToEvidences(attachments),
+    finalEvidences: initialEvidences,
+  });
 
   const [recordData, setRecordData] = useState({
     title: data.record_detail?.title || data.title || "",
@@ -510,7 +545,7 @@ export default function DetailModifyModal({ data, onClose }) {
       data.record_detail?.category || data.category || ""
     ),
     drawer_id: data.record_detail?.drawer_id || data.drawer_id || null,
-    evidences: data.evidences || data.evidence || [],
+    evidences: initialEvidences,
     witness: data.record_detail?.witness || data.witness || [],
     created_at: data.record_detail?.created_at || data.created_at || "",
   });
@@ -1296,38 +1331,60 @@ export default function DetailModifyModal({ data, onClose }) {
               <FormField>
                 <Label $showMark={false}>자료</Label>
                 <NewAttachmentsContainer>
-                  {(recordData?.evidences || []).length === 0 && (
-                    <EmptyText>첨부 파일 없음</EmptyText>
-                  )}
-                  {(recordData?.evidences || []).map((evidence, index) => {
-                    const t = String(evidence.type || "").toLowerCase();
-                    const isImage = t.includes("image") || t === "photo";
-                    const isVideo = t.includes("video");
-                    const isAudio = t.includes("audio");
-                    const src = evidence.url || evidence.s3Url || "";
-                    return (
-                      <AttachmentPreview
-                        key={index}
-                        onClick={() => handleFileClick(evidence)}
-                        style={{ cursor: "pointer" }}
-                      >
-                        {isImage && (
-                          <PreviewImage src={src} alt={evidence.filename} />
-                        )}
-                        {isVideo && (
-                          <video
-                            src={src}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        )}
-                        {isAudio && <AudioIcon>🎵</AudioIcon>}
-                      </AttachmentPreview>
+                  {(() => {
+                    console.log("DetailModifyModal - 자료 필드 렌더링:", {
+                      recordDataEvidences: recordData?.evidences,
+                      evidencesLength: (recordData?.evidences || []).length,
+                    });
+
+                    if ((recordData?.evidences || []).length === 0) {
+                      return <EmptyText>첨부 파일 없음</EmptyText>;
+                    }
+
+                    return (recordData?.evidences || []).map(
+                      (evidence, index) => {
+                        const t = String(evidence.type || "").toLowerCase();
+                        const isImage = t.includes("image") || t === "photo";
+                        const isVideo = t.includes("video");
+                        const isAudio = t.includes("audio");
+                        // S3 presigned URL 우선 사용, fallback으로 기존 URL 사용
+                        const src = evidence.url || evidence.s3Url || "";
+
+                        console.log("DetailModifyModal - evidence 렌더링:", {
+                          index,
+                          evidence,
+                          type: t,
+                          isImage,
+                          isVideo,
+                          isAudio,
+                          src,
+                        });
+
+                        return (
+                          <AttachmentPreview
+                            key={index}
+                            onClick={() => handleFileClick(evidence)}
+                            style={{ cursor: "pointer" }}
+                          >
+                            {isImage && (
+                              <PreviewImage src={src} alt={evidence.filename} />
+                            )}
+                            {isVideo && (
+                              <video
+                                src={src}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
+                              />
+                            )}
+                            {isAudio && <AudioIcon>🎵</AudioIcon>}
+                          </AttachmentPreview>
+                        );
+                      }
                     );
-                  })}
+                  })()}
                 </NewAttachmentsContainer>
               </FormField>
             </FormRow>

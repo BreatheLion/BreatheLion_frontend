@@ -109,10 +109,13 @@ export default function IncidentRecordsPage({
   // PDF 다운로드 핸들러
   const handlePdfDownload = async (drawerId) => {
     try {
-      const response = await apiHelpers.downloadPdf(drawerId);
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
-      const blob = await response.blob();
+      const blob = await apiHelpers.downloadPdf(drawerId);
+
+      // blob이 유효한지 확인
+      if (!blob || !(blob instanceof Blob)) {
+        throw new Error("유효하지 않은 PDF 데이터입니다.");
+      }
+
       const filename = "timeline.pdf";
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");

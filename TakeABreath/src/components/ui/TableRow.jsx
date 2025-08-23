@@ -7,6 +7,7 @@ import editIcon from "../../assets/editIcon.svg";
 import folderIcon from "../../assets/folderIcon.svg";
 import FolderChangeModal from "./FolderChangeModal";
 import TitleEditModal from "./TitleEditModal";
+import SuccessNotificationModal from "./SuccessNotificationModal";
 
 const RowContainer = styled.div`
   display: flex;
@@ -212,6 +213,8 @@ export default function TableRow({
   const [showModal, setShowModal] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [showTitleModal, setShowTitleModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const [modalPosition, setModalPosition] = useState({ top: 0, right: 0 });
   const modalRef = useRef(null);
   const buttonRef = useRef(null);
@@ -329,6 +332,16 @@ export default function TableRow({
     }
   };
 
+  const handleFolderChangeSuccess = (newFolder) => {
+    setSuccessMessage(`"${newFolder}" 폴더로 이동되었습니다.`);
+    setShowSuccessModal(true);
+  };
+
+  const handleTitleChangeSuccess = (newTitle) => {
+    setSuccessMessage(`"${newTitle}"로 제목이 수정되었습니다.`);
+    setShowSuccessModal(true);
+  };
+
   const handleRowClick = (e) => {
     // 설정 버튼 클릭 시에는 행 클릭 이벤트를 발생시키지 않음
     if (e.target.closest("button") || e.target.closest('[role="button"]')) {
@@ -403,6 +416,7 @@ export default function TableRow({
             isOpen={showFolderModal}
             onClose={() => setShowFolderModal(false)}
             onConfirm={handleFolderChange}
+            onSuccess={handleFolderChangeSuccess}
             currentFolder={folder}
             recordId={id}
             recordData={recordData}
@@ -416,8 +430,20 @@ export default function TableRow({
             isOpen={showTitleModal}
             onClose={() => setShowTitleModal(false)}
             onConfirm={handleTitleChange}
+            onSuccess={handleTitleChangeSuccess}
             currentTitle={title}
             recordData={recordData}
+          />,
+          document.body
+        )}
+
+      {showSuccessModal &&
+        createPortal(
+          <SuccessNotificationModal
+            isOpen={showSuccessModal}
+            onClose={() => setShowSuccessModal(false)}
+            title="작업 완료"
+            message={successMessage}
           />,
           document.body
         )}

@@ -4,6 +4,7 @@ import Header from "../components/layout/Header";
 import ContentProveIcon from "../assets/ContentProveIcon.svg";
 import ConsultantIcon from "../assets/ConsultantIcon.svg";
 import ArrowIcon from "../assets/ArrowIcon.svg";
+import { apiHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -114,12 +115,36 @@ export default function ExtractPdfPage({ recordId, recordName }) {
     return `${recordName || "기록명"}   >   자료 내려받기`;
   };
 
-  const handleCardClick = (cardType) => {
+  const handleCardClick = async (cardType) => {
     if (cardType === "내용 증명 받기") {
       navigate(`/get-content-prove/${recordId}`, { state: { recordName } });
-    } else {
-      console.log(`${cardType} 카드 클릭됨`);
-      // 추후 구현
+    } else if (cardType === "상담 자료 받기") {
+      try {
+        console.log("상담 자료 PDF 다운로드 시작:", recordId);
+
+        const response = await apiHelpers.createConsultationPdf(recordId);
+
+        console.log("상담 자료 PDF 응답:", response);
+
+        // PDF Blob 데이터를 파일로 다운로드
+        if (response instanceof Blob) {
+          const url = window.URL.createObjectURL(response);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "consult.pdf";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+
+          alert("상담 자료 PDF가 성공적으로 다운로드되었습니다.");
+        } else {
+          alert("상담 자료가 성공적으로 생성되었습니다.");
+        }
+      } catch (error) {
+        console.error("상담 자료 생성 중 오류:", error);
+        alert("상담 자료 생성에 실패했습니다. 다시 시도해주세요.");
+      }
     }
   };
 
