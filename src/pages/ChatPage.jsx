@@ -961,8 +961,7 @@ export default function ChatPage({ initialChatData }) {
         </FinishButton>
         <FinishDateContainer>
           <FinishDateDisplay>
-            {initialChatData?.serverResponse?.date ||
-              new Date().toISOString().split("T")[0]}
+            {new Date().toLocaleDateString("ko-KR")}
           </FinishDateDisplay>
         </FinishDateContainer>
       </FinishContainer>
