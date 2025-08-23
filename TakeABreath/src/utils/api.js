@@ -63,7 +63,7 @@ export const API_ENDPOINTS = {
   // PDF 추출 관련 엔드포인트
   // 1. 내용증명 PDF 생성 (GetContentProvePage)
   RECORDS_CONTENT_PROVE_PDF: (recordId) =>
-    `${getApiBase()}/api/records/${recordId}/pdf/?type=notice`,
+    `${getApiBase()}/api/records/${recordId}/pdf?type=notice`,
 
   // 2. 폴더별 PDF 다운로드 (AiHelperPage, SummaryPage)
   DRAWERS_PDF_DOWNLOAD: (drawerId) =>
@@ -241,14 +241,14 @@ export const apiHelpers = {
 
   // SummaryPage - 타임라인 조회 (키워드 검색 포함)
   getTimeline: async (drawerId, keyword = "") => {
-    const url = API_ENDPOINTS.DRAWERS_TIMELINE(drawerId);
+    let url = API_ENDPOINTS.DRAWERS_TIMELINE(drawerId);
 
-    let finalUrl = url;
+    // 검색어가 있는 경우 URL 파라미터로 추가
     if (keyword && keyword.trim()) {
-      finalUrl = `${url}?keyword=${encodeURIComponent(keyword.trim())}`;
+      url = `${url}?keyword=${encodeURIComponent(keyword.trim())}`;
     }
 
-    return await apiCall(finalUrl, {
+    return await apiCall(url, {
       method: "GET",
     });
   },

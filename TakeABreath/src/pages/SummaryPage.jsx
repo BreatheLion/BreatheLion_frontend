@@ -432,7 +432,7 @@ export default function SummaryPage({ folderId, folderName }) {
         console.log("타임라인 API 응답 데이터:", responseData);
 
         if (responseData && responseData.isSuccess && responseData.data) {
-          setTimelineData(responseData.data || []);
+          setTimelineData(responseData.data.timelines || []);
         } else {
           setTimelineData([]);
         }
@@ -499,12 +499,7 @@ export default function SummaryPage({ folderId, folderName }) {
   // 검색 실행 함수
   const handleSearch = () => {
     const keyword = searchKeyword.trim();
-    if (keyword) {
-      fetchTimelineData(keyword);
-    } else {
-      // 검색어가 없으면 초기 데이터로 복원
-      fetchTimelineData("");
-    }
+    fetchTimelineData(keyword);
   };
 
   // 정렬 변경 함수
@@ -514,7 +509,7 @@ export default function SummaryPage({ folderId, folderName }) {
 
   useEffect(() => {
     fetchSummaryData();
-    fetchTimelineData("");
+    fetchTimelineData();
   }, [fetchSummaryData, fetchTimelineData]);
 
   useLayoutEffect(() => {
