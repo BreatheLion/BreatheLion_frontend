@@ -2,6 +2,16 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 
+// 이미지 import
+import Consultant1 from "../assets/consultants/Consultant1.svg";
+import Consultant2 from "../assets/consultants/Consultant2.svg";
+import Consultant3 from "../assets/consultants/Consultant3.svg";
+import Consultant4 from "../assets/consultants/Consultant4.svg";
+import Consultant5 from "../assets/consultants/Consultant5.svg";
+import Consultant6 from "../assets/consultants/Consultant6.svg";
+import Consultant7 from "../assets/consultants/Consultant7.svg";
+import Consultant8 from "../assets/consultants/Consultant8.svg";
+
 const PageContainer = styled.div`
   width: 100%;
   height: 100vh;
@@ -125,56 +135,56 @@ const consultantData = [
     name: "김하늘 상담사",
     organization: "경력 8년",
     specialization: "우울증·불안장애",
-    image: "/src/assets/consultants/Consultant1.svg",
+    image: Consultant1,
   },
   {
     id: 2,
     name: "이민준 상담사",
     organization: "경력 12년",
     specialization: "커리어·직무 스트레스",
-    image: "/src/assets/consultants/Consultant2.svg",
+    image: Consultant2,
   },
   {
     id: 3,
     name: "박소영 상담사",
     organization: "경력 5년",
     specialization: "청소년 상담",
-    image: "/src/assets/consultants/Consultant3.svg",
+    image: Consultant3,
   },
   {
     id: 4,
     name: "최지훈 상담사",
     organization: "경력 10년",
     specialization: "부부 상담",
-    image: "/src/assets/consultants/Consultant4.svg",
+    image: Consultant4,
   },
   {
     id: 5,
     name: "한예린 상담사",
     organization: "경력 5년",
     specialization: "대인관계",
-    image: "/src/assets/consultants/Consultant5.svg",
+    image: Consultant5,
   },
   {
     id: 6,
     name: "정우진 상담사",
     organization: "경력 8년",
     specialization: "불안장애·스트레스",
-    image: "/src/assets/consultants/Consultant6.svg",
+    image: Consultant6,
   },
   {
     id: 7,
     name: "윤채원 상담사",
     organization: "경력 12년",
     specialization: "대인관계",
-    image: "/src/assets/consultants/Consultant7.svg",
+    image: Consultant7,
   },
   {
     id: 8,
     name: "강태호 상담사",
     organization: "경력 11년",
     specialization: "정신건강",
-    image: "/src/assets/consultants/Consultant8.svg",
+    image: Consultant8,
   },
 ];
 

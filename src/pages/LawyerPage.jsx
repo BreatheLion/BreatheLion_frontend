@@ -2,6 +2,16 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 
+// 이미지 import
+import lawyer1 from "../assets/lawyers/lawyer1.png";
+import lawyer2 from "../assets/lawyers/lawyer2.png";
+import lawyer3 from "../assets/lawyers/lawyer3.png";
+import lawyer4 from "../assets/lawyers/lawyer4.png";
+import lawyer5 from "../assets/lawyers/lawyer5.png";
+import lawyer6 from "../assets/lawyers/laweyer6.png";
+import lawyer7 from "../assets/lawyers/lawyer7.png";
+import lawyer8 from "../assets/lawyers/lawyer8.png";
+
 const PageContainer = styled.div`
   width: 100%;
   height: 100vh;
@@ -125,56 +135,56 @@ const lawyerData = [
     name: "김민수 변호사",
     lawFirm: "법무법인 한결",
     specialization: "형사 사건",
-    image: "/src/assets/lawyers/lawyer1.png",
+    image: lawyer1,
   },
   {
     id: 2,
     name: "이서현 변호사",
     lawFirm: "법무법인 미래",
     specialization: "지적재산권·특허",
-    image: "/src/assets/lawyers/lawyer2.png",
+    image: lawyer2,
   },
   {
     id: 3,
     name: "박준호 변호사",
     lawFirm: "법무법인 대륙아주",
     specialization: "이혼·가사 사건",
-    image: "/src/assets/lawyers/lawyer3.png",
+    image: lawyer3,
   },
   {
     id: 4,
     name: "정다은 변호사",
     lawFirm: "법무법인 바른길",
     specialization: "지적재산권·특허",
-    image: "/src/assets/lawyers/lawyer4.png",
+    image: lawyer4,
   },
   {
     id: 5,
     name: "최현우 변호사",
     lawFirm: "법무법인 해우",
     specialization: "부동산, 건설",
-    image: "/src/assets/lawyers/lawyer5.png",
+    image: lawyer5,
   },
   {
     id: 6,
     name: "오지민 변호사",
     lawFirm: "법무법인 새빛",
     specialization: "노동, 재산",
-    image: "/src/assets/lawyers/laweyer6.png",
+    image: lawyer6,
   },
   {
     id: 7,
     name: "한지수 변호사",
     lawFirm: "법무법인 정윤",
     specialization: "국제거래, 부채",
-    image: "/src/assets/lawyers/lawyer7.png",
+    image: lawyer7,
   },
   {
     id: 8,
     name: "서강훈 변호사",
     lawFirm: "법무법인 다온",
     specialization: "형사, 마약",
-    image: "/src/assets/lawyers/lawyer8.png",
+    image: lawyer8,
   },
 ];
 
