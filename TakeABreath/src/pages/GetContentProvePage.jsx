@@ -469,15 +469,28 @@ export default function GetContentProvePage({ recordId, recordName }) {
     setIsConfirmModalOpen(false);
 
     try {
+      // 주소와 상세 주소를 합치는 함수
+      const combineAddress = (address, detailAddress) => {
+        if (!address) return null;
+        if (!detailAddress) return address;
+        return `${address} ${detailAddress}`;
+      };
+
       // 선택된 카드에 따라 데이터 구조 결정
       const requestData =
         selectedCard === "상대방의 주소를 알아요"
           ? {
               sender_name: victimName, // 발신인(피해자) 이름
-              sender_address: victimAddress, // 발신인(피해자) 주소
+              sender_address: combineAddress(
+                victimAddress,
+                victimDetailAddress
+              ), // 발신인(피해자) 주소 + 상세 주소
               sender_phone: null, // 주소를 아는 경우 전화번호는 null
               receiver_name: perpetratorName, // 수신인(가해자) 이름
-              receiver_address: perpetratorAddress, // 수신인(가해자) 주소
+              receiver_address: combineAddress(
+                perpetratorAddress,
+                perpetratorDetailAddress
+              ), // 수신인(가해자) 주소 + 상세 주소
               receiver_phone: null, // 주소를 아는 경우 전화번호는 null
             }
           : {

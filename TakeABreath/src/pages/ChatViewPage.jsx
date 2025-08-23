@@ -176,7 +176,12 @@ const FileIcon = styled.div`
   height: 100%;
 `;
 
-export default function ChatViewPage({ record_id, pageTitle, created_at }) {
+export default function ChatViewPage({
+  record_id,
+  pageTitle,
+  created_at,
+  drawerName,
+}) {
   const [isLoading, setIsLoading] = useState(true);
   const [chatData, setChatData] = useState(null);
   const [showFileModal, setShowFileModal] = useState(false);
@@ -306,7 +311,9 @@ export default function ChatViewPage({ record_id, pageTitle, created_at }) {
       <ContentContainer>
         <TitleContainer>
           <Subtitle>
-            {pageTitle} {">"} 채팅 보기
+            {drawerName
+              ? `모아보기   >   ${drawerName}   >   ${pageTitle}   >   채팅 보기`
+              : `${pageTitle}   >   채팅 보기`}
           </Subtitle>
           <Title>{formatTitleDate(created_at)}</Title>
         </TitleContainer>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
 import { SmallButton } from "../components/ui/Button";
@@ -10,6 +10,8 @@ import SuccessNotificationModal from "../components/ui/SuccessNotificationModal"
 import FailureNotificationModal from "../components/ui/FailureNotificationModal";
 import titleEditInRecordIcon from "../assets/titleEditInRecordIcon.svg";
 import { apiHelpers } from "../utils/api";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -301,6 +303,7 @@ export default function RecordDetailPage({ previousPage, record_id }) {
   const [showFailureModal, setShowFailureModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [failureMessage, setFailureMessage] = useState("");
+  const detailContainerRef = useRef(null);
 
   const getPageTitle = () => {
     switch (previousPage) {
@@ -401,7 +404,8 @@ export default function RecordDetailPage({ previousPage, record_id }) {
       window.navigation.navigateToChatView(
         record_id,
         recordData?.title || "제목 없음",
-        recordData?.created_at
+        recordData?.created_at,
+        previousPage === "summary" ? recordData?.drawer_name : null
       );
     }
   };
@@ -409,7 +413,116 @@ export default function RecordDetailPage({ previousPage, record_id }) {
   const handlePdfExtract = () => {
     // ExtractPdfPage로 이동
     if (window.navigation.navigateToExtractPdf) {
-      window.navigation.navigateToExtractPdf(recordData);
+      window.navigation.navigateToExtractPdf(
+        record_id,
+        recordData?.title || "제목 없음",
+        previousPage === "summary" ? recordData?.drawer_name : null
+      );
+    }
+  };
+
+  const handleDetailPdfDownload = async () => {
+    try {
+      console.log("PDF 변환 시작");
+
+      if (!detailContainerRef.current) {
+        throw new Error("PDF 변환할 요소를 찾을 수 없습니다.");
+      }
+
+      // 로딩 상태 표시
+      setSuccessMessage("PDF 변환 중입니다...");
+      setShowSuccessModal(true);
+
+      // DetailContainer의 전체 스크롤 높이를 가져옴
+      const container = detailContainerRef.current;
+      console.log("컨테이너 크기:", {
+        scrollWidth: container.scrollWidth,
+        scrollHeight: container.scrollHeight,
+        clientWidth: container.clientWidth,
+        clientHeight: container.clientHeight,
+      });
+
+      const originalScrollTop = container.scrollTop;
+      const originalOverflow = container.style.overflow;
+      const originalHeight = container.style.height;
+
+      // 스크롤을 맨 위로 이동하고 overflow를 visible로 설정
+      container.scrollTop = 0;
+      container.style.overflow = "visible";
+      container.style.height = "auto";
+
+      console.log("html2canvas 시작");
+
+      // DetailContainer를 캡처
+      const canvas = await html2canvas(container, {
+        scale: 1, // 해상도 낮춤 (테스트용)
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#fbfbfb",
+        width: container.scrollWidth,
+        height: container.scrollHeight,
+        scrollX: 0,
+        scrollY: 0,
+        logging: true, // 로깅 활성화
+        removeContainer: false,
+        foreignObjectRendering: false, // 비활성화
+      });
+
+      console.log("캔버스 생성 완료:", {
+        width: canvas.width,
+        height: canvas.height,
+      });
+
+      // 원래 상태로 복원
+      container.scrollTop = originalScrollTop;
+      container.style.overflow = originalOverflow;
+      container.style.height = originalHeight;
+
+      // 캔버스를 이미지로 변환
+      const imgData = canvas.toDataURL("image/png");
+      console.log("이미지 데이터 생성 완료");
+
+      // PDF 생성
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgWidth = 210; // A4 너비 (mm)
+      const pageHeight = 295; // A4 높이 (mm)
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+
+      let position = 0;
+
+      console.log("PDF 생성 중:", {
+        imgWidth,
+        imgHeight,
+        pageHeight,
+        heightLeft,
+      });
+
+      // 첫 페이지 추가
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // 여러 페이지가 필요한 경우 추가 페이지 생성
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      // PDF 다운로드
+      const fileName = `${recordData?.title || "기록"}_상세정보.pdf`;
+      console.log("PDF 저장 시작:", fileName);
+      pdf.save(fileName);
+      console.log("PDF 저장 완료");
+
+      // 성공 메시지
+      setSuccessMessage("PDF가 성공적으로 다운로드되었습니다.");
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error("PDF 변환 중 오류:", error);
+      setFailureMessage(`PDF 변환에 실패했습니다: ${error.message}`);
+      setShowFailureModal(true);
     }
   };
 
@@ -582,6 +695,24 @@ export default function RecordDetailPage({ previousPage, record_id }) {
             variant="secondary"
             style={{
               borderRadius: "0.5rem",
+              border: "1px solid var(--BP-Gradation, #68B8EA)",
+              background: "#FFF",
+              color: "var(--seconday, #688AE0)",
+              textAlign: "center",
+              fontFamily: "Pretendard",
+              fontSize: "0.875rem",
+              fontStyle: "normal",
+              fontWeight: "500",
+              lineHeight: "1.25rem",
+            }}
+            onClick={handleDetailPdfDownload}
+          >
+            추출
+          </SmallButton>
+          <SmallButton
+            variant="secondary"
+            style={{
+              borderRadius: "0.5rem",
               border: "1px solid var(--5, #E9E9E9)",
               background: "#FFF",
               color: "var(--50, #7A7A7A)",
@@ -634,7 +765,7 @@ export default function RecordDetailPage({ previousPage, record_id }) {
             PDF 추출
           </SmallButton>
         </DetailHeader>
-        <DetailContainer>
+        <DetailContainer ref={detailContainerRef}>
           <FormGrid>
             <FormRow>
               <FormField>

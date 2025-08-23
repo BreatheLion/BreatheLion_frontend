@@ -108,11 +108,17 @@ const HighlightedText = styled.span`
   color: var(--seconday, #688ae0);
 `;
 
-export default function ExtractPdfPage({ recordId, recordName }) {
+export default function ExtractPdfPage({ recordId, recordName, drawerName }) {
   const navigate = useNavigate();
 
   const getSubtitle = () => {
-    return `${recordName || "기록명"}   >   자료 내려받기`;
+    if (drawerName) {
+      return `모아보기   >   ${drawerName}   >   ${
+        recordName || "기록명"
+      }   >   자료 내려받기`;
+    } else {
+      return `${recordName || "기록명"}   >   자료 내려받기`;
+    }
   };
 
   const handleCardClick = async (cardType) => {

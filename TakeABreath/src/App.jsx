@@ -64,12 +64,25 @@ function App() {
     window.navigation.navigateToConsultant = () => navigate("/consultant");
     window.navigation.navigateToRecordDetail = (previousPage, recordId) =>
       navigate(`/record/${recordId}`, { state: { previousPage } });
-    window.navigation.navigateToChatView = (recordId, pageTitle, created_at) =>
-      navigate(`/chat-view/${recordId}`, { state: { pageTitle, created_at } });
+    window.navigation.navigateToChatView = (
+      recordId,
+      pageTitle,
+      created_at,
+      drawerName
+    ) =>
+      navigate(`/chat-view/${recordId}`, {
+        state: { pageTitle, created_at, drawerName },
+      });
     window.navigation.navigateToSummary = (folderId, folderName) =>
       navigate(`/summary/${folderId}`, { state: { folderName } });
-    window.navigation.navigateToExtractPdf = (recordId, recordName) =>
-      navigate(`/extract-pdf/${recordId}`, { state: { recordName } });
+    window.navigation.navigateToExtractPdf = (
+      recordId,
+      recordName,
+      drawerName
+    ) =>
+      navigate(`/extract-pdf/${recordId}`, {
+        state: { recordName, drawerName },
+      });
   }, [navigate]);
 
   // 모달 오픈 시 뒤로가기를 무시
@@ -123,6 +136,7 @@ function App() {
         record_id={Number(recordId)}
         pageTitle={state.pageTitle}
         created_at={state.created_at}
+        drawerName={state.drawerName}
       />
     );
   };
@@ -138,7 +152,13 @@ function App() {
   const ExtractPdfRoute = () => {
     const { recordId } = useParams();
     const state = location.state || {};
-    return <ExtractPdfPage recordId={recordId} recordName={state.recordName} />;
+    return (
+      <ExtractPdfPage
+        recordId={recordId}
+        recordName={state.recordName}
+        drawerName={state.drawerName}
+      />
+    );
   };
 
   const GetContentProveRoute = () => {
