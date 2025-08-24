@@ -250,7 +250,6 @@ const NoResultsMessage = styled.div`
 
 const TimelineAxis = styled.div`
   position: absolute;
-  left: 1rem; /* MarkerCol 중앙과 일치 */
   width: 2px;
   background: var(--BP-Gradation, #68b8ea);
   z-index: 0;
@@ -375,7 +374,7 @@ export default function SummaryPage({ folderId, folderName }) {
   // 축 위치 계산용 ref/state
   const containerRef = useRef(null);
   const dotRefs = useRef([]);
-  const [axisStyle, setAxisStyle] = useState({ top: 0, height: 0 });
+  const [axisStyle, setAxisStyle] = useState({ top: 0, height: 0, left: 0 });
   const setDotRef = (index, el) => {
     if (el) {
       dotRefs.current[index] = el;
@@ -420,6 +419,11 @@ export default function SummaryPage({ folderId, folderName }) {
   const fetchTimelineData = useCallback(
     async (keyword = "") => {
       try {
+        // 타임라인 UI 완전 초기화
+        setTimelineData([]);
+        setAxisStyle({ top: 0, height: 0, left: 0 });
+        dotRefs.current = [];
+        
         // 실제 API 호출 (서버 사이드 검색)
         const responseData = await apiHelpers.getTimeline(folderId, keyword);
         console.log("타임라인 API 응답 데이터:", responseData);
@@ -442,6 +446,15 @@ export default function SummaryPage({ folderId, folderName }) {
   // 검색 실행 함수
   const handleSearch = () => {
     const keyword = searchKeyword.trim();
+    
+    // 검색 시 타임라인 컨테이너 완전 초기화
+    if (containerRef.current) {
+      // 기존 타임라인 요소들 제거
+      setTimelineData([]);
+      setAxisStyle({ top: 0, height: 0, left: 0 });
+      dotRefs.current = [];
+    }
+    
     fetchTimelineData(keyword);
   };
 
@@ -456,21 +469,82 @@ export default function SummaryPage({ folderId, folderName }) {
   }, [fetchSummaryData, fetchTimelineData]);
 
   useLayoutEffect(() => {
-    if (!containerRef.current) return;
-    if (dotRefs.current.length >= 2) {
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const firstRect = dotRefs.current[0].getBoundingClientRect();
-      const lastRect =
-        dotRefs.current[dotRefs.current.length - 1].getBoundingClientRect();
-      const top = firstRect.top - containerRect.top + firstRect.height / 2;
-      const height =
-        lastRect.top - firstRect.top + (lastRect.height - firstRect.height) / 2;
-      setAxisStyle({ top, height });
-    } else {
-      // 0개 또는 1개일 때는 축을 숨김 처리
-      setAxisStyle({ top: 0, height: 0 });
+    // 타임라인 데이터가 비어있으면 축 초기화
+    if (timelineData.length === 0) {
+      setAxisStyle({ top: 0, height: 0, left: 0 });
+      return;
     }
+
+    // DOM이 완전히 렌더링된 후 축 위치 계산을 위해 약간의 지연 추가
+    const timer = setTimeout(() => {
+      if (!containerRef.current) return;
+      if (dotRefs.current.length >= 2) {
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const firstRect = dotRefs.current[0].getBoundingClientRect();
+        const lastRect =
+          dotRefs.current[dotRefs.current.length - 1].getBoundingClientRect();
+
+        // 첫 번째 dot의 중앙 위치를 기준으로 left 위치 계산
+        const left =
+          firstRect.left - containerRect.left + firstRect.width / 2 - 1; // 1px는 선의 절반 너비
+
+        const top = firstRect.top - containerRect.top + firstRect.height / 2;
+        const height =
+          lastRect.top -
+          firstRect.top +
+          (lastRect.height - firstRect.height) / 2;
+
+        setAxisStyle({ top, height, left });
+      } else {
+        // 0개 또는 1개일 때는 축을 숨김 처리
+        setAxisStyle({ top: 0, height: 0, left: 0 });
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [timelineData, isLoading]);
+
+  // 추가적인 축 위치 검증을 위한 useEffect
+  useEffect(() => {
+    if (timelineData.length >= 2 && !isLoading) {
+      const validateAxisPosition = () => {
+        if (!containerRef.current || dotRefs.current.length < 2) return;
+
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const firstRect = dotRefs.current[0].getBoundingClientRect();
+        const lastRect =
+          dotRefs.current[dotRefs.current.length - 1].getBoundingClientRect();
+
+        // 유효한 위치인지 확인
+        if (
+          firstRect.top > 0 &&
+          lastRect.top > 0 &&
+          lastRect.top > firstRect.top
+        ) {
+          const left =
+            firstRect.left - containerRect.left + firstRect.width / 2 - 1;
+          const top = firstRect.top - containerRect.top + firstRect.height / 2;
+          const height =
+            lastRect.top -
+            firstRect.top +
+            (lastRect.height - firstRect.height) / 2;
+
+          // 현재 축 스타일과 다르면 업데이트
+          if (
+            axisStyle.top !== top ||
+            axisStyle.height !== height ||
+            axisStyle.left !== left
+          ) {
+            setAxisStyle({ top, height, left });
+          }
+        }
+      };
+
+      // 약간의 지연 후 검증 실행
+      const timer = setTimeout(validateAxisPosition, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [timelineData, isLoading, axisStyle]);
 
   if (isLoading) {
     return (
@@ -497,8 +571,10 @@ export default function SummaryPage({ folderId, folderName }) {
     return sortOrder === "oldest" ? dateA - dateB : dateB - dateA;
   });
 
-  // dotRefs 재수집을 위해 렌더링마다 초기화
-  dotRefs.current = [];
+  // 타임라인 데이터가 변경될 때마다 dotRefs 완전 초기화
+  if (timelineData.length > 0) {
+    dotRefs.current = [];
+  }
 
   return (
     <PageContainer>
@@ -567,7 +643,11 @@ export default function SummaryPage({ folderId, folderName }) {
           <TimelineContainer ref={containerRef}>
             {sortedTimelineData.length >= 2 && (
               <TimelineAxis
-                style={{ top: axisStyle.top, height: axisStyle.height }}
+                style={{
+                  top: axisStyle.top,
+                  height: axisStyle.height,
+                  left: axisStyle.left,
+                }}
               />
             )}
             {sortedTimelineData.map((record, index) => (

@@ -278,7 +278,7 @@ export default function MainPage({ onNavigateToChat }) {
     const checkSuccessState = () => {
       // 세션스토리지에서 성공 상태 확인
       const showSuccess = sessionStorage.getItem("showSuccessModal");
-      
+
       if (showSuccess === "true") {
         setShowSuccessModal(true);
         // 세션스토리지에서 제거
