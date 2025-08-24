@@ -822,12 +822,9 @@ export default function DetailModifyModal({
       const responseData = await Promise.race([apiPromise, timeoutPromise]);
 
       if (responseData.isSuccess) {
-        // 성공 시 메인페이지로 이동하면서 성공 상태 전달
+        // 성공 시 세션스토리지에 성공 상태 저장 후 메인페이지로 이동
+        sessionStorage.setItem("showSuccessModal", "true");
         if (window.navigation && window.navigation.navigateToMain) {
-          // URL 파라미터를 통해 성공 상태 전달
-          const currentUrl = window.location.pathname;
-          const newUrl = `${currentUrl}?showSuccessModal=true`;
-          window.history.pushState({}, '', newUrl);
           window.navigation.navigateToMain();
         }
       } else {

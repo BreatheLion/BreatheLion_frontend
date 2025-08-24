@@ -276,15 +276,13 @@ export default function MainPage({ onNavigateToChat }) {
   // DetailModifyModal에서 전달받은 성공 상태 확인
   useEffect(() => {
     const checkSuccessState = () => {
-      // URL 파라미터나 세션스토리지에서 성공 상태 확인
-      const urlParams = new URLSearchParams(window.location.search);
-      const showSuccess = urlParams.get('showSuccessModal');
+      // 세션스토리지에서 성공 상태 확인
+      const showSuccess = sessionStorage.getItem("showSuccessModal");
       
-      if (showSuccess === 'true') {
+      if (showSuccess === "true") {
         setShowSuccessModal(true);
-        // URL에서 파라미터 제거
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, '', newUrl);
+        // 세션스토리지에서 제거
+        sessionStorage.removeItem("showSuccessModal");
       }
     };
 
