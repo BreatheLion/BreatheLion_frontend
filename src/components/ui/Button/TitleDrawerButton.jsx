@@ -1,5 +1,9 @@
 import styled from "styled-components";
 
+/*
+  서랍장에서 최근 기록 / 사건별 기록을 전환할 수 있는 버튼 컴포넌트
+*/
+
 const StyledTitleDrawerButton = styled.button`
   display: flex;
   width: 12.5rem;

@@ -24,7 +24,7 @@ const Chip = styled.div`
 
 const Thumb = styled.div`
   width: 100%;
-  height: 5rem;
+  height: 7rem;
   border-radius: 0.25rem;
   overflow: hidden;
   background: #e9e9e9;
@@ -61,22 +61,6 @@ const RemoveBtn = styled.button`
   &:hover {
     background: #333333;
   }
-`;
-
-const Name = styled.span`
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: center;
-  font-size: 0.5rem;
-  line-height: 0.5rem;
-  max-height: 2rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 `;
 
 export default function AttachmentChip({
@@ -140,7 +124,6 @@ export default function AttachmentChip({
           <span style={{ fontSize: "1.5rem", color: "#4a4a4a" }}>🎵</span>
         </Thumb>
       )}
-      <Name title={displayName}>{displayName}</Name>
       {onRemove && (
         <RemoveBtn
           className="remove-btn"

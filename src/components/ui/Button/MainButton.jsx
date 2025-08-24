@@ -1,5 +1,9 @@
 import styled from "styled-components";
 
+/*
+  웹사이트에서 기본적으로 사용하는 버튼 규격, mainButton
+*/
+
 const StyledMainButton = styled.button.withConfig({
   shouldForwardProp: (prop) => prop !== "variant",
 })`

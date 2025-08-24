@@ -1,6 +1,10 @@
 import styled from "styled-components";
-import { useState } from "react";
 import Logo from "../common/Logo";
+
+/*
+  Header 컴포넌트
+  웹사이트 상단의 고정된 헤더 배너 컴포넌트
+*/
 
 const HeaderContainer = styled.header`
   position: absolute;

@@ -1,5 +1,9 @@
 import styled from "styled-components";
 
+/*
+  웹사이트에서 기본적으로 사용하는 버튼 규격, smallButton(MainButton보다 작은 규격)
+*/
+
 const StyledSmallButton = styled.button`
   display: flex;
   width: 8.75rem;

@@ -487,17 +487,7 @@ const mapCategoryToKorean = (englishCategory) => {
 // 폴더 목록 옵션을 불러와 선택할 수 있도록 유지
 // 서버 응답은 { drawer_id, name } 형태라고 가정
 
-const toDateTimeLocal = (dateString) => {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return "";
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
+// toDateTimeLocal 함수 제거됨 - 더 이상 사용하지 않음
 
 export default function DetailModifyModal({
   data,
@@ -1218,19 +1208,7 @@ export default function DetailModifyModal({
                       {severityMap[level]}
                     </SeverityButton>
                   ))}
-                  {(recordData.severity === null ||
-                    recordData.severity === undefined) && (
-                    <div
-                      style={{
-                        color: "#acacac",
-                        fontSize: "0.875rem",
-                        fontFamily: "Pretendard",
-                        marginLeft: "0.5rem",
-                      }}
-                    >
-                      심각도를 선택해주세요
-                    </div>
-                  )}
+                  {/* 심각도 선택 안내 텍스트 제거됨 */}
                 </SeverityContainer>
               </FormField>
             </FormRow>
