@@ -8,6 +8,7 @@ import ConfirmModal from "./ConfirmModal";
 import SavingModal from "./SavingModal";
 import FileShowModal from "./FileShowModal";
 import FailureNotificationModal from "./FailureNotificationModal";
+import SuccessNotificationModal from "./SuccessNotificationModal";
 import { apiHelpers } from "../../utils/api";
 
 // 날짜/시간을 API 형식으로 변환하는 함수
@@ -597,6 +598,7 @@ export default function DetailModifyModal({
   const [showSavingModal, setShowSavingModal] = useState(false);
   const [showFailureModal, setShowFailureModal] = useState(false);
   const [failureMessage, setFailureMessage] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // 폴더 옵션 로드 (data.drawers가 객체 배열이면 그대로 사용, 아니면 목록 API 호출)
   const [drawerOptions, setDrawerOptions] = useState([]);
@@ -820,10 +822,14 @@ export default function DetailModifyModal({
       const responseData = await Promise.race([apiPromise, timeoutPromise]);
 
       if (responseData.isSuccess) {
-        // 성공 시 메인페이지로 이동
-        if (window.navigation && window.navigation.navigateToMain) {
-          window.navigation.navigateToMain();
-        }
+        // 성공 시 성공 모달 표시 후 메인페이지로 이동
+        setShowSuccessModal(true);
+        // 2초 후 메인 페이지로 이동 (SuccessNotificationModal이 자동으로 닫힌 후)
+        setTimeout(() => {
+          if (window.navigation && window.navigation.navigateToMain) {
+            window.navigation.navigateToMain();
+          }
+        }, 2300); // 모달 표시 시간(2초) + fadeOut 애니메이션(0.3초) 고려
       } else {
         throw new Error(responseData.message || "저장 실패");
       }
@@ -1429,6 +1435,13 @@ export default function DetailModifyModal({
         isOpen={showFailureModal}
         onClose={() => setShowFailureModal(false)}
         message={failureMessage}
+      />
+
+      <SuccessNotificationModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="저장 완료"
+        message="기록이 성공적으로 저장되었습니다."
       />
 
       <FileShowModal
