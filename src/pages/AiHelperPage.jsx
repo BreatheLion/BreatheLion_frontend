@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
+import MainButton from "../components/ui/Button/MainButton";
 import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
 import FailureNotificationModal from "../components/ui/FailureNotificationModal";
 import { apiHelpers } from "../utils/api";
@@ -16,7 +17,7 @@ const PageContainer = styled.div`
 const ContentContainer = styled.div`
   width: 55rem;
   margin: 0 auto;
-  height: calc(100vh - 4rem);
+  min-height: calc(100vh - 4rem);
   display: flex;
   flex-direction: column;
   padding: 2rem;
@@ -364,6 +365,15 @@ const ClickableText = styled.span`
   }
 `;
 
+const ButtonContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2rem;
+  margin-bottom: 4rem !important;
+  padding-bottom: 2rem;
+`;
+
 export default function AiHelperPage({ drawerId, drawerName }) {
   const navigate = useNavigate();
   const [currentDrawerName, setCurrentDrawerName] = useState(drawerName || "");
@@ -530,6 +540,11 @@ export default function AiHelperPage({ drawerId, drawerName }) {
     navigate("/consultant");
   };
 
+  const handleBackToList = () => {
+    // 이전 페이지로 돌아가기
+    navigate(-1);
+  };
+
   const renderCareGuideText = () => {
     const careGuide = summaryData?.care_guide || "";
     const additionalText =
@@ -675,10 +690,11 @@ export default function AiHelperPage({ drawerId, drawerName }) {
               )}
             </OrganizationsContainer>
           </SectionContainer>
-          <div style={{ height: "0rem" }}></div>
         </BottomContainer>
+        <ButtonContainer>
+          <MainButton onClick={handleBackToList}>목록으로</MainButton>
+        </ButtonContainer>
       </ContentContainer>
-
       <SuccessNotificationModal
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
