@@ -207,6 +207,29 @@ export default function ChatViewPage({
     }
   };
 
+  // 24시간 형식을 12시간 형식으로 변환하는 함수
+  const formatTimeTo12Hour = (timeString) => {
+    if (!timeString) return "";
+
+    try {
+      // "HH:MM" 형식을 Date 객체로 변환
+      const [hours, minutes] = timeString.split(":");
+      const date = new Date();
+      date.setHours(parseInt(hours, 10));
+      date.setMinutes(parseInt(minutes, 10));
+
+      // 12시간 형식으로 변환
+      return date.toLocaleTimeString("ko-KR", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch (error) {
+      console.error("시간 형식 변환 오류:", error);
+      return timeString; // 변환 실패 시 원본 반환
+    }
+  };
+
   const handleFileClick = (evidence) => {
     setSelectedFile({
       filename: evidence.filename,
@@ -472,7 +495,9 @@ export default function ChatViewPage({
                     )}
                     <div>{message.content}</div>
                     {message.role === "user" && (
-                      <MessageTime>{message.message_time}</MessageTime>
+                      <MessageTime>
+                        {formatTimeTo12Hour(message.message_time)}
+                      </MessageTime>
                     )}
                   </MessageContent>
                 </ChatMessage>

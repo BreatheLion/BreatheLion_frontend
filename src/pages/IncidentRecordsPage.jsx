@@ -137,9 +137,15 @@ export default function IncidentRecordsPage({
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+
+      // 성공 알림 표시
+      setSuccessMessage("타임라인 PDF가 성공적으로 다운로드되었습니다.");
+      setShowSuccessModal(true);
     } catch (error) {
       console.error("PDF 다운로드 실패:", error);
-      setFailureMessage("다운로드에 실패했습니다");
+      setFailureMessage(
+        "타임라인 PDF 다운로드에 실패했습니다. 다시 시도해주세요."
+      );
       setShowFailureModal(true);
     }
   };
