@@ -5,7 +5,6 @@ import {
   useLayoutEffect,
   useCallback,
 } from "react";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
 import BackButton from "../components/ui/BackButton";
@@ -365,7 +364,6 @@ const CardArrow = styled.img`
 `;
 
 export default function SummaryPage({ folderId, folderName }) {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [summaryData, setSummaryData] = useState(null);
   const [timelineData, setTimelineData] = useState([]);
@@ -505,7 +503,13 @@ export default function SummaryPage({ folderId, folderName }) {
   return (
     <PageContainer>
       <Header currentPage="summary" />
-      <BackButton onClick={() => navigate(-1)} />
+      <BackButton
+        onClick={() => {
+          if (window.navigation.navigateToDrawer) {
+            window.navigation.navigateToDrawer("incident");
+          }
+        }}
+      />
       <ContentContainer>
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>

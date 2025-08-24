@@ -383,9 +383,10 @@ export default function RecordDetailPage({ previousPage, record_id }) {
       const responseData = await apiHelpers.deleteRecord(record_id);
 
       if (responseData.isSuccess) {
-        // 성공 시 이전 페이지로 이동
+        // 성공 시 이전 페이지에 따라 적절한 탭으로 이동
         if (window.navigation.navigateToDrawer) {
-          window.navigation.navigateToDrawer();
+          const tab = previousPage === "summary" ? "incident" : "recent";
+          window.navigation.navigateToDrawer(tab);
         }
       } else {
         throw new Error(responseData.message || "레코드 삭제에 실패했습니다.");

@@ -62,7 +62,8 @@ function App() {
   useEffect(() => {
     window.navigation.navigateToMain = () => navigate("/");
     window.navigation.navigateToChat = () => navigate("/chat");
-    window.navigation.navigateToDrawer = () => navigate("/drawer");
+    window.navigation.navigateToDrawer = (tab = "recent") =>
+      navigate(`/drawer?tab=${tab}`);
     window.navigation.navigateToLawyer = () => navigate("/lawyer");
     window.navigation.navigateToConsultant = () => navigate("/consultant");
     window.navigation.navigateToRecordDetail = (previousPage, recordId) =>
@@ -114,14 +115,20 @@ function App() {
     );
   };
 
-  const DrawerRoute = () => (
-    <DrawerPage
-      onNavigateToMain={() => navigate("/")}
-      onNavigateToRecordDetail={(previousPage, recordId) =>
-        window.navigation.navigateToRecordDetail(previousPage, recordId)
-      }
-    />
-  );
+  const DrawerRoute = () => {
+    const searchParams = new URLSearchParams(location.search);
+    const tab = searchParams.get("tab") || "recent";
+
+    return (
+      <DrawerPage
+        initialTab={tab}
+        onNavigateToMain={() => navigate("/")}
+        onNavigateToRecordDetail={(previousPage, recordId) =>
+          window.navigation.navigateToRecordDetail(previousPage, recordId)
+        }
+      />
+    );
+  };
 
   const RecordDetailRoute = () => {
     const state = location.state || {};

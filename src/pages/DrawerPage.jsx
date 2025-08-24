@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
 import { TitleDrawerButton } from "../components/ui/Button";
@@ -122,10 +123,13 @@ const ModalText = styled.span`
 `;
 
 export default function DrawerPage({
+  initialTab = "recent",
   onNavigateToMain,
   onNavigateToRecordDetail,
 }) {
-  const [activeTab, setActiveTab] = useState("recent");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [showModal, setShowModal] = useState(false);
   const [showFolderAddModal, setShowFolderAddModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
@@ -144,6 +148,9 @@ export default function DrawerPage({
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
+    // URL 파라미터 업데이트
+    const newUrl = `/drawer?tab=${tab}`;
+    navigate(newUrl, { replace: true });
   };
 
   const handleSettingClick = () => {
