@@ -38,6 +38,15 @@ const Subtitle = styled.div`
   white-space: pre;
 `;
 
+const Title = styled.div`
+  color: var(--70, #4a4a4a);
+  font-family: Pretendard;
+  font-size: 1.25rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.5rem;
+`;
+
 const InformationContainer = styled.div`
   display: flex;
   width: 51rem;
@@ -80,31 +89,24 @@ const ConsultantName = styled.div`
   font-style: normal;
   font-weight: 700;
   line-height: 1.5rem;
+  margin-bottom: 0.4rem;
 `;
 
-const Spacer1 = styled.div`
-  height: 0.31rem;
-`;
-
-const Organization = styled.div`
+const Experience = styled.div`
   color: var(--50, #7a7a7a);
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
   font-weight: 500;
   line-height: 1.375rem;
-`;
-
-const Spacer2 = styled.div`
-  height: 1.87rem;
+  margin-bottom: 1.5rem;
 `;
 
 const InfoContainer = styled.div`
   display: flex;
-  height: 1.875rem;
   align-items: center;
-  gap: 0.3125rem;
-  align-self: stretch;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
 `;
 
 const InfoTitle = styled.div`
@@ -114,17 +116,37 @@ const InfoTitle = styled.div`
   font-style: normal;
   font-weight: 500;
   line-height: 1.375rem;
-  white-space: nowrap;
-  width: 4.375rem;
+  min-width: 4rem;
+  flex-shrink: 0;
 `;
 
 const InfoContent = styled.div`
-  color: var(--70, #4a4a4a);
+  color: var(--80, #313131);
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
   font-weight: 500;
-  line-height: 1.375rem;
+  line-height: 1.25rem;
+  flex: 1;
+`;
+
+const SpecializationTag = styled.div`
+  display: flex;
+  height: 1.875rem;
+  padding: 0.3125rem 0.625rem;
+  justify-content: center;
+  align-items: center;
+  gap: 0.625rem;
+  border-radius: 1.875rem;
+  border: 1px solid var(--5, #e9e9e9);
+  background: #fff;
+  color: var(--80, #313131);
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.25rem;
+  width: fit-content;
 `;
 
 export default function ConsultantConnectDetailPage() {
@@ -141,52 +163,76 @@ export default function ConsultantConnectDetailPage() {
   // 상담사별 상세 정보 더미 데이터
   const consultantDetailsData = {
     1: {
-      location: "서울 강남구",
-      contact: "02-1234-5678",
       experience: "8년",
+      introduction: "마음 건강을 지키는 작은 습관부터 함께 찾아가요.",
+      contact: "02-1234-567",
+      email: "hskim92@example.com",
+      consultationMethod: "온라인",
+      consultationFee: "50,000원 / 시간",
       specialization: "우울증·불안장애",
     },
     2: {
-      location: "서울 종로구",
-      contact: "02-2345-6789",
       experience: "12년",
+      introduction: "커리어와 직무 스트레스를 함께 해결해 나가요.",
+      contact: "02-2345-6789",
+      email: "lsh@example.com",
+      consultationMethod: "대면",
+      consultationFee: "60,000원 / 시간",
       specialization: "커리어·직무 스트레스",
     },
     3: {
-      location: "서울 서초구",
-      contact: "02-3456-7890",
       experience: "5년",
-      specialization: "청소년 상담",
+      introduction: "청소년의 마음을 이해하고 함께 성장해요.",
+      contact: "02-3456-7890",
+      email: "psy@example.com",
+      consultationMethod: "온라인",
+      consultationFee: "45,000원 / 시간",
+      specialization: "청소년 상담·가족 상담",
     },
     4: {
-      location: "서울 마포구",
-      contact: "02-4567-8901",
       experience: "10년",
-      specialization: "부부 상담",
+      introduction: "부부 관계 개선을 위한 전문적인 상담을 제공해요.",
+      contact: "02-4567-8901",
+      email: "couple@example.com",
+      consultationMethod: "대면",
+      consultationFee: "70,000원 / 시간",
+      specialization: "부부 상담·가족 상담",
     },
     5: {
-      location: "서울 송파구",
-      contact: "02-5678-9012",
       experience: "5년",
-      specialization: "대인관계",
+      introduction: "대인관계 문제를 함께 해결해 나가요.",
+      contact: "02-5678-9012",
+      email: "relation@example.com",
+      consultationMethod: "온라인",
+      consultationFee: "40,000원 / 시간",
+      specialization: "대인관계·자존감",
     },
     6: {
-      location: "서울 영등포구",
-      contact: "02-6789-0123",
       experience: "8년",
+      introduction: "불안과 스트레스를 함께 관리해 나가요.",
+      contact: "02-6789-0123",
+      email: "anxiety@example.com",
+      consultationMethod: "온라인",
+      consultationFee: "55,000원 / 시간",
       specialization: "불안장애·스트레스",
     },
     7: {
-      location: "서울 중구",
-      contact: "02-7890-1234",
       experience: "12년",
-      specialization: "대인관계",
+      introduction: "건강한 대인관계를 위한 상담을 제공해요.",
+      contact: "02-7890-1234",
+      email: "social@example.com",
+      consultationMethod: "대면",
+      consultationFee: "65,000원 / 시간",
+      specialization: "대인관계·사회성",
     },
     8: {
-      location: "서울 용산구",
-      contact: "02-8901-2345",
       experience: "11년",
-      specialization: "정신건강",
+      introduction: "정신건강 회복을 위한 전문적인 상담을 제공해요.",
+      contact: "02-8901-2345",
+      email: "mental@example.com",
+      consultationMethod: "온라인",
+      consultationFee: "75,000원 / 시간",
+      specialization: "정신건강·트라우마",
     },
   };
 
@@ -194,9 +240,12 @@ export default function ConsultantConnectDetailPage() {
   const currentConsultantDetails = consultantData
     ? consultantDetailsData[consultantData.id]
     : {
-        location: "서울 강남구",
-        contact: "02-1234-5678",
         experience: "8년",
+        introduction: "마음 건강을 지키는 작은 습관부터 함께 찾아가요.",
+        contact: "02-1234-567",
+        email: "hskim92@example.com",
+        consultationMethod: "온라인",
+        consultationFee: "50,000원 / 시간",
         specialization: "우울증·불안장애",
       };
 
@@ -209,6 +258,7 @@ export default function ConsultantConnectDetailPage() {
       <ContentContainer>
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>
+          <Title>상담사 상담</Title>
         </TitleContainer>
 
         <InformationContainer>
@@ -216,15 +266,11 @@ export default function ConsultantConnectDetailPage() {
             <ConsultantName>
               {consultantData?.name || "상담사 이름"}
             </ConsultantName>
-            <Spacer1 />
-            <Organization>
-              {consultantData?.organization || "상담센터"}
-            </Organization>
-            <Spacer2 />
+            <Experience>경력 {currentConsultantDetails.experience}</Experience>
 
             <InfoContainer>
-              <InfoTitle>위치</InfoTitle>
-              <InfoContent>{currentConsultantDetails.location}</InfoContent>
+              <InfoTitle>한 줄 소개</InfoTitle>
+              <InfoContent>{currentConsultantDetails.introduction}</InfoContent>
             </InfoContainer>
 
             <InfoContainer>
@@ -233,15 +279,29 @@ export default function ConsultantConnectDetailPage() {
             </InfoContainer>
 
             <InfoContainer>
-              <InfoTitle>경력</InfoTitle>
-              <InfoContent>{currentConsultantDetails.experience}</InfoContent>
+              <InfoTitle>이메일</InfoTitle>
+              <InfoContent>{currentConsultantDetails.email}</InfoContent>
+            </InfoContainer>
+
+            <InfoContainer>
+              <InfoTitle>상담 방식</InfoTitle>
+              <InfoContent>
+                {currentConsultantDetails.consultationMethod}
+              </InfoContent>
+            </InfoContainer>
+
+            <InfoContainer>
+              <InfoTitle>상담료</InfoTitle>
+              <InfoContent>
+                {currentConsultantDetails.consultationFee}
+              </InfoContent>
             </InfoContainer>
 
             <InfoContainer>
               <InfoTitle>전문 분야</InfoTitle>
-              <InfoContent>
+              <SpecializationTag>
                 {currentConsultantDetails.specialization}
-              </InfoContent>
+              </SpecializationTag>
             </InfoContainer>
           </LeftSection>
 

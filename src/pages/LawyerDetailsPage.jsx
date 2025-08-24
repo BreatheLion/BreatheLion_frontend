@@ -38,6 +38,15 @@ const Subtitle = styled.div`
   white-space: pre;
 `;
 
+const Title = styled.div`
+  color: var(--70, #4a4a4a);
+  font-family: Pretendard;
+  font-size: 1.25rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.5rem;
+`;
+
 const InformationContainer = styled.div`
   display: flex;
   width: 51rem;
@@ -80,10 +89,7 @@ const LawyerName = styled.div`
   font-style: normal;
   font-weight: 700;
   line-height: 1.5rem;
-`;
-
-const Spacer1 = styled.div`
-  height: 0.31rem;
+  margin-bottom: 0.4rem;
 `;
 
 const LawFirm = styled.div`
@@ -93,18 +99,14 @@ const LawFirm = styled.div`
   font-style: normal;
   font-weight: 500;
   line-height: 1.375rem;
-`;
-
-const Spacer2 = styled.div`
-  height: 1.87rem;
+  margin-bottom: 1.5rem;
 `;
 
 const InfoContainer = styled.div`
   display: flex;
-  height: 1.875rem;
   align-items: center;
-  gap: 0.3125rem;
-  align-self: stretch;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
 `;
 
 const InfoTitle = styled.div`
@@ -114,17 +116,37 @@ const InfoTitle = styled.div`
   font-style: normal;
   font-weight: 500;
   line-height: 1.375rem;
-  white-space: nowrap;
-  width: 4.375rem;
+  min-width: 4rem;
+  flex-shrink: 0;
 `;
 
 const InfoContent = styled.div`
-  color: var(--70, #4a4a4a);
+  color: var(--80, #313131);
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
   font-weight: 500;
-  line-height: 1.375rem;
+  line-height: 1.25rem;
+  flex: 1;
+`;
+
+const SpecializationTag = styled.div`
+  display: flex;
+  height: 1.875rem;
+  padding: 0.3125rem 0.625rem;
+  justify-content: center;
+  align-items: center;
+  gap: 0.625rem;
+  border-radius: 1.875rem;
+  border: 1px solid var(--5, #e9e9e9);
+  background: #fff;
+  color: var(--80, #313131);
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.25rem;
+  width: fit-content;
 `;
 
 export default function LawyerDetailsPage() {
@@ -141,52 +163,60 @@ export default function LawyerDetailsPage() {
   // 변호사별 상세 정보 더미 데이터
   const lawyerDetailsData = {
     1: {
-      location: "서울 강남구",
-      contact: "02-1234-5678",
-      experience: "8년",
+      location: "서울특별시 서초구",
+      contact: "02-1234-567",
+      email: "kms@example.com",
+      experience: "서울중앙지검 검사 출신, 8년 경력",
       specialization: "형사 사건",
     },
     2: {
-      location: "서울 종로구",
+      location: "서울특별시 종로구",
       contact: "02-2345-6789",
-      experience: "12년",
+      email: "lsh@example.com",
+      experience: "대법원 판사 출신, 12년 경력",
       specialization: "지적재산권·특허",
     },
     3: {
-      location: "서울 서초구",
+      location: "서울특별시 서초구",
       contact: "02-3456-7890",
-      experience: "10년",
+      email: "pjh@example.com",
+      experience: "가정법원 판사 출신, 10년 경력",
       specialization: "이혼·가사 사건",
     },
     4: {
-      location: "서울 마포구",
+      location: "서울특별시 마포구",
       contact: "02-4567-8901",
-      experience: "15년",
+      email: "jdh@example.com",
+      experience: "특허청 심사관 출신, 15년 경력",
       specialization: "지적재산권·특허",
     },
     5: {
-      location: "서울 송파구",
+      location: "서울특별시 송파구",
       contact: "02-5678-9012",
-      experience: "11년",
-      specialization: "부동산, 건설",
+      email: "chw@example.com",
+      experience: "국토교통부 공무원 출신, 11년 경력",
+      specialization: "부동산·건설",
     },
     6: {
-      location: "서울 영등포구",
+      location: "서울특별시 영등포구",
       contact: "02-6789-0123",
-      experience: "9년",
-      specialization: "노동, 재산",
+      email: "ojm@example.com",
+      experience: "노동부 공무원 출신, 9년 경력",
+      specialization: "노동·재산",
     },
     7: {
-      location: "서울 중구",
+      location: "서울특별시 중구",
       contact: "02-7890-1234",
-      experience: "13년",
-      specialization: "국제거래, 부채",
+      email: "hjs@example.com",
+      experience: "기획재정부 공무원 출신, 13년 경력",
+      specialization: "국제거래·부채",
     },
     8: {
-      location: "서울 용산구",
+      location: "서울특별시 용산구",
       contact: "02-8901-2345",
-      experience: "7년",
-      specialization: "형사, 마약",
+      email: "skh@example.com",
+      experience: "검찰청 검사 출신, 7년 경력",
+      specialization: "형사·마약",
     },
   };
 
@@ -194,9 +224,10 @@ export default function LawyerDetailsPage() {
   const currentLawyerDetails = lawyerData
     ? lawyerDetailsData[lawyerData.id]
     : {
-        location: "서울 강남구",
-        contact: "02-1234-5678",
-        experience: "8년",
+        location: "서울특별시 서초구",
+        contact: "02-1234-567",
+        email: "kms@example.com",
+        experience: "서울중앙지검 검사 출신, 8년 경력",
         specialization: "형사 사건",
       };
 
@@ -209,14 +240,13 @@ export default function LawyerDetailsPage() {
       <ContentContainer>
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>
+          <Title>변호사 상담</Title>
         </TitleContainer>
 
         <InformationContainer>
           <LeftSection>
             <LawyerName>{lawyerData?.name || "변호사 이름"}</LawyerName>
-            <Spacer1 />
             <LawFirm>{lawyerData?.lawFirm || "법무법인"}</LawFirm>
-            <Spacer2 />
 
             <InfoContainer>
               <InfoTitle>위치</InfoTitle>
@@ -229,13 +259,20 @@ export default function LawyerDetailsPage() {
             </InfoContainer>
 
             <InfoContainer>
+              <InfoTitle>이메일</InfoTitle>
+              <InfoContent>{currentLawyerDetails.email}</InfoContent>
+            </InfoContainer>
+
+            <InfoContainer>
               <InfoTitle>경력</InfoTitle>
               <InfoContent>{currentLawyerDetails.experience}</InfoContent>
             </InfoContainer>
 
             <InfoContainer>
               <InfoTitle>전문 분야</InfoTitle>
-              <InfoContent>{currentLawyerDetails.specialization}</InfoContent>
+              <SpecializationTag>
+                {currentLawyerDetails.specialization}
+              </SpecializationTag>
             </InfoContainer>
           </LeftSection>
 
