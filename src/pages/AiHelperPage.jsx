@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
 import MainButton from "../components/ui/Button/MainButton";
-import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
-import FailureNotificationModal from "../components/ui/FailureNotificationModal";
 import { apiHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
@@ -379,10 +377,6 @@ export default function AiHelperPage({ drawerId, drawerName }) {
   const [currentDrawerName, setCurrentDrawerName] = useState(drawerName || "");
   const [isLoading, setIsLoading] = useState(true);
   const [summaryData, setSummaryData] = useState(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showFailureModal, setShowFailureModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [failureMessage, setFailureMessage] = useState("");
 
   useEffect(() => {
     // props로 받은 drawerName이 있으면 사용, 없으면 기본값 설정
@@ -489,49 +483,10 @@ export default function AiHelperPage({ drawerId, drawerName }) {
     return `${currentDrawerName}   >   AI 도우미`;
   };
 
-  const handlePdfExtractClick = async () => {
-    try {
-      const targetDrawerId = drawerId || 1;
-      console.log("PDF 다운로드 시작, drawerId:", targetDrawerId);
-
-      // API 호출하여 PDF Blob 받기
-      const response = await apiHelpers.downloadPdf(targetDrawerId);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Blob 데이터 받기
-      const blob = await response.blob();
-
-      // 파일명 추출 (서버에서 고정으로 오는 경우)
-      const filename = "timeline.pdf";
-
-      // Blob URL 생성
-      const url = window.URL.createObjectURL(blob);
-
-      // 임시 링크 생성 및 클릭
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-
-      // 정리
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      // 성공 모달 표시
-      setSuccessMessage("PDF 파일이 다운로드되었습니다.");
-      setShowSuccessModal(true);
-
-      console.log("PDF 다운로드 완료");
-    } catch (error) {
-      console.error("PDF 다운로드 중 오류:", error);
-
-      // 실패 모달 표시
-      setFailureMessage("PDF 다운로드에 실패했습니다. 다시 시도해주세요.");
-      setShowFailureModal(true);
+  const handlePdfExtractClick = () => {
+    // SummaryPage로 이동
+    if (window.navigation.navigateToSummary) {
+      window.navigation.navigateToSummary(drawerId, drawerName);
     }
   };
 
@@ -695,19 +650,6 @@ export default function AiHelperPage({ drawerId, drawerName }) {
           <MainButton onClick={handleBackToList}>목록으로</MainButton>
         </ButtonContainer>
       </ContentContainer>
-      <SuccessNotificationModal
-        isOpen={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
-        title="다운로드 완료"
-        message={successMessage}
-      />
-
-      <FailureNotificationModal
-        isOpen={showFailureModal}
-        onClose={() => setShowFailureModal(false)}
-        title="다운로드 실패"
-        message={failureMessage}
-      />
     </PageContainer>
   );
 }

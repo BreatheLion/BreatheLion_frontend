@@ -563,7 +563,7 @@ export default function SummaryPage({ folderId, folderName }) {
       <ContentContainer>
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>
-          <Title>{summaryData?.folder_name || "폴더명"}</Title>
+          <Title>{summaryData?.drawer_name || "폴더명"}</Title>
         </TitleContainer>
 
         <SummaryContainer>
