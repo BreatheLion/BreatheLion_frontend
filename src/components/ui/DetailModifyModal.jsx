@@ -10,6 +10,17 @@ import FileShowModal from "./FileShowModal";
 import FailureNotificationModal from "./FailureNotificationModal";
 import { apiHelpers } from "../../utils/api";
 
+// 날짜/시간을 API 형식으로 변환하는 함수
+const formatDateTimeForAPI = (date, time) => {
+  if (!date) return "";
+
+  // 시간이 없으면 00:00으로 설정
+  const timeValue = time || "00:00";
+
+  // 형식: YYYY-MM-DDTHH:MM:00
+  return `${date}T${timeValue}:00`;
+};
+
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -496,9 +507,7 @@ export default function DetailModifyModal({
 }) {
   const MAX_ATTACHMENTS = 10; // 첨부 최대 개수
   const MAX_TOTAL_SIZE = 300 * 1024 * 1024; // 총합 300MB (바이트 단위)
-  const initialLocal = toDateTimeLocal(
-    data.record_detail?.occurred_at || data.occurred_at
-  );
+  const initialLocal = ""; // occurred_at은 더 이상 전달받지 않으므로 빈 값으로 설정
   const initialDate = initialLocal ? initialLocal.split("T")[0] : "";
   const initialTime = initialLocal
     ? (initialLocal.split("T")[1] || "").slice(0, 5)
@@ -558,7 +567,7 @@ export default function DetailModifyModal({
     title: data.record_detail?.title || data.title || "",
     assailant: data.record_detail?.assailant || data.assailant || [],
     severity: data.record_detail?.severity || data.severity || null,
-    occurred_at: initialLocal,
+    occurred_at: "", // occurred_at은 더 이상 전달받지 않으므로 빈 값으로 설정
     location: data.record_detail?.location || data.location || "",
     content: data.record_detail?.content || data.content || "",
     category: mapCategoryToKorean(
@@ -801,10 +810,8 @@ export default function DetailModifyModal({
         content: recordData.content,
         severity: recordData.severity,
         location: recordData.location,
-        created_at: recordData.created_at || "",
-        occurred_at: recordData.occurred_at
-          ? `${recordData.occurred_at}:00`
-          : "",
+        // created_at은 더 이상 전송하지 않음
+        occurred_at: recordData.occurred_at || "",
         assailant: recordData.assailant || [],
         witness: recordData.witness || [],
         drawer: drawerName || null,
@@ -846,9 +853,9 @@ export default function DetailModifyModal({
       ...prev,
       occurred_at:
         value && occurTime
-          ? `${value}T${occurTime}`
+          ? formatDateTimeForAPI(value, occurTime)
           : value
-          ? `${value}T00:00`
+          ? formatDateTimeForAPI(value, "00:00")
           : "",
     }));
   };
@@ -860,9 +867,9 @@ export default function DetailModifyModal({
       ...prev,
       occurred_at:
         occurDate && time
-          ? `${occurDate}T${time}`
+          ? formatDateTimeForAPI(occurDate, time)
           : occurDate
-          ? `${occurDate}T00:00`
+          ? formatDateTimeForAPI(occurDate, "00:00")
           : "",
     }));
   };
@@ -1251,6 +1258,7 @@ export default function DetailModifyModal({
                   <HalfInput
                     type="date"
                     value={occurDate}
+                    max="9999-12-31"
                     onChange={(e) => {
                       handleDateChange(e.target.value);
                       clearHighlight("occurred_at");

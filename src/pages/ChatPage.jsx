@@ -724,45 +724,13 @@ export default function ChatPage({ initialChatData }) {
       } else {
         throw new Error(responseData.message || "채팅 종료 실패");
       }
-    } catch {
-      // 목업 데이터 사용 (추후 제거 예정)
-      const mockResponse = {
-        isSuccess: true,
-        code: "200",
-        message: "채팅 끝",
-        data: {
-          record_id: 3,
-          drawers: [
-            { drawer_id: 1, name: "동방에서 일어난 거" },
-            { drawer_id: 2, name: "커피집 진상" },
-          ],
-          record_detail: {
-            title: "동방에서 일어난 무시무시한 사건",
-            category: "괴롭힘",
-            content: "오늘 해승이가 해원이를 괴롭혔다",
-            severity: 1,
-            location: "동방",
-            occurred_at: "2025.08.01 (14:30)",
-            assailant: ["서해승", "이예림"],
-            witness: ["오영록"],
-          },
-          evidences: [
-            {
-              filename: "해원이 욕설 파일",
-              type: "AUDIO",
-              url: "url~~",
-            },
-            {
-              filename: "폭행 당시 사진",
-              type: "IMAGE",
-              url: "url2~~",
-            },
-          ],
-        },
-      };
+    } catch (error) {
+      console.error("채팅 종료 중 오류:", error);
 
-      setFinishResponse(mockResponse.data);
-      setShowDetailModal(true);
+      // API 에러 시 ChatPage로 돌아가기 (목업 데이터 사용하지 않음)
+      alert("채팅 종료에 실패했습니다. 다시 시도해주세요.");
+
+      // 로딩 상태만 해제하고 ChatPage 유지
     } finally {
       setIsFinishing(false);
     }
