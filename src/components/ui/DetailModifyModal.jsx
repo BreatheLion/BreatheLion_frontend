@@ -822,14 +822,14 @@ export default function DetailModifyModal({
       const responseData = await Promise.race([apiPromise, timeoutPromise]);
 
       if (responseData.isSuccess) {
-        // 성공 시 성공 모달 표시 후 메인페이지로 이동
-        setShowSuccessModal(true);
-        // 2초 후 메인 페이지로 이동 (SuccessNotificationModal이 자동으로 닫힌 후)
-        setTimeout(() => {
-          if (window.navigation && window.navigation.navigateToMain) {
-            window.navigation.navigateToMain();
-          }
-        }, 2300); // 모달 표시 시간(2초) + fadeOut 애니메이션(0.3초) 고려
+        // 성공 시 메인페이지로 이동하면서 성공 상태 전달
+        if (window.navigation && window.navigation.navigateToMain) {
+          // URL 파라미터를 통해 성공 상태 전달
+          const currentUrl = window.location.pathname;
+          const newUrl = `${currentUrl}?showSuccessModal=true`;
+          window.history.pushState({}, '', newUrl);
+          window.navigation.navigateToMain();
+        }
       } else {
         throw new Error(responseData.message || "저장 실패");
       }

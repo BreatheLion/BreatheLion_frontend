@@ -1,10 +1,11 @@
 import styled from "styled-components";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "../components/layout/Header";
 import Logo from "../components/common/Logo";
 import MainPageSendButton from "../assets/MainPageSendButton.svg";
 import { API_ENDPOINTS, apiCall } from "../utils/api";
 import LoadingModal from "../components/ui/LoadingModal";
+import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
 
 const MainContainer = styled.div`
   background: var(
@@ -158,6 +159,7 @@ export default function MainPage({ onNavigateToChat }) {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showLoadingModal, setShowLoadingModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleSubmit = async () => {
     const trimmed = inputValue.trim();
@@ -271,6 +273,24 @@ export default function MainPage({ onNavigateToChat }) {
     }
   };
 
+  // DetailModifyModal에서 전달받은 성공 상태 확인
+  useEffect(() => {
+    const checkSuccessState = () => {
+      // URL 파라미터나 세션스토리지에서 성공 상태 확인
+      const urlParams = new URLSearchParams(window.location.search);
+      const showSuccess = urlParams.get('showSuccessModal');
+      
+      if (showSuccess === 'true') {
+        setShowSuccessModal(true);
+        // URL에서 파라미터 제거
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
+    };
+
+    checkSuccessState();
+  }, []);
+
   return (
     <MainContainer>
       <Header currentPage="main" />
@@ -303,6 +323,13 @@ export default function MainPage({ onNavigateToChat }) {
           showAutoClose={false}
         />
       )}
+
+      <SuccessNotificationModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="저장 완료"
+        message="기록이 성공적으로 저장되었습니다."
+      />
     </MainContainer>
   );
 }
