@@ -2,6 +2,8 @@ import styled from "styled-components";
 import { useState, useEffect, useRef } from "react";
 import Header from "../components/layout/Header";
 import DetailModifyModal from "../components/ui/DetailModifyModal";
+import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
+import FailureNotificationModal from "../components/ui/FailureNotificationModal";
 import { evidenceClient } from "../utils/evidence";
 import FinishLoadingModal from "../components/ui/FinishLoadingModal";
 import AttachmentChip from "../components/ui/AttachmentChip";
@@ -458,6 +460,8 @@ export default function ChatPage({ initialChatData }) {
   const [isFinishing, setIsFinishing] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [finishResponse, setFinishResponse] = useState(null);
+  const [showFailureModal, setShowFailureModal] = useState(false);
+  const [failureMessage, setFailureMessage] = useState("");
   // attachments: 채팅에서 올린 파일을 즉시 S3 업로드하여 s3Key/previewUrl을 보관
   // { id, filename, type: "IMAGE"|"VIDEO"|"AUDIO", s3Key, previewUrl, mimeType, size }
   const [attachments, setAttachments] = useState([]);
@@ -871,40 +875,21 @@ export default function ChatPage({ initialChatData }) {
         evidences: evidences ? evidences.length : 0,
       });
 
-      // 목업 데이터 사용 (추후 제거 예정)
-      const mockResponse = {
-        isSuccess: true,
-        code: "200",
-        message: "채팅성공",
-        data: {
-          answer: "어 고생했어",
-          time: new Date().toLocaleTimeString("ko-KR", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          }),
-          date: new Date().toISOString().split("T")[0],
-        },
-      };
+      // 에러 처리 - 사용자 액션이므로 모달 사용
+      setFailureMessage("메시지 전송에 실패했습니다. 다시 시도해주세요.");
+      setShowFailureModal(true);
 
+      // 로딩 상태 제거
       setMessages((prev) => {
         const updated = [...prev];
         const idx = updated.findIndex(
           (m) => m.type === "ai" && m.content === "응답 중입니다"
         );
         if (idx !== -1) {
-          updated[idx] = {
-            ...updated[idx],
-            content: mockResponse.data.answer,
-            time: mockResponse.data.time,
-            date: mockResponse.data.date,
-          };
+          updated.splice(idx, 1);
         }
         return updated;
       });
-
-      setInputValue("");
-      clearAllAttachments();
     } finally {
       setIsLoading(false);
       uploadAbortRef.current = null;
@@ -1071,6 +1056,13 @@ export default function ChatPage({ initialChatData }) {
             />
           );
         })()}
+
+      <FailureNotificationModal
+        isOpen={showFailureModal}
+        onClose={() => setShowFailureModal(false)}
+        title="작업 실패"
+        message={failureMessage}
+      />
     </ChatContainer>
   );
 }

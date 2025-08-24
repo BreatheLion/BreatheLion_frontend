@@ -90,43 +90,7 @@ export default function RecentRecordsPage({ onNavigateToRecordDetail }) {
         setRecentRecords([]);
       }
     } catch (error) {
-      // 목업 데이터 사용 (추후 제거 예정)
-      console.log("API 호출 실패, 목업 데이터 사용:", error);
-      const mockData = {
-        records: [
-          {
-            record_id: 1,
-            drawer_id: 5,
-            title:
-              "긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목긴제목",
-            location:
-              "긴장소긴장소긴장소긴장소긴장소긴장소긴장소긴장소긴장소긴장소긴장소",
-            drawer: "동방에서 벌어진 일",
-            assailant: ["조해원", "오영록"],
-            created_at: "2025-08-05T10:00:00",
-          },
-          {
-            record_id: 2,
-            drawer_id: 7,
-            title: "물건을 던지는 신체적 위협",
-            location: "교실",
-            drawer:
-              "긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더긴폴더ㄴ",
-            assailant: ["김민재"],
-            created_at: "2025-08-03T13:15:00",
-          },
-          {
-            record_id: 3,
-            drawer_id: 4,
-            title: "고의적인 밀침과 언쟁 발생",
-            location: "복도",
-            drawer: "복도에서의 갈등",
-            assailant: ["이서준", "박지윤"],
-            created_at: "2025-08-06T09:45:00",
-          },
-        ],
-      };
-      setRecentRecords(mockData.records);
+      window.handleApiError(error, "오류가 발생했습니다. 메인 페이지로 이동합니다.");
     } finally {
       setIsLoading(false);
     }

@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
+import BackButton from "../components/ui/BackButton";
 
 // 이미지 import
 import lawyer1 from "../assets/lawyers/lawyer1.png";
@@ -198,6 +199,7 @@ export default function LawyerPage() {
   return (
     <PageContainer>
       <Header currentPage="lawyer" />
+      <BackButton onClick={() => navigate(-1)} />
       <ContentContainer>
         <TitleContainer>
           <Title>변호사 상담</Title>

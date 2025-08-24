@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
 import { SmallButton } from "../components/ui/Button";
@@ -8,6 +9,7 @@ import FolderChangeModal from "../components/ui/FolderChangeModal";
 import FileShowModal from "../components/ui/FileShowModal";
 import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
 import FailureNotificationModal from "../components/ui/FailureNotificationModal";
+import BackButton from "../components/ui/BackButton";
 import titleEditInRecordIcon from "../assets/titleEditInRecordIcon.svg";
 import { apiHelpers } from "../utils/api";
 
@@ -290,6 +292,7 @@ const severityMap = {
 };
 
 export default function RecordDetailPage({ previousPage, record_id }) {
+  const navigate = useNavigate();
   const [recordData, setRecordData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showTitleEditModal, setShowTitleEditModal] = useState(false);
@@ -498,54 +501,10 @@ export default function RecordDetailPage({ previousPage, record_id }) {
         throw new Error("기록 데이터를 찾을 수 없습니다.");
       }
     } catch (error) {
-      // 목업 데이터 사용 (추후 제거 예정)
-      console.log("API 호출 실패, 목업 데이터 사용:", error);
-
-      const mockData = {
-        record_id: 1,
-        drawer_id: 5,
-        title: "교내에서 열린 잔악무도한 일",
-        category: "언어폭력",
-        content: "교내에서 학생 간 심한 욕설이 발생하였습니다.",
-        severity: 2,
-        location: "서울시 A고등학교",
-        district: "동작구",
-        occurred_at: "2025-08-01T14:30:00",
-        created_at: "2025-08-02T09:00:00",
-        updated_at: "2025-08-02T09:10:00",
-        assailant: ["김민재"],
-        witness: ["정다은", "한유진"],
-        drawer_name: "동방에서 벌어진 일",
-        evidences: [
-          {
-            id: 101,
-            record_id: 1,
-            type: "AUDIO",
-            filename: "bullying_recording.m4a",
-            s3_url:
-              "https://s3.bucket.com/records/1/audio/bullying_recording.m4a",
-            uploaded_at: "2025-08-02T09:05:00",
-          },
-          {
-            id: 102,
-            record_id: 1,
-            type: "PHOTO",
-            filename: "chat_screenshot.png",
-            s3_url: "https://s3.bucket.com/records/1/photo/chat_screenshot.png",
-            uploaded_at: "2025-08-02T09:06:00",
-          },
-          {
-            id: 103,
-            record_id: 1,
-            type: "FILE",
-            filename: "진술서.pdf",
-            s3_url: "https://s3.bucket.com/records/1/file/진술서.pdf",
-            uploaded_at: "2025-08-02T09:07:00",
-          },
-        ],
-      };
-
-      setRecordData(mockData);
+      window.handleApiError(
+        error,
+        "오류가 발생했습니다. 메인 페이지로 이동합니다."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -580,6 +539,7 @@ export default function RecordDetailPage({ previousPage, record_id }) {
   return (
     <PageContainer>
       <Header currentPage="record-detail" />
+      <BackButton onClick={() => navigate(-1)} />
       <ContentContainer>
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>

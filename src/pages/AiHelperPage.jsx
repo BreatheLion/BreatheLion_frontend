@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
 import MainButton from "../components/ui/Button/MainButton";
+import BackButton from "../components/ui/BackButton";
 import { apiHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
@@ -416,60 +417,10 @@ export default function AiHelperPage({ drawerId, drawerName }) {
         setSummaryData(null);
       }
     } catch (error) {
-      // 목업 데이터 사용 (추후 제거 예정)
-      console.log("API 호출 실패, 목업 데이터 사용:", error);
-
-      const mockData = {
-        drawer_name: "동방에서 벌어진 일",
-        assailant: ["김민재", "정다은"],
-        record_count: 5,
-        summary:
-          "교내에서 학생 간 심한 욕설과 폭력이 발생하였습니다. 가해자들이 피해자를 지속적으로 괴롭혔으며, 이는 학교 폭력에 해당하는 행위입니다.",
-        care_guide:
-          "이런 상황에서 가장 중요한 것은 안전입니다. 즉시 신고하고 증거를 수집하세요. 학교나 경찰에 도움을 요청하는 것이 필요합니다.",
-        related_laws: [
-          {
-            law_name: "학교폭력예방 및 대책에 관한 법률",
-            article: "제2조(정의)",
-            content:
-              "이 법에서 '학교폭력'이란 학교 내외에서 학생을 대상으로 발생한 상해, 폭행, 감금, 협박, 약취·유인, 명예훼손·모욕, 공갈, 강요 및 성폭력, 따돌림, 정보통신망을 이용한 음란·폭력정보 등에 의하여 신체·정신 또는 재산상의 피해를 수반하는 행위를 말한다.",
-          },
-          {
-            law_name: "형법",
-            article: "제260조(상해)",
-            content:
-              "사람의 신체를 상해한 자는 7년 이하의 징역, 10년 이하의 자격정지 또는 1천만원 이하의 벌금에 처한다.",
-          },
-          {
-            law_name: "형법",
-            article: "제307조(명예훼손)",
-            content:
-              "공연히 사실을 적시하여 사람의 명예를 훼손한 자는 2년 이하의 징역이나 금고 또는 500만원 이하의 벌금에 처한다.",
-          },
-        ],
-        organizations: [
-          {
-            name: "학교폭력신고센터",
-            description: "학교폭력 피해자 상담 및 신고",
-            phone: "117",
-            url: "https://www.schoolviolence.or.kr",
-          },
-          {
-            name: "청소년폭력예방재단",
-            description: "청소년 폭력 예방 및 상담",
-            phone: "1388",
-            url: "https://www.1388.or.kr",
-          },
-          {
-            name: "경찰청 사이버안전국",
-            description: "사이버 폭력 신고 및 상담",
-            phone: "182",
-            url: "https://www.police.go.kr/www/open/cyber",
-          },
-        ],
-      };
-
-      setSummaryData(mockData);
+      window.handleApiError(
+        error,
+        "오류가 발생했습니다. 메인 페이지로 이동합니다."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -543,6 +494,7 @@ export default function AiHelperPage({ drawerId, drawerName }) {
   return (
     <PageContainer>
       <Header currentPage="ai-helper" />
+      <BackButton onClick={() => navigate(-1)} />
       <ContentContainer>
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>

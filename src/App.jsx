@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Routes,
   Route,
@@ -21,6 +21,7 @@ import ConsultantConnectPage from "./pages/ConsultantConnectPage";
 import LawyerDetailsPage from "./pages/LawyerDetailsPage";
 import ConsultantConnectDetailPage from "./pages/ConsultantConnectDetailPage";
 import AiHelperPage from "./pages/AiHelperPage";
+import ErrorModal from "./components/ui/ErrorModal";
 
 // 전역 네비게이션 함수들을 위한 객체
 window.navigation = {};
@@ -45,15 +46,17 @@ window.handleApiError = (
     isErrorHandling = false;
   }, 1000);
 
-  alert(`${errorMessage}\n\n메인 페이지로 이동합니다.`);
-  if (window.navigation.navigateToMain) {
-    window.navigation.navigateToMain();
+  // 에러 모달 표시
+  if (window.showErrorModal) {
+    window.showErrorModal();
   }
 };
 
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [shouldNavigateToMain, setShouldNavigateToMain] = useState(false);
 
   // 전역 네비게이션(기존 컴포넌트 호환)
   useEffect(() => {
@@ -83,6 +86,9 @@ function App() {
       navigate(`/extract-pdf/${recordId}`, {
         state: { recordName, drawerName },
       });
+
+    // 에러 모달 표시 함수 설정
+    window.showErrorModal = () => setShowErrorModal(true);
   }, [navigate]);
 
   // 모달 오픈 시 뒤로가기를 무시
@@ -176,39 +182,63 @@ function App() {
   };
 
   return (
-    <Routes>
-      {/* 초기 진입은 MainPage */}
-      <Route
-        path="/"
-        element={
-          <MainPage
-            onNavigateToChat={(chatData) =>
-              navigate("/chat", { state: { initialChatData: chatData } })
+    <>
+      <Routes>
+        {/* 초기 진입은 MainPage */}
+        <Route
+          path="/"
+          element={
+            <MainPage
+              onNavigateToChat={(chatData) =>
+                navigate("/chat", { state: { initialChatData: chatData } })
+              }
+            />
+          }
+        />
+        <Route path="/chat" element={<ChatRoute />} />
+        <Route path="/drawer" element={<DrawerRoute />} />
+        <Route path="/record/:recordId" element={<RecordDetailRoute />} />
+        <Route path="/chat-view/:recordId" element={<ChatViewRoute />} />
+        <Route path="/summary/:folderId" element={<SummaryRoute />} />
+        <Route path="/extract-pdf/:recordId" element={<ExtractPdfRoute />} />
+        <Route
+          path="/get-content-prove/:recordId"
+          element={<GetContentProveRoute />}
+        />
+        <Route path="/ai-helper/:drawerId" element={<AiHelperRoute />} />
+        <Route path="/lawyer" element={<LawyerPage />} />
+        <Route path="/consultant" element={<ConsultantPage />} />
+        <Route path="/consultant-connect" element={<ConsultantConnectPage />} />
+        <Route path="/lawyer-details" element={<LawyerDetailsPage />} />
+        <Route
+          path="/consultant-details"
+          element={<ConsultantConnectDetailPage />}
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      {showErrorModal && (
+        <ErrorModal
+          onClose={() => {
+            setShowErrorModal(false);
+            setShouldNavigateToMain(true);
+          }}
+        />
+      )}
+
+      {/* 모달이 사라진 후 메인 페이지로 이동 */}
+      {shouldNavigateToMain && !showErrorModal && (
+        <div style={{ display: "none" }}>
+          {(() => {
+            setShouldNavigateToMain(false);
+            if (window.navigation.navigateToMain) {
+              window.navigation.navigateToMain();
             }
-          />
-        }
-      />
-      <Route path="/chat" element={<ChatRoute />} />
-      <Route path="/drawer" element={<DrawerRoute />} />
-      <Route path="/record/:recordId" element={<RecordDetailRoute />} />
-      <Route path="/chat-view/:recordId" element={<ChatViewRoute />} />
-      <Route path="/summary/:folderId" element={<SummaryRoute />} />
-      <Route path="/extract-pdf/:recordId" element={<ExtractPdfRoute />} />
-      <Route
-        path="/get-content-prove/:recordId"
-        element={<GetContentProveRoute />}
-      />
-      <Route path="/ai-helper/:drawerId" element={<AiHelperRoute />} />
-      <Route path="/lawyer" element={<LawyerPage />} />
-      <Route path="/consultant" element={<ConsultantPage />} />
-      <Route path="/consultant-connect" element={<ConsultantConnectPage />} />
-      <Route path="/lawyer-details" element={<LawyerDetailsPage />} />
-      <Route
-        path="/consultant-details"
-        element={<ConsultantConnectDetailPage />}
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+            return null;
+          })()}
+        </div>
+      )}
+    </>
   );
 }
 

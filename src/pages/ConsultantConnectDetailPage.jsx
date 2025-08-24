@@ -1,7 +1,8 @@
 import React from "react";
 import styled from "styled-components";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
+import BackButton from "../components/ui/BackButton";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -199,9 +200,12 @@ export default function ConsultantConnectDetailPage() {
         specialization: "우울증·불안장애",
       };
 
+  const navigate = useNavigate();
+
   return (
     <PageContainer>
       <Header currentPage="consultant-details" />
+      <BackButton onClick={() => navigate(-1)} />
       <ContentContainer>
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>

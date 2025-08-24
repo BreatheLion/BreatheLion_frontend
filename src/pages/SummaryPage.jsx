@@ -5,8 +5,10 @@ import {
   useLayoutEffect,
   useCallback,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
+import BackButton from "../components/ui/BackButton";
 import ArrowIcon from "../assets/ArrowIcon.svg";
 import DownArrowIcon from "../assets/DownArrowIcon.svg";
 import SearchIcon from "../assets/SearchIcon.svg";
@@ -363,6 +365,7 @@ const CardArrow = styled.img`
 `;
 
 export default function SummaryPage({ folderId, folderName }) {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [summaryData, setSummaryData] = useState(null);
   const [timelineData, setTimelineData] = useState([]);
@@ -407,18 +410,10 @@ export default function SummaryPage({ folderId, folderName }) {
         setSummaryData(null);
       }
     } catch (error) {
-      // 목업 데이터 사용 (추후 제거 예정)
-      console.log("API 호출 실패, 목업 데이터 사용:", error);
-
-      const mockData = {
-        drawer_name: "동방에서 벌어진 일",
-        assailant: ["김민재", "정다은"],
-        record_count: 5,
-        summary:
-          "교내에서 학생 간 심한 욕설과 폭력이 발생하였습니다. 가해자들이 피해자를 지속적으로 괴롭혔으며, 이는 학교 폭력에 해당하는 행위입니다.",
-      };
-
-      setSummaryData(mockData);
+      window.handleApiError(
+        error,
+        "오류가 발생했습니다. 메인 페이지로 이동합니다."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -437,60 +432,10 @@ export default function SummaryPage({ folderId, folderName }) {
           setTimelineData([]);
         }
       } catch (error) {
-        // 목업 데이터 사용 (추후 제거 예정)
-        console.log("타임라인 API 호출 실패, 목업 데이터 사용:", error);
-
-        const mockTimelineData = [
-          {
-            record_id: 1,
-            title: "교내에서 발생한 첫 번째 사건",
-            location: "교실",
-            category: "언어폭력",
-            summary: "수업 중 가해자가 피해자에게 심한 욕설을 하였습니다.",
-            occurred_at: "2025-06-13",
-            severity: 1,
-          },
-          {
-            record_id: 2,
-            title: "복도에서의 두 번째 사건",
-            location: "복도",
-            category: "폭력",
-            summary: "복도에서 가해자가 피해자를 밀치고 위협하였습니다.",
-            occurred_at: "2025-06-15",
-            severity: 2,
-          },
-          {
-            record_id: 3,
-            title: "사내 메신저를 통한 괴롭힘",
-            location: "사내 메신저",
-            category: "언어폭력",
-            summary: "메시지에 인사 없이 지시만 하며 피해자를 무시하였습니다.",
-            occurred_at: "2025-06-18",
-            severity: 0,
-          },
-          {
-            record_id: 4,
-            title: "급식실에서의 집단 괴롭힘",
-            location: "급식실",
-            category: "집단 괴롭힘",
-            summary: "여러 명이 함께 피해자를 따돌리고 음식을 뺏었습니다.",
-            occurred_at: "2025-06-20",
-            severity: 2,
-          },
-          {
-            record_id: 5,
-            title: "최근 발생한 심각한 사건",
-            location: "운동장",
-            category: "폭력",
-            summary: "운동장에서 신체적 폭력이 발생하여 피해자가 다쳤습니다.",
-            occurred_at: "2025-06-25",
-            severity: 2,
-          },
-        ];
-
-        // 목업 데이터는 키워드와 관계없이 전체 데이터 사용
-        // 실제 API에서는 서버에서 필터링된 결과가 옴
-        setTimelineData(mockTimelineData);
+        window.handleApiError(
+          error,
+          "오류가 발생했습니다. 메인 페이지로 이동합니다."
+        );
       }
     },
     [folderId]
@@ -560,6 +505,7 @@ export default function SummaryPage({ folderId, folderName }) {
   return (
     <PageContainer>
       <Header currentPage="summary" />
+      <BackButton onClick={() => navigate(-1)} />
       <ContentContainer>
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>

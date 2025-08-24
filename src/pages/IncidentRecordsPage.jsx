@@ -176,53 +176,7 @@ export default function IncidentRecordsPage({
         setIncidentData([]);
       }
     } catch (error) {
-      // 목업 데이터 사용 (추후 제거 예정)
-      console.log("API 호출 실패, 목업 데이터 사용:", error);
-      const mockData = {
-        isSuccess: true,
-        code: "200",
-        message: "서랍 목록 조회 성공",
-        data: {
-          drawers: [
-            {
-              drawer_id: 1,
-              name: "상도동 커피 폭언",
-              record_count: 3,
-              create_at: "2025.08.16",
-              update_at: "2025.08.20",
-            },
-            {
-              drawer_id: 2,
-              name: "회기동 함박",
-              record_count: 0,
-              create_at: "2025.08.06",
-              update_at: "2025.08.19",
-            },
-            {
-              drawer_id: 3,
-              name: "동방에서 벌어진 일",
-              record_count: 5,
-              create_at: "2025.08.10",
-              update_at: "2025.08.18",
-            },
-            {
-              drawer_id: 4,
-              name: "교실에서 일어난 위협",
-              record_count: 2,
-              create_at: "2025.08.12",
-              update_at: "2025.08.15",
-            },
-          ],
-        },
-      };
-
-      // record_count를 record_amt로 매핑하고 create_at을 date로 매핑
-      const mappedData = mockData.data.drawers.map((drawer) => ({
-        ...drawer,
-        record_amt: drawer.record_count,
-        date: drawer.create_at,
-      }));
-      setIncidentData(mappedData);
+      window.handleApiError(error, "오류가 발생했습니다. 메인 페이지로 이동합니다.");
     } finally {
       setIsLoading(false);
     }
@@ -297,17 +251,9 @@ export default function IncidentRecordsPage({
         throw new Error(responseData.message || "폴더 삭제에 실패했습니다.");
       }
     } catch (error) {
-      // 목업 데이터 사용 (추후 제거 예정)
-      console.log("API 호출 실패, 목업 데이터 사용:", error);
-
       // 실패 모달 표시
       setFailureMessage("폴더 삭제에 실패했습니다. 다시 시도해주세요.");
       setShowFailureModal(true);
-
-      // 목업 데이터로 로컬 상태 업데이트 (테스트용)
-      setIncidentData((prev) =>
-        prev.filter((folder) => !selectedFolders.includes(folder.drawer_id))
-      );
     } finally {
       setShowDeleteConfirmModal(false);
       setIsDeleteSelectionMode(false);

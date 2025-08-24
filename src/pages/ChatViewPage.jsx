@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
 import FileShowModal from "../components/ui/FileShowModal";
+import BackButton from "../components/ui/BackButton";
 import { apiHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
@@ -182,6 +184,7 @@ export default function ChatViewPage({
   created_at,
   drawerName,
 }) {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [chatData, setChatData] = useState(null);
   const [showFileModal, setShowFileModal] = useState(false);
@@ -259,55 +262,10 @@ export default function ChatViewPage({
         throw new Error("채팅 데이터를 찾을 수 없습니다.");
       }
     } catch (error) {
-      // 목업 데이터 사용 (추후 제거 예정)
-      console.log("API 호출 실패, 목업 데이터 사용:", error);
-
-      const mockData = {
-        isSuccess: true,
-        code: "200",
-        message: "채팅 조회 성공!",
-        data: {
-          session_id: 5,
-          messages: [
-            {
-              content:
-                "그런 마음이 드는 게 정말 힘들겠어요. 따돌림을 당하는 것 같은 느낌도 참 고통스럽고요.",
-              role: "assistant",
-              message_time: "13:39",
-              message_date: "2025 - 08 - 11",
-              evidences: [
-                {
-                  fileName: "photo.jpg",
-                  contentType: "image/jpeg",
-                  viewUrl: "https://bucket.s3.amazonaws.com/presigned-url-123",
-                },
-                {
-                  fileName: "screenshot.png",
-                  contentType: "image/png",
-                  viewUrl: "https://bucket.s3.amazonaws.com/presigned-url-125",
-                },
-              ],
-            },
-            {
-              content: "네, 지난주에 친구들이 점심시간에 저를 빼놓고 모였어요.",
-              role: "user",
-              message_time: "13:40",
-              message_date: "2025 - 08 - 11",
-              evidences: null,
-            },
-            {
-              content:
-                "그때 어떤 기분이 들었는지, 그리고 이후에 어떤 일이 있었는지 이야기해 주실 수 있나요?",
-              role: "assistant",
-              message_time: "13:41",
-              message_date: "2025 - 08 - 11",
-              evidences: null,
-            },
-          ],
-        },
-      };
-
-      setChatData(mockData);
+      window.handleApiError(
+        error,
+        "오류가 발생했습니다. 메인 페이지로 이동합니다."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -331,6 +289,7 @@ export default function ChatViewPage({
   return (
     <PageContainer>
       <Header currentPage="chat-view" />
+      <BackButton onClick={() => navigate(-1)} />
       <ContentContainer>
         <TitleContainer>
           <Subtitle>

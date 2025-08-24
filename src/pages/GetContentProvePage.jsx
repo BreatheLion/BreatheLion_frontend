@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
 import MainButton from "../components/ui/Button/MainButton";
 import ConfirmModal from "../components/ui/ConfirmModal";
 import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
 import FailureNotificationModal from "../components/ui/FailureNotificationModal";
+import BackButton from "../components/ui/BackButton";
 import WarningIcon from "../assets/warningIcon.svg";
 import { apiHelpers } from "../utils/api";
 
@@ -347,6 +349,7 @@ const PhoneField = ({ value, onChange, isInvalid, placeholder }) => (
 );
 
 export default function GetContentProvePage({ recordId, recordName }) {
+  const navigate = useNavigate();
   const [selectedCard, setSelectedCard] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -595,6 +598,7 @@ export default function GetContentProvePage({ recordId, recordName }) {
   return (
     <PageContainer>
       <Header currentPage="get-content-prove" />
+      <BackButton onClick={() => navigate(-1)} />
       <ContentContainer ref={contentContainerRef}>
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>
