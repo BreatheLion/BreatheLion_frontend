@@ -90,7 +90,10 @@ export default function RecentRecordsPage({ onNavigateToRecordDetail }) {
         setRecentRecords([]);
       }
     } catch (error) {
-      window.handleApiError(error, "오류가 발생했습니다. 메인 페이지로 이동합니다.");
+      window.handleApiError(
+        error,
+        "오류가 발생했습니다. 메인 페이지로 이동합니다."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -117,7 +120,7 @@ export default function RecentRecordsPage({ onNavigateToRecordDetail }) {
               id={record.record_id}
               order={index + 1}
               title={record.title}
-              date={new Date(record.created_at).toLocaleDateString("ko-KR", {
+              date={new Date(record.occurred_at).toLocaleDateString("ko-KR", {
                 year: "numeric",
                 month: "numeric",
                 day: "numeric",
