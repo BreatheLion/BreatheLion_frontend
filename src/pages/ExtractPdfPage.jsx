@@ -1,6 +1,9 @@
 import styled from "styled-components";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
+import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
+import FailureNotificationModal from "../components/ui/FailureNotificationModal";
 import ContentProveIcon from "../assets/ContentProveIcon.svg";
 import ConsultantIcon from "../assets/ConsultantIcon.svg";
 import ArrowIcon from "../assets/ArrowIcon.svg";
@@ -110,6 +113,10 @@ const HighlightedText = styled.span`
 
 export default function ExtractPdfPage({ recordId, recordName, drawerName }) {
   const navigate = useNavigate();
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showFailureModal, setShowFailureModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [failureMessage, setFailureMessage] = useState("");
 
   const getSubtitle = () => {
     if (drawerName) {
@@ -143,13 +150,16 @@ export default function ExtractPdfPage({ recordId, recordName, drawerName }) {
           document.body.removeChild(link);
           window.URL.revokeObjectURL(url);
 
-          alert("상담 자료 PDF가 성공적으로 다운로드되었습니다.");
+          setSuccessMessage("상담 자료 PDF가 성공적으로 다운로드되었습니다.");
+          setShowSuccessModal(true);
         } else {
-          alert("상담 자료가 성공적으로 생성되었습니다.");
+          setSuccessMessage("상담 자료가 성공적으로 생성되었습니다.");
+          setShowSuccessModal(true);
         }
       } catch (error) {
         console.error("상담 자료 생성 중 오류:", error);
-        alert("상담 자료 생성에 실패했습니다. 다시 시도해주세요.");
+        setFailureMessage("상담 자료 생성에 실패했습니다. 다시 시도해주세요.");
+        setShowFailureModal(true);
       }
     }
   };
@@ -210,6 +220,20 @@ export default function ExtractPdfPage({ recordId, recordName, drawerName }) {
           </Card>
         </CardsContainer>
       </ContentContainer>
+
+      <SuccessNotificationModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="상담 자료 생성 완료"
+        message={successMessage}
+      />
+
+      <FailureNotificationModal
+        isOpen={showFailureModal}
+        onClose={() => setShowFailureModal(false)}
+        title="상담 자료 생성 실패"
+        message={failureMessage}
+      />
     </PageContainer>
   );
 }

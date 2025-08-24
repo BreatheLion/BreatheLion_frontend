@@ -3,6 +3,8 @@ import styled from "styled-components";
 import Header from "../components/layout/Header";
 import MainButton from "../components/ui/Button/MainButton";
 import ConfirmModal from "../components/ui/ConfirmModal";
+import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
+import FailureNotificationModal from "../components/ui/FailureNotificationModal";
 import WarningIcon from "../assets/warningIcon.svg";
 import { apiHelpers } from "../utils/api";
 
@@ -347,6 +349,10 @@ const PhoneField = ({ value, onChange, isInvalid, placeholder }) => (
 export default function GetContentProvePage({ recordId, recordName }) {
   const [selectedCard, setSelectedCard] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showFailureModal, setShowFailureModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [failureMessage, setFailureMessage] = useState("");
   const contentContainerRef = React.useRef(null);
 
   // 가해자 상태
@@ -416,7 +422,10 @@ export default function GetContentProvePage({ recordId, recordName }) {
         },
       }).open();
     } else {
-      alert("주소 검색 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+      setFailureMessage(
+        "주소 검색 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요."
+      );
+      setShowFailureModal(true);
     }
   };
 
@@ -522,13 +531,16 @@ export default function GetContentProvePage({ recordId, recordName }) {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        alert("내용증명 PDF가 성공적으로 다운로드되었습니다.");
+        setSuccessMessage("내용증명 PDF가 성공적으로 다운로드되었습니다.");
+        setShowSuccessModal(true);
       } else {
-        alert("내용증명이 성공적으로 생성되었습니다.");
+        setSuccessMessage("내용증명이 성공적으로 생성되었습니다.");
+        setShowSuccessModal(true);
       }
     } catch (error) {
       console.error("내용증명 생성 중 오류:", error);
-      alert("내용증명 생성에 실패했습니다. 다시 시도해주세요.");
+      setFailureMessage("내용증명 생성에 실패했습니다. 다시 시도해주세요.");
+      setShowFailureModal(true);
     }
   };
 
@@ -732,6 +744,20 @@ export default function GetContentProvePage({ recordId, recordName }) {
         onConfirm={handleConfirmModalConfirm}
         title="내용증명을 추출할까요?"
         subtitle=""
+      />
+
+      <SuccessNotificationModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="내용증명 생성 완료"
+        message={successMessage}
+      />
+
+      <FailureNotificationModal
+        isOpen={showFailureModal}
+        onClose={() => setShowFailureModal(false)}
+        title="내용증명 생성 실패"
+        message={failureMessage}
       />
     </PageContainer>
   );
