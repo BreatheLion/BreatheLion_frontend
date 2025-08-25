@@ -48,7 +48,7 @@ const Title = styled.h2`
   margin: 0;
 `;
 
-const Subtitle = styled.p`
+const Subtitle = styled.div`
   color: var(--30, #acacac);
   text-align: center;
   font-family: Pretendard;
@@ -95,14 +95,7 @@ export default function DeleteConfirmModal({
       <ModalCard onClick={(e) => e.stopPropagation()}>
         <TextContainer>
           <Title>{title}</Title>
-          <Subtitle>
-            {subtitle.split("\n").map((line, index) => (
-              <span key={index}>
-                {line}
-                {index < subtitle.split("\n").length - 1 && <br />}
-              </span>
-            ))}
-          </Subtitle>
+          <Subtitle>{subtitle}</Subtitle>
         </TextContainer>
         <IconContainer>
           <IconImage src={deleteCheckIcon} alt="삭제 확인 아이콘" />
