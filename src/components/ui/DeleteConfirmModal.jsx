@@ -57,6 +57,7 @@ const Subtitle = styled.p`
   font-weight: 500;
   line-height: 1.25rem;
   margin: 0;
+  white-space: pre-line;
 `;
 
 const IconContainer = styled.div`
