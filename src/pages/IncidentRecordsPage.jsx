@@ -176,7 +176,10 @@ export default function IncidentRecordsPage({
         setIncidentData([]);
       }
     } catch (error) {
-      window.handleApiError(error, "오류가 발생했습니다. 메인 페이지로 이동합니다.");
+      window.handleApiError(
+        error,
+        "오류가 발생했습니다. 메인 페이지로 이동합니다."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -250,7 +253,7 @@ export default function IncidentRecordsPage({
       } else {
         throw new Error(responseData.message || "폴더 삭제에 실패했습니다.");
       }
-    } catch (error) {
+    } catch {
       // 실패 모달 표시
       setFailureMessage("폴더 삭제에 실패했습니다. 다시 시도해주세요.");
       setShowFailureModal(true);
@@ -263,6 +266,13 @@ export default function IncidentRecordsPage({
 
   return (
     <>
+      {isDeleteSelectionMode && (
+        <FolderDeleteSelectionUI
+          selectedCount={selectedFolders.length}
+          onCancel={handleDeleteSelectionCancel}
+          onDelete={handleDeleteSelectionConfirm}
+        />
+      )}
       <CardsContainer>
         {isLoading ? (
           <div style={{ textAlign: "center", padding: "2rem" }}>
@@ -272,13 +282,6 @@ export default function IncidentRecordsPage({
           <EmptyMessage>서랍이 없습니다</EmptyMessage>
         ) : (
           <>
-            {isDeleteSelectionMode && (
-              <FolderDeleteSelectionUI
-                selectedCount={selectedFolders.length}
-                onCancel={handleDeleteSelectionCancel}
-                onDelete={handleDeleteSelectionConfirm}
-              />
-            )}
             {incidentData.map((incident) => (
               <IncidentCard
                 key={incident.drawer_id}
