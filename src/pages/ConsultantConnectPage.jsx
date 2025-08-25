@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
-import BackButton from "../components/ui/BackButton";
 
 // 이미지 import
 import Consultant1 from "../assets/consultants/Consultant1.svg";
@@ -199,7 +198,6 @@ export default function ConsultantConnectPage() {
   return (
     <PageContainer>
       <Header currentPage="consultant-connect" />
-      <BackButton onClick={() => navigate(-1)} />
       <ContentContainer>
         <TitleContainer>
           <Title>상담사 상담</Title>

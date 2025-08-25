@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
-import MainButton from "../components/ui/Button/MainButton";
-import BackButton from "../components/ui/BackButton";
+import { SmallButton } from "../components/ui/Button";
 import { apiHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
@@ -25,9 +24,28 @@ const ContentContainer = styled.div`
 const TitleContainer = styled.div`
   width: 100%;
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4.5rem;
+`;
+
+const TitleContent = styled.div`
+  display: flex;
   flex-direction: column;
   gap: 0.62rem;
-  margin-top: 4.5rem;
+`;
+
+const CustomSmallButton = styled(SmallButton)`
+  border-radius: 0.5rem;
+  border: 1px solid var(--5, #e9e9e9);
+  background: #fff;
+  color: var(--50, #7a7a7a);
+  text-align: center;
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.375rem;
 `;
 
 const Subtitle = styled.div`
@@ -494,11 +512,15 @@ export default function AiHelperPage({ drawerId, drawerName }) {
   return (
     <PageContainer>
       <Header currentPage="ai-helper" />
-      <BackButton onClick={() => navigate(-1)} />
       <ContentContainer>
         <TitleContainer>
-          <Subtitle>{getSubtitle()}</Subtitle>
-          <Title>{currentDrawerName}</Title>
+          <TitleContent>
+            <Subtitle>{getSubtitle()}</Subtitle>
+            <Title>{currentDrawerName}</Title>
+          </TitleContent>
+          <CustomSmallButton onClick={handleBackToList}>
+            목록으로
+          </CustomSmallButton>
         </TitleContainer>
 
         <SummaryContainer>
@@ -598,9 +620,6 @@ export default function AiHelperPage({ drawerId, drawerName }) {
             </OrganizationsContainer>
           </SectionContainer>
         </BottomContainer>
-        <ButtonContainer>
-          <MainButton onClick={handleBackToList}>목록으로</MainButton>
-        </ButtonContainer>
       </ContentContainer>
     </PageContainer>
   );

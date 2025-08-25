@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
 import FailureNotificationModal from "../components/ui/FailureNotificationModal";
-import BackButton from "../components/ui/BackButton";
 import ContentProveIcon from "../assets/ContentProveIcon.svg";
 import ConsultantIcon from "../assets/ConsultantIcon.svg";
 import ArrowIcon from "../assets/ArrowIcon.svg";
@@ -168,7 +167,6 @@ export default function ExtractPdfPage({ recordId, recordName, drawerName }) {
   return (
     <PageContainer>
       <Header currentPage="extract-pdf" />
-      <BackButton onClick={() => navigate(-1)} />
       <ContentContainer>
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>

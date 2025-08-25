@@ -2,7 +2,6 @@ import React from "react";
 import styled from "styled-components";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
-import BackButton from "../components/ui/BackButton";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -236,7 +235,6 @@ export default function LawyerDetailsPage() {
   return (
     <PageContainer>
       <Header currentPage="lawyer-details" />
-      <BackButton onClick={() => navigate(-1)} />
       <ContentContainer>
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>

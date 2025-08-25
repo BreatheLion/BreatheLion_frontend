@@ -6,7 +6,6 @@ import MainButton from "../components/ui/Button/MainButton";
 import ConfirmModal from "../components/ui/ConfirmModal";
 import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
 import FailureNotificationModal from "../components/ui/FailureNotificationModal";
-import BackButton from "../components/ui/BackButton";
 import WarningIcon from "../assets/warningIcon.svg";
 import { apiHelpers } from "../utils/api";
 
@@ -598,7 +597,6 @@ export default function GetContentProvePage({ recordId, recordName }) {
   return (
     <PageContainer>
       <Header currentPage="get-content-prove" />
-      <BackButton onClick={() => navigate(-1)} />
       <ContentContainer ref={contentContainerRef}>
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>

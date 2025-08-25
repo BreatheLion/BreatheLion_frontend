@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
 import { SmallButton } from "../components/ui/Button";
@@ -9,7 +8,6 @@ import FolderChangeModal from "../components/ui/FolderChangeModal";
 import FileShowModal from "../components/ui/FileShowModal";
 import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
 import FailureNotificationModal from "../components/ui/FailureNotificationModal";
-import BackButton from "../components/ui/BackButton";
 import titleEditInRecordIcon from "../assets/titleEditInRecordIcon.svg";
 import { apiHelpers } from "../utils/api";
 
@@ -292,7 +290,6 @@ const severityMap = {
 };
 
 export default function RecordDetailPage({ previousPage, record_id }) {
-  const navigate = useNavigate();
   const [recordData, setRecordData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showTitleEditModal, setShowTitleEditModal] = useState(false);
@@ -540,7 +537,6 @@ export default function RecordDetailPage({ previousPage, record_id }) {
   return (
     <PageContainer>
       <Header currentPage="record-detail" />
-      <BackButton onClick={() => navigate(-1)} />
       <ContentContainer>
         <TitleContainer>
           <Subtitle>{getSubtitle()}</Subtitle>

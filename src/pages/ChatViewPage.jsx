@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
 import FileShowModal from "../components/ui/FileShowModal";
-import BackButton from "../components/ui/BackButton";
+import { SmallButton } from "../components/ui/Button";
 import { apiHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
@@ -25,9 +25,28 @@ const ContentContainer = styled.div`
 const TitleContainer = styled.div`
   width: 100%;
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4.5rem;
+`;
+
+const TitleContent = styled.div`
+  display: flex;
   flex-direction: column;
   gap: 0.62rem;
-  margin-top: 4.5rem;
+`;
+
+const CustomSmallButton = styled(SmallButton)`
+  border-radius: 0.5rem;
+  border: 1px solid var(--5, #e9e9e9);
+  background: #fff;
+  color: var(--50, #7a7a7a);
+  text-align: center;
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.375rem;
 `;
 
 const Subtitle = styled.div`
@@ -289,15 +308,19 @@ export default function ChatViewPage({
   return (
     <PageContainer>
       <Header currentPage="chat-view" />
-      <BackButton onClick={() => navigate(-1)} />
       <ContentContainer>
         <TitleContainer>
-          <Subtitle>
-            {drawerName
-              ? `모아보기   >   ${drawerName}   >   ${pageTitle}   >   채팅 보기`
-              : `${pageTitle}   >   채팅 보기`}
-          </Subtitle>
-          <Title>{formatTitleDate(created_at)}</Title>
+          <TitleContent>
+            <Subtitle>
+              {drawerName
+                ? `모아보기   >   ${drawerName}   >   ${pageTitle}   >   채팅 보기`
+                : `${pageTitle}   >   채팅 보기`}
+            </Subtitle>
+            <Title>{formatTitleDate(created_at)}</Title>
+          </TitleContent>
+          <CustomSmallButton onClick={() => navigate(-1)}>
+            목록으로
+          </CustomSmallButton>
         </TitleContainer>
 
         <ChatContainer>

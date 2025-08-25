@@ -7,7 +7,7 @@ import {
 } from "react";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
-import BackButton from "../components/ui/BackButton";
+import { SmallButton } from "../components/ui/Button";
 import ArrowIcon from "../assets/ArrowIcon.svg";
 import DownArrowIcon from "../assets/DownArrowIcon.svg";
 import SearchIcon from "../assets/SearchIcon.svg";
@@ -32,9 +32,28 @@ const ContentContainer = styled.div`
 const TitleContainer = styled.div`
   width: 100%;
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4.5rem;
+`;
+
+const TitleContent = styled.div`
+  display: flex;
   flex-direction: column;
   gap: 0.62rem;
-  margin-top: 4.5rem;
+`;
+
+const CustomSmallButton = styled(SmallButton)`
+  border-radius: 0.5rem;
+  border: 1px solid var(--5, #e9e9e9);
+  background: #fff;
+  color: var(--50, #7a7a7a);
+  text-align: center;
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.375rem;
 `;
 
 const Subtitle = styled.div`
@@ -423,7 +442,7 @@ export default function SummaryPage({ folderId, folderName }) {
         setTimelineData([]);
         setAxisStyle({ top: 0, height: 0, left: 0 });
         dotRefs.current = [];
-        
+
         // 실제 API 호출 (서버 사이드 검색)
         const responseData = await apiHelpers.getTimeline(folderId, keyword);
         console.log("타임라인 API 응답 데이터:", responseData);
@@ -446,7 +465,7 @@ export default function SummaryPage({ folderId, folderName }) {
   // 검색 실행 함수
   const handleSearch = () => {
     const keyword = searchKeyword.trim();
-    
+
     // 검색 시 타임라인 컨테이너 완전 초기화
     if (containerRef.current) {
       // 기존 타임라인 요소들 제거
@@ -454,7 +473,7 @@ export default function SummaryPage({ folderId, folderName }) {
       setAxisStyle({ top: 0, height: 0, left: 0 });
       dotRefs.current = [];
     }
-    
+
     fetchTimelineData(keyword);
   };
 
@@ -579,17 +598,21 @@ export default function SummaryPage({ folderId, folderName }) {
   return (
     <PageContainer>
       <Header currentPage="summary" />
-      <BackButton
-        onClick={() => {
-          if (window.navigation.navigateToDrawer) {
-            window.navigation.navigateToDrawer("incident");
-          }
-        }}
-      />
       <ContentContainer>
         <TitleContainer>
-          <Subtitle>{getSubtitle()}</Subtitle>
-          <Title>{summaryData?.drawer_name || "폴더명"}</Title>
+          <TitleContent>
+            <Subtitle>{getSubtitle()}</Subtitle>
+            <Title>{summaryData?.drawer_name || "폴더명"}</Title>
+          </TitleContent>
+          <CustomSmallButton
+            onClick={() => {
+              if (window.navigation.navigateToDrawer) {
+                window.navigation.navigateToDrawer("incident");
+              }
+            }}
+          >
+            목록으로
+          </CustomSmallButton>
         </TitleContainer>
 
         <SummaryContainer>
