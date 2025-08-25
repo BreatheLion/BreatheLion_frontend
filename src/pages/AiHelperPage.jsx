@@ -563,15 +563,24 @@ export default function AiHelperPage({ drawerId, drawerName }) {
               <SectionTitle>유사 법률 및 판례</SectionTitle>
             </SectionTitleContainer>
             <LawsContainer>
-              {summaryData?.related_laws?.map((law, index) => (
-                <LawContainer key={index}>
-                  <LawHeader>
-                    <LawNameTag>{law.law_name}</LawNameTag>
-                    <LawArticle>{law.article}</LawArticle>
-                  </LawHeader>
-                  <LawContent>{law.content}</LawContent>
+              {summaryData?.related_laws &&
+              summaryData.related_laws.length > 0 ? (
+                summaryData.related_laws.map((law, index) => (
+                  <LawContainer key={index}>
+                    <LawHeader>
+                      <LawNameTag>{law.law_name}</LawNameTag>
+                      <LawArticle>{law.article}</LawArticle>
+                    </LawHeader>
+                    <LawContent>{law.content}</LawContent>
+                  </LawContainer>
+                ))
+              ) : (
+                <LawContainer>
+                  <LawContent>
+                    유사 법률이 없습니다.{"\n"}더 많은 기록을 입력해 주세요.
+                  </LawContent>
                 </LawContainer>
-              ))}
+              )}
             </LawsContainer>
           </SectionContainer>
 

@@ -132,6 +132,7 @@ const LoadingText = styled.span`
 `;
 
 const MainText = styled.div`
+  position: relative;
   color: rgba(255, 255, 255, 0.37);
   text-align: center;
   font-family: Pretendard;
@@ -139,20 +140,25 @@ const MainText = styled.div`
   font-style: normal;
   font-weight: 600;
   line-height: 2.375rem;
-  margin-bottom: 2.06rem;
+  margin-bottom: 0.44rem;
 `;
 
 const TitleText = styled.div`
   position: absolute;
-  left: 3.63rem;
-  top: 7.38rem;
-  color: #fff;
+  left: 50%;
+  top: calc(-3.12rem - 2.25rem);
+  transform: translateX(-50%);
+  width: 100vw;
+  max-width: 60rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
   font-family: Pretendard;
-  font-size: 2.25rem;
+  font-size: 1.8rem;
   font-style: normal;
-  font-weight: 400;
-  line-height: 3.125rem;
+  font-weight: 600;
+  line-height: 2.375rem;
   white-space: pre-line;
+  margin-bottom: 2rem;
 `;
 
 export default function MainPage({ onNavigateToChat }) {
@@ -292,11 +298,26 @@ export default function MainPage({ onNavigateToChat }) {
   return (
     <MainContainer>
       <Header currentPage="main" />
-      <TitleText>
-        당신의 상처가{"\n"}잊히지 않도록,{"\n"}왜곡되지 않도록.
-      </TitleText>
       <ContentWrapper>
-        <MainText>숨쉬어와 함께 기록해보세요</MainText>
+        <MainText>
+          <TitleText>
+            말하지 못한 상처를, 이제는 말해도 괜찮아요.{"\n"}당신의 감정과
+            이야기를, 증거로 지켜드릴게요.
+          </TitleText>
+          <div
+            style={{
+              marginTop: "2rem",
+              color: "rgba(255, 255, 255, 0.90)",
+              fontFamily: "Pretendard",
+              fontSize: "1rem",
+              fontStyle: "normal",
+              fontWeight: "400",
+              lineHeight: "2.375rem",
+            }}
+          >
+            아픔은 여기에만 남기고, 당신은 한 걸음 나아가도 좋아요.
+          </div>
+        </MainText>
         <InputContainer>
           <TextInput
             type="text"
