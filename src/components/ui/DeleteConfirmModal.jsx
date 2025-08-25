@@ -95,7 +95,14 @@ export default function DeleteConfirmModal({
       <ModalCard onClick={(e) => e.stopPropagation()}>
         <TextContainer>
           <Title>{title}</Title>
-          <Subtitle>{subtitle}</Subtitle>
+          <Subtitle>
+            {subtitle.split("\n").map((line, index) => (
+              <span key={index}>
+                {line}
+                {index < subtitle.split("\n").length - 1 && <br />}
+              </span>
+            ))}
+          </Subtitle>
         </TextContainer>
         <IconContainer>
           <IconImage src={deleteCheckIcon} alt="삭제 확인 아이콘" />
