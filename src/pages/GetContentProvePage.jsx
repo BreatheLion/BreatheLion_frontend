@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../components/layout/Header";
 import MainButton from "../components/ui/Button/MainButton";
@@ -348,7 +347,6 @@ const PhoneField = ({ value, onChange, isInvalid, placeholder }) => (
 );
 
 export default function GetContentProvePage({ recordId, recordName }) {
-  const navigate = useNavigate();
   const [selectedCard, setSelectedCard] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);

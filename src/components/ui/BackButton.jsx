@@ -3,7 +3,7 @@ import ArrowIcon from "../../assets/ArrowIcon.svg";
 
 const BackButtonContainer = styled.button`
   position: fixed;
-  top: 5rem; /* 헤더 높이(4rem) + 여백(1rem) */
+  top: 5rem; 
   left: 2rem;
   width: 2.5rem;
   height: 2.5rem;

@@ -88,7 +88,6 @@ export default function LoadingModal({
     const fetchData = async () => {
       try {
         if (apiEndpoint && apiData) {
-          // TODO: 백엔드 연동 후 실제 API 호출로 변경
           // 현재는 fallback 데이터 사용 (임시 로직)
           console.log("API 호출 시뮬레이션:", apiEndpoint, apiData);
           if (mounted && fallbackData) {
@@ -106,7 +105,6 @@ export default function LoadingModal({
       }
     };
 
-    // TODO: 백엔드 연동 후 실제 API 응답을 기다리도록 수정 필요
     // 현재는 지정된 시간(autoCloseMs 또는 5초) 후 자동으로 완료 처리 (임시 로직)
     const timer = setTimeout(() => {
       if (!mounted) return;

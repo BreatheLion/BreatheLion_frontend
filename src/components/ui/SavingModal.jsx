@@ -12,7 +12,6 @@ export default function SavingModal({ isOpen, onDone }) {
       autoCloseMs={3000}
       onDone={onDone}
       showAutoClose={true}
-      // TODO: 백엔드 연동 후 실제 서버 응답을 기다리도록 수정 필요
       // 현재는 3초 후 자동으로 완료 처리 (임시 로직)
     />
   );

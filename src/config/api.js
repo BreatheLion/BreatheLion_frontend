@@ -1,5 +1,4 @@
 // API 설정 관리
-// TODO: 실제 배포 시 환경변수로 변경 필요
 
 // 개발 환경 설정
 const DEV_CONFIG = {

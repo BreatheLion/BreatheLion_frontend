@@ -488,7 +488,6 @@ const mapCategoryToKorean = (englishCategory) => {
 // 폴더 목록 옵션을 불러와 선택할 수 있도록 유지
 // 서버 응답은 { drawer_id, name } 형태라고 가정
 
-// toDateTimeLocal 함수 제거됨 - 더 이상 사용하지 않음
 
 export default function DetailModifyModal({
   data,
@@ -883,18 +882,7 @@ export default function DetailModifyModal({
     setSelectedFile(null);
   };
 
-  // const clearAllLocalEvidences = () => {
-  //   setLocalEvidences((prev) => {
-  //     prev.forEach((p) => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
-  //     return [];
-  //   });
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     evidences: prev.evidences.filter(
-  //       (ev) => !String(ev.url || "").startsWith("blob:")
-  //     ),
-  //   }));
-  // };
+
 
   return (
     <ModalOverlay>

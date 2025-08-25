@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 
-// 이미지 import
+
 import Consultant1 from "../assets/consultants/Consultant1.svg";
 import Consultant2 from "../assets/consultants/Consultant2.svg";
 import Consultant3 from "../assets/consultants/Consultant3.svg";
@@ -26,7 +26,7 @@ const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
   padding: 2rem;
-  padding-top: 6.31rem; /* 4rem (header) + 2rem (padding) + 0.31rem (additional margin) */
+  padding-top: 6.31rem; 
 `;
 
 const TitleContainer = styled.div`

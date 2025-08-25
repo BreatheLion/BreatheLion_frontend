@@ -180,7 +180,7 @@ const InputArea = styled.div`
   padding: 0 12.5rem 2rem 12.5rem;
   display: flex;
   justify-content: center;
-  align-items: flex-end; /* 하단 정렬로 라인 일치 */
+  align-items: flex-end;
   gap: 1rem;
 `;
 
@@ -189,7 +189,7 @@ const InputContainer = styled.div`
   display: flex;
   width: 100%;
   max-width: 60rem;
-  padding: 0.9375rem 1.25rem 0 1.25rem; /* 하단 패딩 제거 */
+  padding: 0.9375rem 1.25rem 0 1.25rem; 
   flex-direction: column;
   align-items: stretch;
   border-radius: 1.25rem;
@@ -211,17 +211,17 @@ const ChatInput = styled.textarea`
   box-sizing: border-box;
   background: transparent;
   border: none;
-  padding: 0; /* 한 줄 기준 컴팩트 */
+  padding: 0; 
   margin: 0;
   color: #313131;
   font-family: "Pretendard", sans-serif;
   font-size: 1rem;
   line-height: 1.25rem;
-  height: 1.25rem; /* 기본 1줄 높이 */
-  min-height: 1.25rem; /* 최소 1줄 */
+  height: 1.25rem; 
+  min-height: 1.25rem; 
   outline: none;
-  resize: none; /* 수동 리사이즈 금지 */
-  max-height: calc(1.25rem * 4); /* 최대 4줄 */
+  resize: none; 
+  max-height: calc(1.25rem * 4); 
   overflow-y: auto;
 
   &::placeholder {
@@ -305,25 +305,25 @@ const AttachmentsBar = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0 12.5rem 0 12.5rem; /* 하단 여백 제거로 겹침 방지 */
+  padding: 0 12.5rem 0 12.5rem;
 `;
 
 const BottomPanel = styled.div`
   padding: 0 0 0 0;
-  height: 16rem; /* 최대: InputArea 최대 + AttachmentsBar 1줄 보장 (여유 증가) */
+  height: 16rem; 
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end; /* 내용은 하단 정렬 */
+  justify-content: flex-end; 
   gap: 0.5rem;
-  overflow: hidden; /* 내부 스クロ롤 금지, 초과분은 잘림 */
+  overflow: hidden; 
 `;
 
 const Spacer = styled.div`
   flex: 1;
 `;
 
-// Removed local AttachmentChip styled component to avoid name collision with imported AttachmentChip
+
 
 const ChipRemove = styled.button`
   border: none;
@@ -340,8 +340,8 @@ const ChipRemove = styled.button`
 `;
 
 const PreviewThumb = styled.div`
-  width: 10rem; /* 고정 크기 */
-  height: 6rem; /* 고정 크기 */
+  width: 10rem; 
+  height: 6rem; 
   border-radius: 0.25rem;
   overflow: hidden;
   background: #e9e9e9;
@@ -356,11 +356,10 @@ const PreviewThumb = styled.div`
   }
 `;
 
-// 진행률 UI 제거
 
 const VideoPreview = styled.video`
-  width: 10rem; /* 이미지 썸네일과 동일 */
-  height: 6rem; /* 이미지 썸네일과 동일 */
+  width: 10rem; 
+  height: 6rem; 
   border-radius: 0.25rem;
   background: #000;
   object-fit: cover;
@@ -379,8 +378,8 @@ const MessageAttachments = styled.div`
 `;
 
 const MessageImage = styled.img`
-  width: 20rem; /* 고정 크기 */
-  height: 12rem; /* 고정 크기 */
+  width: 20rem; 
+  height: 12rem; 
   border-radius: 0.5rem;
   object-fit: cover;
   background: #e9e9e9;
@@ -388,7 +387,7 @@ const MessageImage = styled.img`
 `;
 
 const MessageVideo = styled.video`
-  width: 20rem; /* 메시지 이미지와 동일 */
+  width: 20rem; 
   height: 12rem; /* 메시지 이미지와 동일 */
   border-radius: 0.5rem;
   background: #000;
@@ -472,9 +471,6 @@ export default function ChatPage({ initialChatData }) {
   const fileInputRef = useRef(null);
   const chatAreaRef = useRef(null);
   const inputRef = useRef(null);
-  // 진행률 데모/플래그 제거
-  // TODO: 백엔드 연동 후 false로 변경 필요
-  // 임시 테스트: 3초 지연 후 응답으로 치환 (임시 로직)
   const USE_FAKE_API = false; // 실제 API 호출을 위해 false로 변경
   const SIMULATE_LATENCY_MS = 3000;
   const fakeTimerRef = useRef(null);
