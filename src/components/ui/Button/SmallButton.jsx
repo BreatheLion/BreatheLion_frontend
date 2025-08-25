@@ -8,7 +8,7 @@ const StyledSmallButton = styled.button`
   display: flex;
   width: 8.75rem;
   height: 2.75rem;
-  padding: 0.625rem 2.6875rem;
+  padding: 0.625rem 2rem;
   justify-content: center;
   align-items: center;
   flex-shrink: 0;
