@@ -301,6 +301,7 @@ export default function IncidentRecordsPage({
         onClose={() => setShowDeleteConfirmModal(false)}
         onConfirm={handleDeleteConfirm}
         selectedCount={selectedFolders.length}
+        subtitle="폴더를 삭제하면 현재 폴더 안의 기록도 함께 삭제됩니다.\n정말로 삭제하시겠습니까?"
       />
 
       <SuccessNotificationModal
