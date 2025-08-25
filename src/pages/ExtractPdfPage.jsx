@@ -7,6 +7,7 @@ import FailureNotificationModal from "../components/ui/FailureNotificationModal"
 import ContentProveIcon from "../assets/ContentProveIcon.svg";
 import ConsultantIcon from "../assets/ConsultantIcon.svg";
 import ArrowIcon from "../assets/ArrowIcon.svg";
+import DownloadIcon from "../assets/downloadIcon.svg";
 import { apiHelpers } from "../utils/api";
 
 const PageContainer = styled.div`
@@ -216,7 +217,7 @@ export default function ExtractPdfPage({ recordId, recordName, drawerName }) {
                 자료를 만들어 드립니다.
               </CardDescription>
             </div>
-            <CardImageIcon src={ArrowIcon} alt="화살표" />
+            <CardImageIcon src={DownloadIcon} alt="다운로드" />
           </Card>
         </CardsContainer>
       </ContentContainer>

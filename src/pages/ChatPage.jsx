@@ -757,7 +757,11 @@ export default function ChatPage({ initialChatData }) {
     if (isLoading) return; // 중복 전송 방지
 
     const trimmed = inputValue.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      setFailureMessage("텍스트를 포함해서 메시지를 전송해야 합니다.");
+      setShowFailureModal(true);
+      return;
+    }
 
     // chat_session_id 검증
     if (!chatSessionId) {
