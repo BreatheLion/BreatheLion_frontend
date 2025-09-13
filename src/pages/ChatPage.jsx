@@ -950,7 +950,7 @@ export default function ChatPage({ initialChatData }) {
                             {att.type && att.type.startsWith("image/") && (
                               <MessageImage
                                 src={att.previewUrl}
-                                alt={att.name}
+                                alt={att.name}b
                               />
                             )}
                             {att.type && att.type.startsWith("video/") && (

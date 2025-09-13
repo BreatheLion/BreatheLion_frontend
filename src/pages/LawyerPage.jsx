@@ -2,15 +2,15 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 
-// 이미지 import
-import lawyer1 from "../assets/lawyers/lawyer1.png";
-import lawyer2 from "../assets/lawyers/lawyer2.png";
-import lawyer3 from "../assets/lawyers/lawyer3.png";
-import lawyer4 from "../assets/lawyers/lawyer4.png";
-import lawyer5 from "../assets/lawyers/lawyer5.png";
-import lawyer6 from "../assets/lawyers/laweyer6.png";
-import lawyer7 from "../assets/lawyers/lawyer7.png";
-import lawyer8 from "../assets/lawyers/lawyer8.png";
+// 이미지 import (WebP 최적화)
+import lawyer1 from "../assets/lawyers/lawyer1.webp";
+import lawyer2 from "../assets/lawyers/lawyer2.webp";
+import lawyer3 from "../assets/lawyers/lawyer3.webp";
+import lawyer4 from "../assets/lawyers/lawyer4.webp";
+import lawyer5 from "../assets/lawyers/lawyer5.webp";
+import lawyer6 from "../assets/lawyers/laweyer6.webp";
+import lawyer7 from "../assets/lawyers/lawyer7.webp";
+import lawyer8 from "../assets/lawyers/lawyer8.webp";
 
 const PageContainer = styled.div`
   width: 100%;
