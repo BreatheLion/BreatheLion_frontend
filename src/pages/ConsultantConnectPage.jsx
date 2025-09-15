@@ -10,6 +10,7 @@ import Consultant5 from "../assets/consultants/consultant5.webp";
 import Consultant6 from "../assets/consultants/consultant6.webp";
 import Consultant7 from "../assets/consultants/consultant7.webp";
 import Consultant8 from "../assets/consultants/consultant8.webp";
+import LazyImage from "../components/ui/LazyImage";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -73,16 +74,12 @@ const ConsultantCard = styled.div`
   background: var(--Main-bk, #f8faff);
 `;
 
-const ConsultantImage = styled.div`
+const ConsultantImage = styled(LazyImage)`
   width: 100%;
-  height: 100%;
+  height: auto;
   margin-bottom: 1.25rem;
   aspect-ratio: 1/1;
   border-radius: 0.3125rem;
-  background: ${(props) =>
-    `url(${props.src}) lightgray 0px -0.502px / 100% 106.667% no-repeat`};
-  background-size: cover;
-  background-position: center;
 `;
 
 const ConsultantInfo = styled.div`
@@ -209,7 +206,11 @@ export default function ConsultantConnectPage() {
               onClick={() => handleConsultantCardClick(consultant)}
               style={{ cursor: "pointer" }}
             >
-              <ConsultantImage src={consultant.image} />
+              <ConsultantImage
+                src={consultant.image}
+                alt={consultant.name}
+                borderRadius="0.3125rem"
+              />
               <ConsultantInfo>
                 <ConsultantName>{consultant.name}</ConsultantName>
                 <Organization>{consultant.organization}</Organization>

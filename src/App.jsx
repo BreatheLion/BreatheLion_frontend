@@ -22,6 +22,8 @@ import LawyerDetailsPage from "./pages/LawyerDetailsPage";
 import ConsultantConnectDetailPage from "./pages/ConsultantConnectDetailPage";
 import AiHelperPage from "./pages/AiHelperPage";
 import ErrorModal from "./components/ui/ErrorModal";
+import smileVideo from "./videos/smile.mp4";
+import savingVideo from "./videos/savingDocumentAnimation.mp4";
 
 // 전역 네비게이션 함수들을 위한 객체
 window.navigation = {};
@@ -57,6 +59,26 @@ function App() {
   const location = useLocation();
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [shouldNavigateToMain, setShouldNavigateToMain] = useState(false);
+
+  // 초기 접속 시 자주 쓰는 영상 프리로드
+  useEffect(() => {
+    const links = [];
+    const addPreload = (href) => {
+      if (!href) return null;
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "video";
+      link.href = href;
+      link.type = "video/mp4";
+      document.head.appendChild(link);
+      return link;
+    };
+    links.push(addPreload(smileVideo));
+    links.push(addPreload(savingVideo));
+    return () => {
+      links.forEach((l) => l && l.remove());
+    };
+  }, []);
 
   // 전역 네비게이션(기존 컴포넌트 호환)
   useEffect(() => {
