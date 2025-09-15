@@ -2,15 +2,14 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 
-
-import Consultant1 from "../assets/consultants/Consultant1.svg";
-import Consultant2 from "../assets/consultants/Consultant2.svg";
-import Consultant3 from "../assets/consultants/Consultant3.svg";
-import Consultant4 from "../assets/consultants/Consultant4.svg";
-import Consultant5 from "../assets/consultants/Consultant5.svg";
-import Consultant6 from "../assets/consultants/Consultant6.svg";
-import Consultant7 from "../assets/consultants/Consultant7.svg";
-import Consultant8 from "../assets/consultants/Consultant8.svg";
+import Consultant1 from "../assets/consultants/consultant1.webp";
+import Consultant2 from "../assets/consultants/consultant2.webp";
+import Consultant3 from "../assets/consultants/consultant3.webp";
+import Consultant4 from "../assets/consultants/consultant4.webp";
+import Consultant5 from "../assets/consultants/consultant5.webp";
+import Consultant6 from "../assets/consultants/consultant6.webp";
+import Consultant7 from "../assets/consultants/consultant7.webp";
+import Consultant8 from "../assets/consultants/consultant8.webp";
 
 const PageContainer = styled.div`
   width: 100%;
@@ -26,7 +25,7 @@ const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
   padding: 2rem;
-  padding-top: 6.31rem; 
+  padding-top: 6.31rem;
 `;
 
 const TitleContainer = styled.div`
