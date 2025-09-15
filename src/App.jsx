@@ -24,6 +24,8 @@ import AiHelperPage from "./pages/AiHelperPage";
 import ErrorModal from "./components/ui/ErrorModal";
 import smileVideo from "./videos/smile.mp4";
 import savingVideo from "./videos/savingDocumentAnimation.mp4";
+import iconSymbol from "./assets/iconSymbol.svg";
+import MainPageSendButton from "./assets/MainPageSendButton.svg";
 
 // 전역 네비게이션 함수들을 위한 객체
 window.navigation = {};
@@ -60,21 +62,26 @@ function App() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [shouldNavigateToMain, setShouldNavigateToMain] = useState(false);
 
-  // 초기 접속 시 자주 쓰는 영상 프리로드
+  // 초기 접속 시 자주 쓰는 영상/아이콘 프리로드
   useEffect(() => {
     const links = [];
-    const addPreload = (href) => {
+    const addPreload = (href, as, type) => {
       if (!href) return null;
       const link = document.createElement("link");
       link.rel = "preload";
-      link.as = "video";
+      link.as = as;
       link.href = href;
-      link.type = "video/mp4";
+      if (type) link.type = type;
       document.head.appendChild(link);
       return link;
     };
-    links.push(addPreload(smileVideo));
-    links.push(addPreload(savingVideo));
+    // videos
+    links.push(addPreload(smileVideo, "video", "video/mp4"));
+    links.push(addPreload(savingVideo, "video", "video/mp4"));
+    // main page icons (SVG)
+    links.push(addPreload(iconSymbol, "image", "image/svg+xml"));
+    links.push(addPreload(MainPageSendButton, "image", "image/svg+xml"));
+
     return () => {
       links.forEach((l) => l && l.remove());
     };
