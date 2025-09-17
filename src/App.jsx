@@ -26,6 +26,9 @@ import smileVideo from "./videos/smile.mp4";
 import savingVideo from "./videos/savingDocumentAnimation.mp4";
 import iconSymbol from "./assets/iconSymbol.svg";
 import MainPageSendButton from "./assets/MainPageSendButton.svg";
+import sadCloudIcon from "./assets/sadCloudIcon.svg";
+import ConsultantIcon from "./assets/ConsultantIcon.svg";
+import ContentProveIcon from "./assets/ContentProveIcon.svg";
 
 // 전역 네비게이션 함수들을 위한 객체
 window.navigation = {};
@@ -81,6 +84,10 @@ function App() {
     // main page icons (SVG)
     links.push(addPreload(iconSymbol, "image", "image/svg+xml"));
     links.push(addPreload(MainPageSendButton, "image", "image/svg+xml"));
+    // additional icons for modals and pages
+    links.push(addPreload(sadCloudIcon, "image", "image/svg+xml"));
+    links.push(addPreload(ConsultantIcon, "image", "image/svg+xml"));
+    links.push(addPreload(ContentProveIcon, "image", "image/svg+xml"));
 
     return () => {
       links.forEach((l) => l && l.remove());
