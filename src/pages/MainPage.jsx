@@ -6,6 +6,7 @@ import MainPageSendButton from "../assets/MainPageSendButton.svg";
 import { API_ENDPOINTS, apiCall } from "../utils/api";
 import LoadingModal from "../components/ui/LoadingModal";
 import SuccessNotificationModal from "../components/ui/SuccessNotificationModal";
+import { usePreloadMedia } from "../hooks/usePreloadMedia";
 
 const MainContainer = styled.div`
   background: var(
@@ -166,6 +167,9 @@ export default function MainPage({ onNavigateToChat }) {
   const [isLoading, setIsLoading] = useState(false);
   const [showLoadingModal, setShowLoadingModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // 미디어 파일 프리로딩 (백그라운드에서 조용히 실행)
+  usePreloadMedia();
 
   const handleSubmit = async () => {
     const trimmed = inputValue.trim();
