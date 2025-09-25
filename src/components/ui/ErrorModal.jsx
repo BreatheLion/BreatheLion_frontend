@@ -60,6 +60,7 @@ const MediaImg = styled.img`
   height: 100%;
   object-fit: cover;
   display: block;
+  border: none;
 `;
 
 export default function ErrorModal({ onClose }) {
@@ -69,7 +70,7 @@ export default function ErrorModal({ onClose }) {
         <Title>아이쿠, 문제가 생겼어요</Title>
         <Sub>구름을 클릭해서 메인화면으로 돌아가요</Sub>
         <MediaBox>
-          <MediaImg src={sadCloudIcon} alt="sad cloud" />
+          <MediaImg src={sadCloudIcon} alt="" />
         </MediaBox>
       </ModalCard>
     </ModalOverlay>

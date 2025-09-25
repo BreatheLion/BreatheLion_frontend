@@ -230,43 +230,12 @@ export default function MainPage({ onNavigateToChat }) {
         throw new Error("서버 응답이 올바르지 않습니다.");
       }
     } catch (error) {
-      console.log("API 호출 실패, 목업 데이터 사용:", error);
+      console.error("API 호출 실패:", error);
 
-      // 목업 데이터 사용 (FINAL_API_DOCUMENTATION 기반)
-      const mockResponse = {
-        isSuccess: true,
-        code: "200",
-        message: "채팅성공",
-        data: {
-          session_id: 1,
-          record_id: 3, // 새로운 record_id 필드 추가
-          answer:
-            "안녕하세요. 오늘 있으셨던 사건에 대해 이야기해 주셔서 감사합니다. 어떤 일이 있었는지 조금 더 자세히 말씀해 주실 수 있을까요? 어떤 감정을 느끼셨는지도 함께 이야기해 주시면 도움이 될 것 같아요.",
-          message_time: new Date().toLocaleTimeString("ko-KR", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          }),
-          message_date: new Date().toISOString().split("T")[0],
-        },
-      };
-
-      console.log("목업 응답 데이터:", mockResponse);
-
-      // 목업 응답에서 받은 answer를 사용
-      const tempResponse = {
-        chat_session_id: mockResponse.data.session_id,
-        record_id: mockResponse.data.record_id, // 새로운 record_id 필드 추가
-        answer: mockResponse.data.answer,
-        time: mockResponse.data.message_time,
-        date: mockResponse.data.message_date,
-      };
-
-      onNavigateToChat({
-        userMessage: trimmed,
-        serverResponse: tempResponse,
-        isLoading: false,
-      });
+      window.handleApiError(
+        error,
+        "응답을 불러오지 못했어요. 잠시 후 다시 시도해주세요."
+      );
     } finally {
       setIsLoading(false);
       setShowLoadingModal(false);
